@@ -26,6 +26,9 @@ class Drawing extends Tile {
     canEdit() {
 	return game.user.isGM || this.owner == game.user.id
     }
+    get type() {
+	return this.data.type;
+    }
     get fillColor() {
 	return this.data.fillColor ? this.data.fillColor.replace("#", "0x") : 0x000000;
     }
@@ -35,7 +38,8 @@ class Drawing extends Tile {
     get usesFill() {
 	return [DRAWING_FILL_TYPE.SOLID,
 		DRAWING_FILL_TYPE.PATTERN,
-		DRAWING_FILL_TYPE.STRETCH].includes(this.data.fill)
+		DRAWING_FILL_TYPE.STRETCH].includes(this.data.fill) &&
+	    this.type != "text"
     }
     get usesTexture() {
 	return [DRAWING_FILL_TYPE.PATTERN,
@@ -100,6 +104,13 @@ class Drawing extends Tile {
 	if (this.usesTexture) {
 	    try {
 		this.texture = await loadTexture(this.data.texture);
+		// Ensure playback state for videos
+		let source = this.texture.baseTexture.source;
+		if ( source && source.tagName === "VIDEO" ) {
+		    source.loop = true;
+		    source.muted = true;
+		    source.play();
+		}
 	    } catch { 
 		this.texture = null;
 	    }
@@ -115,7 +126,11 @@ class Drawing extends Tile {
 	} else {
 	    this.bg = null
 	}
-	this.img = this.addChild(new PIXI.Graphics());
+
+	if (this.data.type == "text")
+	    this.img = this.addChild(new PIXI.Text(''));
+	else
+	    this.img = this.addChild(new PIXI.Graphics());
 	this.frame = this.addChild(new PIXI.Graphics());
 	this.scaleHandle = this.addChild(new PIXI.Graphics());
 
@@ -165,20 +180,30 @@ class Drawing extends Tile {
 	    this._updateDimensions(position, {snap: false})
 	} else if (type == "freehand") {
 	    this.data.points.push([position.x, position.y])
+	} else if (type == "polygon") {
+	    if (this.data.points.length > 1)
+		this.data.points.pop()
+	    this.data.points.push([position.x, position.y])
 	}
     }
     /* -------------------------------------------- */
     refresh() {
-	this.img.clear().lineStyle(this.data.strokeWidth, this.strokeColor, this.data.strokeAlpha)
+	// PIXI.Text doesn't have a `.clear()`
+	if (this.img instanceof PIXI.Graphics)
+	    this.img.clear().lineStyle(this.data.strokeWidth, this.strokeColor, this.data.strokeAlpha)
 	if (this.usesFill) {
 	    this.img.beginFill(this.fillColor, this.data.fillAlpha);
 	}
 	if (this.data.type == "rectangle") {
-	    this.renderRectangle(this.img)
+	    this.renderRectangle()
 	} else if (this.data.type == "ellipse") {
-	    this.renderEllipse(this.img)
+	    this.renderEllipse()
+	} else if (this.data.type == "polygon") {
+	    this.renderPolygon()
 	} else if (this.data.type == "freehand") {
-	    this.renderFreehand(this.img)
+	    this.renderFreehand()
+	} else if (this.data.type == "text") {
+	    this.renderText()
 	}
 
 	// Handle Filling data
@@ -203,8 +228,13 @@ class Drawing extends Tile {
 		let scale_y = this.data.textureHeight / this.texture.height;
 		this.bg.tile.tileScale.set(scale_x, scale_y)
 	    }
-	    if (this.bg.tile.mask) this.bg.removeChild(this.bg.tile.mask).destroy({children: true})
-	    this.bg.tile.mask = this.bg.addChild(this.img.clone());
+	    // Can't clone a PIXI.Text
+	    if (this.img instanceof PIXI.Graphics) {
+		if (this.bg.tile.mask) this.bg.removeChild(this.bg.tile.mask).destroy({children: true})
+		this.bg.tile.mask = this.bg.addChild(this.img.clone());
+	    } else {
+		this.bg.tile.mask = this.img;
+	    }
 	    // In case of polygons being out of bounds/scaled, the `this.img.cone()`
 	    // does not copy the position/scale so we need to do it manually.
 	    this.bg.tile.mask.position = this.img.position;
@@ -251,7 +281,7 @@ class Drawing extends Tile {
     }
 
     renderFreehand() {
-	let point =this.data.points[0]
+	let point = this.data.points[0]
 	let ox = point[0];
 	let oy = point[1];
 	this.img.moveTo(0, 0)
@@ -268,8 +298,24 @@ class Drawing extends Tile {
 	this.img.arc(point[0] - ox, point[1] - oy, this.data.strokeWidth / 4, 0, Math.PI * 2)
 	this._handlePolygonBounds(this.img)
     }
+    renderPolygon() {
+	this.renderFreehand()
+    }
 
     _handlePolygonBounds() {
+	this._handleUnshapedBounds()
+	let bounds = this.img.getLocalBounds()
+	if (this.id === undefined) {
+	    /* If the polygon is currently being drawn and we move to negative values
+	     * from our starting point, then shift our x/y position appropriately to have
+	     * the correct hit area and background pattern.
+	     */
+	    this.data.x = this.data.points[0][0] + bounds.x;
+	    this.data.y = this.data.points[0][1] + bounds.y;
+	}
+	this.img.position.set(-bounds.x * this.img.scale.x, -bounds.y * this.img.scale.y)
+    }
+    _handleUnshapedBounds() {
 	let bounds = this.img.getLocalBounds()
 	let scale_x = 1;
 	let scale_y = 1;
@@ -286,12 +332,22 @@ class Drawing extends Tile {
 	     */
 	    this.data.width = bounds.width;
 	    this.data.height = bounds.height;
-	    this.data.x = this.data.points[0][0] + bounds.x;
-	    this.data.y = this.data.points[0][1] + bounds.y;
 	}
 	this.img.scale.set(scale_x, scale_y)
-	this.img.position.set(-bounds.x * scale_x, -bounds.y * scale_y)
     }
+
+    renderText() {
+	this.img.style = {fontFamily : this.data.fontFamily,
+			  fontSize: this.data.fontSize,
+			  fill : this.data.fillColor,
+			  stroke: this.data.strokeColor,
+			  strokeThickness: this.data.strokeWidth,
+			  wordWrap: this.data.wordWrap}
+	this.img.text = this.data.content || "Hello World!"
+	this._handleUnshapedBounds()
+    }
+
+
     /* -------------------------------------------- */
 
     /**

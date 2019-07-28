@@ -88,7 +88,7 @@ class DrawingConfig extends FormApplication {
 	if ( this.object.id ) {
 	    formData["id"] = this.object.id;
 	    this.object.update(canvas.scene._id, formData)
-		.then(() => this.object.layer.constructor.updateDefaultData(this.object))
+		.then(() => this.object.layer.updateDefaultData(this.object))
 	}
 	else this.object.constructor.create(canvas.scene._id, formData);
     }

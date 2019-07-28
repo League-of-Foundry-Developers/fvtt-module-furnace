@@ -7,7 +7,11 @@
  * @type {PlaceablesLayer}
  */
 class DrawingsLayer extends PlaceablesLayer {
-    static _defaultData = {};
+    constructor() {
+	super()
+    
+	this._defaultData = {};
+    }
 
     /**
      * Define the source data array underlying the placeable objects contained in this layer
@@ -82,18 +86,23 @@ class DrawingsLayer extends PlaceablesLayer {
 
     /* -------------------------------------------- */
 
-    static getDefaultData(type) {
-	if (DrawingsLayer._defaultData[type] === undefined) {
-	    DrawingsLayer._defaultData[type] = mergeObject(FakeServer.DrawingDefaultData("all"),
-							   FakeServer.DrawingDefaultData(type),
-							   {inplace: false})
+    getDefaultData(type) {
+	if (this._defaultData[type] === undefined) {
+	    this._defaultData[type] = mergeObject(FakeServer.DrawingDefaultData("all"),
+						  FakeServer.DrawingDefaultData(type),
+						  {inplace: false})
 	    // Default color is the user color
-	    DrawingsLayer._defaultData[type].strokeColor = game.user.color
+	    if (type == "text") {
+		this._defaultData[type].fillColor = game.user.color
+	    } else {
+		this._defaultData[type].strokeColor = game.user.color
+		this._defaultData[type].fillColor = game.user.color
+	    }
 	}
-	delete DrawingsLayer._defaultData[type].id
-	return DrawingsLayer._defaultData[type]
+	delete this._defaultData[type].id
+	return this._defaultData[type]
     }
-    static updateDefaultData(drawing) {
+    updateDefaultData(drawing) {
 	let data = duplicate(drawing.data)
 	mergeObject(data, {id: 1, x: 0, y:0, width: 0, height: 0, owner: null}, {overwrite: true})
 	if (data.points) delete data.points
@@ -115,7 +124,7 @@ class DrawingsLayer extends PlaceablesLayer {
 	    else
 		type = "rectangle";
 	}
-	let data = mergeObject(DrawingsLayer.getDefaultData(type), event.data.origin, {inplace: false})
+	let data = mergeObject(this.getDefaultData(type), event.data.origin, {inplace: false})
 	if (type == "freehand" || type == "polygon")
 	    data.points.push([data.x, data.y])
 

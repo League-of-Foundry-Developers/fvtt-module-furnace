@@ -81,11 +81,12 @@ class FakeServer {
 	    },
 	    text: {
 		type: "text",
+		fill: DRAWING_FILL_TYPE.SOLID,
 		strokeWidth: 2,
 		content: "",
 		fontFamily: "Arial",
-		fontSize: 15,
-		wordWrap: true
+		fontSize: 25,
+		wordWrap: false
 	    },
 	    polygon: {
 		type: "polygon",
@@ -106,11 +107,17 @@ class FakeServer {
 	return duplicate(drawings)
     }
     static async setDrawings(scene, drawings) {
+	let original = scene.getFlag("furnace", "drawings") || []
 	drawings = drawings.map(this.sanityCheck)
 	console.log("Updating drawings database for scene ", scene.id, " : ", drawings)
-	return await scene.setFlag("furnace", "drawings", drawings)
+	let ret = await scene.setFlag("furnace", "drawings", drawings)
 	// FIXME: module-to-core: Add 'drawings' as the things to trigger a redraw in scene._onUpdate
-	//if (canvas.scene.id == scene.id) canvas.drawings.draw()
+	// In the meantime, only update if a drawing got created or deleted.. issue with updates is that
+	// it makes it hard to move/rotate drawings because the redraw makes you lose the selection.
+	//if (original.length != drawings.length && canvas.scene.id == scene.id) canvas.drawings.draw()
+	// TODO: onupdate check if flags changes.. issue with rotate
+	// TODO: the ghost drawings issue is because of canvasInit, a canvas.draw() causes them maybe ?
+	return ret
 
     }
     static sanityCheck(data, update=false) {
@@ -124,7 +131,7 @@ class FakeServer {
 	if (data.points !== undefined)
 	    data.points = data.points.map(c => [Math.round(c[0]), Math.round(c[1])])
 	if (!update) {
-	    if (data.owner === undefined)
+	    if (!data.owner)
 		data.owner = game.user.id
 	    /* Sanitize content to have default values. Should do more, like ensure id exists and
 	     * is unique, type is known, values are not out bounds, etc..
@@ -201,9 +208,11 @@ class FakeServer {
 
 class FurnaceDrawing {
     static canvasInit() {
-	canvas.hud.drawing = new DrawingHUD()
-	let gridIdx = canvas.stage.children.indexOf(canvas.grid)
-	canvas.drawings = canvas.stage.addChildAt(new DrawingsLayer(), gridIdx)
+	if (canvas.drawings === undefined) {
+	    canvas.hud.drawing = new DrawingHUD()
+	    let gridIdx = canvas.stage.children.indexOf(canvas.grid)
+	    canvas.drawings = canvas.stage.addChildAt(new DrawingsLayer(), gridIdx)
+	}
 	// Should probably 'await' this, but the hook isn't async
 	canvas.drawings.draw()
     }
