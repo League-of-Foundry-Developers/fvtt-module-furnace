@@ -75,7 +75,7 @@ class DrawingHUD extends BasePlaceableHUD {
     this.object.update(canvas.scene._id, data).then(() => {
       console.log("color : ", this.object.data.fillColor)
       this.render()
-      this.object.layer.updateDefaultData(this.object)
+      this.object.layer.updateStartingData(this.object)
     })
   }
 

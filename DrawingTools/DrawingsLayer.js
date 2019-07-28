@@ -10,7 +10,7 @@ class DrawingsLayer extends PlaceablesLayer {
   constructor() {
     super()
 
-    this._defaultData = {};
+    this._startingData = {};
   }
 
   /**
@@ -86,29 +86,41 @@ class DrawingsLayer extends PlaceablesLayer {
 
   /* -------------------------------------------- */
 
-  getDefaultData(type) {
-    if (this._defaultData[type] === undefined) {
-      this._defaultData[type] = mergeObject(FakeServer.DrawingDefaultData("all"),
-        FakeServer.DrawingDefaultData(type),
-        { inplace: false })
-      // Default color is the user color
-      if (type == "text") {
-        this._defaultData[type].fillColor = game.user.color
-      } else {
-        this._defaultData[type].strokeColor = game.user.color
-        this._defaultData[type].fillColor = game.user.color
-      }
-    }
-    delete this._defaultData[type].id
-    return this._defaultData[type]
+  getStartingData(type) {
+    if (this._startingData[type] === undefined)
+      this._startingData[type] = this.getDefaultData(type);
+    delete this._startingData[type].id
+    return this._startingData[type]
   }
-  updateDefaultData(drawing) {
+  getDefaultData(type) {
+    let defaultData = mergeObject(FakeServer.DrawingDefaultData("all"), FakeServer.DrawingDefaultData(type), { inplace: false });
+    // Default color is the user color
+    if (type == "text") {
+      defaultData.fillColor = game.user.color;
+    }
+    else {
+      defaultData.strokeColor = game.user.color;
+      defaultData.fillColor = game.user.color;
+    }
+    return defaultData;
+  }
+
+  updateStartingData(drawing) {
     let data = duplicate(drawing.data)
     mergeObject(data, { id: 1, x: 0, y: 0, width: 0, height: 0, owner: null }, { overwrite: true })
     if (data.points) delete data.points
     if (data.content) delete data.content
-    mergeObject(this.getDefaultData(data.type), data, { overwrite: true })
-    console.log("Updated default data to : ", this._defaultData[data.type])
+    mergeObject(this.getStartingData(data.type), data, { overwrite: true })
+    console.log("Updated default data to : ", this._startingData[data.type])
+  }
+
+  /**
+   * Get the configuration sheet for the layer.
+   * This allows a user to configure the default values for all tools
+   */
+  configureStartingData() {
+    // We don't use a singleton because defaults could change between calls.
+    new DrawingConfig(this, undefined, true).render(true);
   }
 
   _getNewDataFromEvent(event) {
@@ -124,7 +136,7 @@ class DrawingsLayer extends PlaceablesLayer {
       else
         type = "rectangle";
     }
-    let data = mergeObject(this.getDefaultData(type), event.data.origin, { inplace: false })
+    let data = mergeObject(this.getStartingData(type), event.data.origin, { inplace: false })
     if (type == "freehand" || type == "polygon")
       data.points.push([data.x, data.y])
 

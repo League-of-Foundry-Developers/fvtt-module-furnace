@@ -3,7 +3,8 @@
 
     <div class="form-group">
         <label>Drawing Type</label>
-        <select name="type" data-dtype="String" disabled>
+        <select name="type" data-dtype="String"
+        {{#unless enableTypeSelection}} disabled {{/unless}}>
             {{#select object.type}}
             {{#each drawingTypes as |type t|}}
             <option value="{{t}}">{{type}}</option>
@@ -11,7 +12,7 @@
             {{/select}}
         </select>
     </div>
-
+    {{#unless enableTypeSelection}} 
     <div class="form-group">
         <label for="x">X-Position <span class="units">(pixels)</span></label>
         <input type="text" name="x" value="{{object.x}}" data-dtype="Number"/>
@@ -31,9 +32,9 @@
         <label for="height">Height <span class="units">(pixels)</span></label>
         <input type="text" name="height" value="{{object.height}}" data-dtype="Number"/>
     </div>
-
+    {{/unless}}
     <div class="form-group">
-        <label for="height">Rotation <span class="units">(degrees)</span></label>
+        <label for="rotation">Rotation <span class="units">(degrees)</span></label>
         <input type="text" name="rotation" value="{{object.rotation}}" data-dtype="Number"/>
     </div>
     <hr>
@@ -112,6 +113,6 @@
     <hr>
     <div style="display: flex;">
       <button type="button" name="reset" value="1"><i class="fas fa-sync"></i> Reset to Default</button>
-      <button type="submit" name="submit" value="1"><i class="far fa-save"></i> {{submitText}} Drawing</button>
+      <button type="submit" name="submit" value="1"><i class="far fa-save"></i> {{submitText}} </button>
     </div>
 </form>

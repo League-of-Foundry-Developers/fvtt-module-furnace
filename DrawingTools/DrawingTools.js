@@ -261,7 +261,21 @@ class FurnaceDrawing {
               clear: {
                 name: "Clear all Drawings",
                 icon: "fas fa-trash",
-                onClick: () => canvas.drawings.deleteAll(),
+                onClick: () => {
+                  canvas.drawings.deleteAll();
+                  ui.controls.controls[ui.controls.activeControl].activeTool = "select";
+                  ui.controls.render();
+                },
+                visible: isTrusted
+              },
+              configure: {
+                name: "Clear all Drawings",
+                icon: "fas fa-cog",
+                onClick: () => {
+                  canvas.drawings.configureStartingData();
+                  ui.controls.controls[ui.controls.activeControl].activeTool = "select";
+                  ui.controls.render();
+                },
                 visible: isTrusted
               }
             },
