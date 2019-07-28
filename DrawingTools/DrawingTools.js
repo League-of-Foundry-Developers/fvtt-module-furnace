@@ -248,6 +248,9 @@ class FurnaceDrawing {
   // FIXME: module-to-core: you know where this goes :)
   static renderSceneControls(obj, html, data) {
     if (obj.controls.drawings == undefined) {
+      // FIXME: module-to-core: currently, trusted players can't update a scene.
+      // Having them able to modify the drawings field would be great. Otherwise, this 
+      // needs to become isGM.
       let isTrusted = game.user.isTrusted;
       let controls = obj.controls
 

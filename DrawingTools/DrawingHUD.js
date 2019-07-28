@@ -73,7 +73,6 @@ class DrawingHUD extends BasePlaceableHUD {
     if (event.target.name == "fillColor" && this.object.data.fill == DRAWING_FILL_TYPE.NONE)
       data.fill = DRAWING_FILL_TYPE.SOLID;
     this.object.update(canvas.scene._id, data).then(() => {
-      console.log("color : ", this.object.data.fillColor)
       this.render()
       this.object.layer.updateStartingData(this.object)
     })

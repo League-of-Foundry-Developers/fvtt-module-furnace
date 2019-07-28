@@ -39,13 +39,13 @@ class DrawingsLayer extends PlaceablesLayer {
    * @return {DrawingsLayer}
    */
   draw() {
-    // FIXME: module-to-core
+    // FIXME: module-to-core: remove
     canvas.scene.data.drawings = FakeServer.getDrawings(canvas.scene)
     super.draw();
     return this;
   }
 
-  // FIXME: module-to-core : use of FakeServer.setData instead of canvas.scene.update()
+  // FIXME: module-to-core : use of FakeServer.setDrawings instead of canvas.scene.update()
   // Can be removed entirely in core
   deleteAll() {
     const cls = this.constructor.placeableClass;
@@ -89,12 +89,11 @@ class DrawingsLayer extends PlaceablesLayer {
   getStartingData(type) {
     if (this._startingData[type] === undefined)
       this._startingData[type] = this.getDefaultData(type);
-    delete this._startingData[type].id
     return this._startingData[type]
   }
   getDefaultData(type) {
     let defaultData = mergeObject(FakeServer.DrawingDefaultData("all"), FakeServer.DrawingDefaultData(type), { inplace: false });
-    // Default color is the user color
+    // Set default colors as the user color
     if (type == "text") {
       defaultData.fillColor = game.user.color;
     }
@@ -111,7 +110,7 @@ class DrawingsLayer extends PlaceablesLayer {
     if (data.points) delete data.points
     if (data.content) delete data.content
     mergeObject(this.getStartingData(data.type), data, { overwrite: true })
-    console.log("Updated default data to : ", this._startingData[data.type])
+    delete this._startingData[type].id
   }
 
   /**
@@ -128,7 +127,6 @@ class DrawingsLayer extends PlaceablesLayer {
       event.data.origin = canvas.grid.getSnappedPosition(event.data.origin.x,
         event.data.origin.y);
     }
-    // TODO: Populate with default settings from a singleton sheet/last settings used
     let type = game.activeTool;
     if (type == "shape") {
       if (event.data.originalEvent.ctrlKey)
@@ -161,6 +159,7 @@ class DrawingsLayer extends PlaceablesLayer {
     event.data.createState = 2;
   }
 
+  /* Difference with base class is that we don't need a minimum of half-grid to create the drawing  */
   _onDragCreate(event) {
     this.constructor.placeableClass.create(canvas.scene._id, event.data.object.data);
     this._onDragCancel(event);
@@ -177,7 +176,7 @@ class DrawingsLayer extends PlaceablesLayer {
     if (event.data.createState == 2) {
       let drawing = event.data.object;
 
-      drawing.updateMovePosition(event.data.destination)
+      drawing.updateDragPosition(event.data.destination)
       drawing.refresh();
     }
   }

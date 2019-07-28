@@ -19,12 +19,8 @@ class Drawing extends Tile {
     return this._sheet;
   }
 
-  canChain() {
-    return ["polygon", "freehand"].includes(this.data.type)
-  }
-
   canEdit() {
-    return game.user.isGM || this.owner == game.user.id
+    return game.user.isGM || (game.user.isTrusted && this.owner == game.user.id)
   }
   get type() {
     return this.data.type;
@@ -174,13 +170,14 @@ class Drawing extends Tile {
     return this;
   }
 
-  updateMovePosition(position) {
+  updateDragPosition(position) {
     let type = this.data.type;
 
     console.log("Update move position : ", position)
     if (type == "rectangle" || type == "ellipse") {
       this._updateDimensions(position, { snap: false })
     } else if (type == "freehand") {
+      // FIXME: if straight line, merge points together?
       this.data.points.push([position.x, position.y])
     } else if (type == "polygon") {
       if (this.data.points.length > 1)
