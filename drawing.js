@@ -108,7 +108,7 @@ class DrawingsLayer extends PlaceablesLayer {
     /* -------------------------------------------- */
 
     _getNewDataFromEvent(event) {
-	if ( !event.data.originalEvent.shiftKey ) {
+	if ( !event.data.originalEvent.shiftKey && game.activeTool == "shape") {
 	    event.data.origin = canvas.grid.getSnappedPosition(event.data.origin.x,
 							       event.data.origin.y);
 	}
@@ -122,6 +122,8 @@ class DrawingsLayer extends PlaceablesLayer {
 		data.type = "square"; // rectangle really
 	}
 	mergeObject(data, FakeServer.DrawingDefaultData[data.type], {overwrite: false})
+	if (data.type == "freehand" || data.type == "polygon")
+	    data.points.push([data.x, data.y])
 	return data;
     }
     /* -------------------------------------------- */
@@ -316,6 +318,8 @@ class Drawing extends Tile {
 
 	if (type == "square" || type == "circle") {
 	    this._updateDimensions(position, {snap: false})
+	} else if (type == "freehand") {
+	    this.data.points.push([position.x, position.y])
 	}
     }
     /* -------------------------------------------- */
@@ -334,6 +338,13 @@ class Drawing extends Tile {
 	    let half_height = this.data.height / 2;
 	    let half_stroke = this.data.strokeWidth / 2;
 	    this.img.drawEllipse(half_width, half_height, Math.abs(half_width) - half_stroke, Math.abs(half_height) - half_stroke);
+	} else if (this.data.type == "freehand") {
+	    let ox = this.data.points[0][0];
+	    let oy = this.data.points[0][1];
+	    this.img.moveTo(0, 0)
+	    for (let point of this.data.points) {
+		this.img.lineTo(point[0] - ox, point[1] - oy)
+	    }
 	}
 
 	// Handle Filling data
@@ -349,7 +360,6 @@ class Drawing extends Tile {
 	    }
 	    this.bg.tile.mask = this.addChild(this.img.clone())
 	} else if (this.texture && (this.data.fill == DRAWING_FILL_TYPE.STRETCH || this.data.fill == DRAWING_FILL_TYPE.CONTOUR)) {
-	    console.log("doing it")
             this.bg.tile = this.bg.addChild(new PIXI.Sprite(this.texture));
 	    // Set dimensions
 	    this.bg.tile.width = this.data.width;
@@ -653,14 +663,18 @@ class FakeServer {
 		textureWidth: 0,
 		textureHeight: 0,
 		textureAlpha: 1,
-		points: []
+		points: [],
+		originalWidth: 0,
+		originalHeight: 0
 	    },
 	    freehand: {
 		texture: null,
 		textureWidth: 0,
 		textureHeight: 0,
 		textureAlpha: 1,
-		points: []
+		points: [],
+		originalWidth: 0,
+		originalHeight: 0
 	    }
 	}
     }
