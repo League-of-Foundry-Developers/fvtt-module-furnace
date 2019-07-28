@@ -2,21 +2,37 @@
  * Hey Atropos!
  *
  * This is the main file which has the stuff that doesn't get copied 'mostly as is'.
- * the biggest part being the FakeServer class which just sort of emulates the server side of things
- * as I replaced the call to SocketInterface.trigger by FakeServer.trigger in the DrawingsLayer class.
- * I'm sure you know better on how the server side needs to be done, so I won't say any more.
- * There are a couple of hooks, I'm sure you'll know where to place the code from there into the
- * appropriate place inside the core, and some new config/global vars.
+ * the biggest part being the FakeServer class which just sort of emulates the server
+ *  side of things as I replaced the call to SocketInterface.trigger by FakeServer.trigger
+ * in the DrawingsLayer class.
+ * It was done this way to minimize the impact on the code for the rest of the 
+ * implementation and make it easier to integrate into core.
+ * I'm sure you know better on how the server side needs to be done, so I won't
+ * say any more on that.
+ * There are a couple of hooks here, I'm sure you'll know where to place the code from
+ * there into the appropriate places inside the core, and some new config/global vars.
  * 
- * You'll find in all/most of the files notes in comments prefixed with 'FIXME: module-to-core',
- * those are things that shouldn't be there in the final code and are just hacks
- * to make it work as a module. It's mostly stuff to use the FakeServer instead of SocketInterface
- * or other similar things, you can usually delete the code following the FIXME, unless specified
+ * You'll find in all/most of the files notes in comments prefixed with 
+ * '// FIXME: module-to-core', those are things that shouldn't be there in the final
+ * code and are just hacks to make it work seamlessly as a module. It's mostly stuff to
+ * use the FakeServer instead of SocketInterface or other similar things to make use of the
+ * flags instead of a scene.data.drawings. You can usually delete the code following the FIXME,
+ * unless specified otherwise. There are also some other "FIXME" lines that aren't really needing
+ * of fixes but are there because I want to read that specific comment or that asks a question
+ * about the implementation.
+ * 
+ * My biggest issue might be the "default settings" per drawing, since the sanity checking
+ * has to be done on the server, I'm thinking maybe a temporary object could be created to validate
+ * the config data and stored, otherwise client side needs to keep track of all the default values
+ * and the sanity checking (like having to do Number(data.fill)).
  *
+ * That's about it for the intro. I hope it's fine for you and the code fits your standard.
+ * I tried to stay as close as possible to your coding style and design, but I know that you like
+ * to add the semicolon to every line and I've had a lot of trouble doing that, sorry about that!
+ * 
+ * FIXME: copy/pasted drawings will have proper values in the server but for some reason will all
+ * share the same id, so moving one will move all of them.
  */
-
-// FIXME: All indentations would need to be fixed. emacs seems to think tabs are a good thing
-// and it also uses 4 spaces per tab instead of 2...
 
 const DRAWING_FILL_TYPE = {
   "NONE": 0,
@@ -48,12 +64,15 @@ CONFIG.drawingFillTypes = {
 
 
 class FakeServer {
+  upating = false;
+
   static DrawingDefaultData(type = "all") {
     return {
+      // Special 'all' type which contains default values common to all types
       all: {
         id: 1,
         x: 0,
-        y: 0, // FIXME: tiles have unused 'z', should this also add it?
+        y: 0, // FIXME: tiles have unused 'z', should drawings also have it now?
         width: 0,
         height: 0,
         owner: null,
@@ -90,12 +109,12 @@ class FakeServer {
       },
       polygon: {
         type: "polygon",
-        strokeWidth: 2,
+        strokeWidth: 3,
         points: [],
       },
       freehand: {
         type: "freehand",
-        strokeWidth: 2,
+        strokeWidth: 3,
         points: [],
       }
     }[type]
@@ -107,19 +126,14 @@ class FakeServer {
     return duplicate(drawings)
   }
   static async setDrawings(scene, drawings) {
-    let original = scene.getFlag("furnace", "drawings") || []
     drawings = drawings.map(this.sanityCheck)
     console.log("Updating drawings database for scene ", scene.id, " : ", drawings)
+    this.updating = true
     let ret = await scene.setFlag("furnace", "drawings", drawings)
-    // FIXME: module-to-core: Add 'drawings' as the things to trigger a redraw in scene._onUpdate
-    // In the meantime, only update if a drawing got created or deleted.. issue with updates is that
-    // it makes it hard to move/rotate drawings because the redraw makes you lose the selection.
-    //if (original.length != drawings.length && canvas.scene.id == scene.id) canvas.drawings.draw()
-    // TODO: onupdate check if flags changes.. issue with rotate
-    // TODO: the ghost drawings issue is because of canvasInit, a canvas.draw() causes them maybe ?
+    this.updating = false
     return ret
-
   }
+
   static sanityCheck(data, update = false) {
     if (data.id !== undefined) data.id = Number(data.id)
     if (data.fill !== undefined) {
@@ -130,9 +144,12 @@ class FakeServer {
     /* Float points is unnecessary */
     if (data.points !== undefined)
       data.points = data.points.map(c => [Math.round(c[0]), Math.round(c[1])])
+    for (key in ["x", "y", "width", "height"]) {
+      data["key"] = Math.round(data["key"]);
+    }
+    if (data.owner === undefined)
+      data.owner = game.user.id
     if (!update) {
-      if (!data.owner)
-        data.owner = game.user.id
       /* Sanitize content to have default values. Should do more, like ensure id exists and
        * is unique, type is known, values are not out bounds, etc..
        */
@@ -217,6 +234,17 @@ class FurnaceDrawing {
     canvas.drawings.draw()
   }
 
+  static onUpdateScene(scene, updated) {
+    // FIXME: module-to-core: Add 'drawings' as the things to trigger a redraw in scene._onUpdate
+    // In the meantime, only update if a drawing got created or deleted.. issue with updates is that
+    // it makes it hard to move/rotate drawings because the redraw makes you lose the selection.
+    // We use this.updating to avoid the problem and so redraws happen only if another user is doing
+    // the changes.
+    if (!FakeServer.updating &&
+      updated["flags.furnace.drawings"] !== undefined &&
+      canvas.scene.id == scene.id)
+      canvas.drawings.draw()
+  }
   // FIXME: module-to-core: you know where this goes :)
   static renderSceneControls(obj, html, data) {
     if (obj.controls.drawings == undefined) {
@@ -291,3 +319,4 @@ class FurnaceDrawing {
 
 Hooks.on('canvasInit', FurnaceDrawing.canvasInit);
 Hooks.on('renderSceneControls', FurnaceDrawing.renderSceneControls);
+Hooks.on('updateScene', FurnaceDrawing.onUpdateScene);
