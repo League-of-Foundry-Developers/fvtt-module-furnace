@@ -153,7 +153,9 @@ class Drawing extends Tile {
         cancel: event => this._onDragCancel(event)
       }, {
           candrag: event => !this.data.locked,
-          canright: event => this._controlled
+          canright: event => this._controlled,
+          canclick: event => this._controlled || game.activeTool == "select",
+          canhover: event => this._controlled || game.activeTool == "select"
         });
 
       // Scale handler
