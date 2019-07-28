@@ -120,7 +120,7 @@ class DrawingsLayer extends PlaceablesLayer {
    */
   configureStartingData() {
     // We don't use a singleton because defaults could change between calls.
-    new DrawingConfig(this, undefined, true).render(true);
+    new DrawingDefaultsConfig(this).render(true);
   }
 
   _getNewDataFromEvent(event) {
