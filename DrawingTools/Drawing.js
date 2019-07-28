@@ -193,9 +193,8 @@ class Drawing extends Tile {
     // PIXI.Text doesn't have a `.clear()`
     if (this.img instanceof PIXI.Graphics)
       this.img.clear().lineStyle(this.data.strokeWidth, this.strokeColor, this.data.strokeAlpha)
-    if (this.usesFill) {
+    if (this.usesFill)
       this.img.beginFill(this.fillColor, this.data.fillAlpha);
-    }
     if (this.data.type == "rectangle") {
       this.renderRectangle()
     } else if (this.data.type == "ellipse") {

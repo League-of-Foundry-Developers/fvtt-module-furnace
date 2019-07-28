@@ -120,6 +120,7 @@ class DrawingConfig extends FormApplication {
       // Get the data from the current page, and data saved from the other pages
       this._defaults[formData.type] = formData
       for (let type in this._defaults) {
+        this._defaults[type].fill = Number(this._defaults[type].fill);
         this.object.updateStartingData({ data: this._defaults[type] })
       }
     } else {
