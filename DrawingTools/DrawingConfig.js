@@ -72,8 +72,14 @@ class DrawingConfig extends FormApplication {
     html.find("input[name=fillAlpha]").closest(".form-group")[!showTextOptions ? "show" : "hide"]()
     // FIXME: module-to-core sanity check server side, contour fill isn't valid for text.
     html.find(`option[value=${DRAWING_FILL_TYPE.CONTOUR}]`).attr("disabled", showTextOptions)
+    this.resizeFormWindow(html)
   }
 
+  resizeFormWindow(html) {
+    let div_height = html.filter(".empty-space").outerHeight(true);
+    let app_height = html.closest(".app").height(); 
+    html.closest(".app").height(app_height - div_height);
+  }
 
   reset(ev, html) {
     let type = html.find("select[name=type]").val()
