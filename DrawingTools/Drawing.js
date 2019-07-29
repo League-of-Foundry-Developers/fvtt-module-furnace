@@ -317,7 +317,7 @@ class Drawing extends Tile {
   renderText(sprite) {
     let lineHeight = this.data.height / this.data.content.split("\n").length
     sprite.style = {
-      fontFamily: "Arial",
+      fontFamily: this.data.fontFamily,
       fontSize: this.data.fontSize,
       fill: this.usesFill ? this.data.fillColor : "transparent",
       stroke: this.data.strokeColor,
@@ -326,11 +326,9 @@ class Drawing extends Tile {
       wordWrapWidth: this.data.width,
       lineHeight: this.data.wordWrap ? lineHeight : undefined
     }
-    console.log(this.data.width, this.data.height);
     sprite.alpha = this.data.strokeAlpha;
     sprite.text = this.data.content;
     this._handleUnshapedBounds(sprite)
-    console.log(this.data.width, this.data.height, sprite.scale);
   }
 
   _handlePolygonBounds(graphics) {

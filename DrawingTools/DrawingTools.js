@@ -60,6 +60,15 @@ CONFIG.drawingFillTypes = {
   4: "Contour Texture"
 }
 
+CONFIG.WebSafeFonts = {
+  "Arial": "Arial, Helvetica, sans-serif",
+  "Arial Black": '"Arial Black", Gadget, sans-serif',
+  "Times New Roman": '"Times New Roman", Times, serif',
+  "Comic Sans MS": '"Commic Sans MS", cursive, sans-serif',
+  "Courier New": '"Courier New", Courier, monospace',
+  // FIXME: There are more, but do we want to show all of the available options??
+}
+
 
 class FakeServer {
   upating = false;

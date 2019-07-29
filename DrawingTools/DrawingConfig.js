@@ -26,13 +26,18 @@ class DrawingConfig extends FormApplication {
    * @return {Object}
    */
   getData() {
+    let availableFonts = {}
+    for (let font of FONTS._loaded)
+      availableFonts[font] = font;
+    for (let font in CONFIG.WebSafeFonts)
+      availableFonts[CONFIG.WebSafeFonts[font]] = font;
     return {
       object: duplicate(this.object.data),
       enableTypeSelection: false,
       options: this.options,
       drawingTypes: CONFIG.drawingTypes,
       fillTypes: CONFIG.drawingFillTypes,
-      availableFonts: FONTS._loaded,
+      availableFonts: availableFonts,
       submitText: this.preview ? "Create" : "Update"
     }
   }
@@ -77,7 +82,7 @@ class DrawingConfig extends FormApplication {
 
   resizeFormWindow(html) {
     let div_height = html.filter(".empty-space").outerHeight(true);
-    let app_height = html.closest(".app").height(); 
+    let app_height = html.closest(".app").height();
     html.closest(".app").height(app_height - div_height);
   }
 
@@ -111,7 +116,6 @@ class DrawingConfig extends FormApplication {
     // FIXME: not sure what happens to the sheet in that case? would the object itself become
     // invalid or would it still work anyway?
     await this.object.draw();
-    console.log("refresh ", this.object.data.fill, realData.fill)
     this.object.data = realData;
   }
 
