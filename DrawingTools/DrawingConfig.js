@@ -32,7 +32,8 @@ class DrawingConfig extends FormApplication {
       options: this.options,
       drawingTypes: CONFIG.drawingTypes,
       fillTypes: CONFIG.drawingFillTypes,
-      submitText: this.options.preview ? "Create" : "Update"
+      availableFonts: FONTS._loaded,
+      submitText: this.preview ? "Create" : "Update"
     }
   }
 
@@ -41,18 +42,24 @@ class DrawingConfig extends FormApplication {
     super.activateListeners(html);
     html.find("select[name=fill]").change((ev) => this.updateFields(html))
     html.find("button[name=reset]").click((ev) => this.reset(ev, html))
-    html.find("input").change((ev) => this.refresh(html))
+    html.find("input,textarea,select").change((ev) => this.refresh(html))
     this.updateFields(html)
   }
 
   updateFields(html) {
+    // Get fill/drawing type. Use html because of the DrawingDefaultsConfig subclass.
     let fillType = Number(html.find("select[name=fill]").val())
+    let drawingType = html.find("select[name=type]").val()
+    // Determine what options are to be available and which aren't
     let enableFillOptions = (fillType != DRAWING_FILL_TYPE.NONE &&
       fillType != DRAWING_FILL_TYPE.CONTOUR)
     let enableTextureOptions = (fillType == DRAWING_FILL_TYPE.PATTERN ||
       fillType == DRAWING_FILL_TYPE.STRETCH ||
       fillType == DRAWING_FILL_TYPE.CONTOUR)
     let enableTextureSizeOptions = (fillType == DRAWING_FILL_TYPE.PATTERN)
+    let showTextOptions = drawingType == "text";
+
+    // Enable/Disable various options by setting their opacity and pointer-events.
     let enable = { "pointer-events": "unset", "opacity": 1.0 };
     let disable = { "pointer-events": "none", "opacity": 0.5 };
     html.find("input[name=fillColor],input[name=fillAlpha]")
@@ -60,8 +67,13 @@ class DrawingConfig extends FormApplication {
     html.find(".fill-section .notes,.texture-section").css(enableTextureOptions ? enable : disable)
     html.find("input[name=textureWidth],input[name=textureHeight]")
       .closest(".form-group").css(enableTextureSizeOptions ? enable : disable)
-    this.refresh(html)
+    // Show/hide text options and fillAlpha
+    html.find(".text-section")[showTextOptions ? "show" : "hide"]()
+    html.find("input[name=fillAlpha]").closest(".form-group")[!showTextOptions ? "show" : "hide"]()
+    // FIXME: module-to-core sanity check server side, contour fill isn't valid for text.
+    html.find(`option[value=${DRAWING_FILL_TYPE.CONTOUR}]`).attr("disabled", showTextOptions)
   }
+
 
   reset(ev, html) {
     let type = html.find("select[name=type]").val()
@@ -77,18 +89,24 @@ class DrawingConfig extends FormApplication {
     this.refresh(html)
   }
 
-  refresh(html) {
-    
-    let oldData = this.object.data;
+  async refresh(html) {
+
+    let realData = this.object.data;
 
     if (html) {
       // Temporarily change the object's data in order to preview changes
       let newData = validateForm(html[0]);
       // Add missing items like 'type' from disabled field.
-      this.object.data = mergeObject(newData, oldData, { overwrite: false });
+      this.object.data = mergeObject(newData, realData, { overwrite: false });
     }
-    this.object.refresh();
-    this.object.data = oldData;
+    // We actually call draw here and not refresh in case we changed the texture but also
+    // because if we get a full redraw due to another user creating their own drawings,
+    // then the refresh will fail because the object's PIXI elements will have been destroyed.
+    // FIXME: not sure what happens to the sheet in that case? would the object itself become
+    // invalid or would it still work anyway?
+    await this.object.draw();
+    console.log("refresh ", this.object.data.fill, realData.fill)
+    this.object.data = realData;
   }
 
   /* -------------------------------------------- */
@@ -105,8 +123,14 @@ class DrawingConfig extends FormApplication {
       formData["id"] = this.object.id;
       this.object.update(canvas.scene._id, formData)
         .then(() => this.object.layer.updateStartingData(this.object))
+    } else {
+      // Creating a new object will need to have things that aren't in the form
+      //such as 'type' which is disabled and therefore automatically skipped from the data.
+      mergeObject(this.object.data, formData);
+      // Refreshing will cause sizes to be recalculated first
+      this.object.refresh();
+      this.object.constructor.create(canvas.scene._id, this.object.data);
     }
-    else this.object.constructor.create(canvas.scene._id, formData);
   }
 
   /* -------------------------------------------- */

@@ -61,8 +61,6 @@ CONFIG.drawingFillTypes = {
 }
 
 
-
-
 class FakeServer {
   upating = false;
 

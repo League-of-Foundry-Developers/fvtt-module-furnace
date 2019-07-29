@@ -37,9 +37,36 @@
         <label for="rotation">Rotation <span class="units">(degrees)</span></label>
         <input type="text" name="rotation" value="{{object.rotation}}" data-dtype="Number"/>
     </div>
-    <hr>
 
+    <div class="text-section">
+      <hr>
+
+      <div class="form-group">
+          <label>Font</label>
+          <select name="fontFamily" data-dtype="String">
+              {{#select object.fontFamily}}
+              {{#each availableFonts as |font f|}}
+              <option value="{{f}}">{{font}}</option>
+              {{/each}}
+              {{/select}}
+          </select>
+      </div>
+      <div class="form-group">
+        <label for="fontSize">Font Size </label>
+        <input type="text" name="fontSize" value="{{object.fontSize}}" data-dtype="Number"/>
+      </div>
+      <div class="form-group">
+          <label>Wrap text</label>
+          <input type="checkbox" name="wordWrap" data-dtype="Boolean" {{checked object.wordWrap}}/>
+      </div>
+      <div class="form-group">
+          <label>Text Content</label>
+          <textarea name="content" data-dtype="String">{{object.content}}</textarea>
+      </div>
+  
+    </div>
     <div class="stroke-section">
+      <hr>
       <div class="form-group">
         <label for="strokeWidth">Stroke Width <span class="units">(pixels)</span></label>
         <input type="text" name="strokeWidth" value="{{object.strokeWidth}}" data-dtype="Number"/>

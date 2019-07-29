@@ -161,7 +161,6 @@ class DrawingsLayer extends PlaceablesLayer {
    */
   _onDragStart(event) {
     super._onDragStart(event);
-    if (game.activeTool == "clear") return;
     let data = this._getNewDataFromEvent(event);
     let drawing = new Drawing(data);
     drawing.draw();
@@ -173,8 +172,20 @@ class DrawingsLayer extends PlaceablesLayer {
   /* Difference with base class is that we don't need a minimum of half-grid to create the drawing  */
   _onDragCreate(event) {
     // A single click could create 
-    this.constructor.placeableClass.create(canvas.scene._id, event.data.object.data);
+    let object = event.data.object;
     this._onDragCancel(event);
+    // Text objects create their sheets for users to enter the text, otherwise create the drawing
+    if (object.data.type == "text") {
+      // Render the preview sheet
+      object.sheet.preview = this.preview;
+      object.sheet.render(true);
+
+      // Re-render the preview text
+      this.preview.addChild(object);
+      object.refresh();
+    } else {
+      this.constructor.placeableClass.create(canvas.scene._id, object.data);
+    }
   }
 
   /* -------------------------------------------- */
