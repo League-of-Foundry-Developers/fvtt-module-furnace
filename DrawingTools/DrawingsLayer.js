@@ -46,22 +46,33 @@ class DrawingsLayer extends PlaceablesLayer {
   }
 
   // FIXME: module-to-core : use of FakeServer.setDrawings instead of canvas.scene.update()
-  // Can be removed entirely in core
+  // The other reason for not just deleting this is that a trusted player could delete all drawings
+  // that he owns, but not others.
+  // This would need to be checked by the server I guess ?
   deleteAll() {
     const cls = this.constructor.placeableClass;
+    let title = "Clear All Drawings"
+    let content = `<p>Clear all Drawings from this Scene?</p>`
+    let new_drawings = []
     if (!game.user.isGM) {
-      throw new Error(`You do not have permission to delete ${cls.name} placeables from the Scene.`);
+      if (game.user.isTrusted) {
+        title = "Clear Your Drawings"
+        content = `<p>Clear your Drawings from this Scene?</p>`
+        new_drawings = FakeServer.getDrawings(canvas.scene).filter(d => d.owner !== game.user.id)
+      } else {
+        throw new Error(`You do not have permission to delete ${cls.name} placeables from the Scene.`);
+      }
     }
     let layer = this;
     new Dialog({
-      title: "Clear All Objects",
-      content: `<p>Clear all ${cls.name} objects from this Scene?</p>`,
+      title: title,
+      content: content,
       buttons: {
         yes: {
           icon: '<i class="fas fa-trash"></i>',
           label: "Yes",
           // FIXME: module-to-core: Add 'drawings' as the things to trigger a redraw in _onUpdate
-          callback: () => FakeServer.setDrawings(canvas.scene, []).then(canvas.drawings.draw.bind(this))
+          callback: () => FakeServer.setDrawings(canvas.scene, new_drawings).then(canvas.drawings.draw.bind(this))
         },
         no: {
           icon: '<i class="fas fa-times"></i>',

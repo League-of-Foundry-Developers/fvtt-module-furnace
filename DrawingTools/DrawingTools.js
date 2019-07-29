@@ -120,6 +120,26 @@ class FakeServer {
     }[type]
   }
 
+  static updateFlag(scene, drawings) {
+    console.log('updating flags');
+    return scene.setFlag("furnace", "drawings", drawings)
+  }
+
+  static onMessage(data) {
+    // FIXME: module-to-core: This is just to bypass the restriction on non-GM users from
+    // modifying the scene. This would go away in the core, but you'll need to make trusted users
+    // able to modify the scene.drawings data.
+    // Some people in #vtt-modules requested the ability to allow individual users the ability to edit,
+    // I don't know if "set/remove them as trusted" is the right answer here, but if you want to add
+    // a flag for drawing tools or a more complicated system for permissions on individual features
+    // then that needs to be done separately. Maybe create it as an issue for future releases.data => {
+    console.log("Got message : ", data)
+    if (data.updateFlags === true && game.user.isGM && data.target == game.user.id) {
+      let scene = game.scenes.get(data.scene);
+      return FakeServer.updateFlag(scene, data.drawings);
+    }
+  }
+
   static getDrawings(scene) {
     let drawings = scene.getFlag("furnace", "drawings") || []
     console.log("Get drawings for scene ", scene.id, " : ", drawings)
@@ -129,7 +149,29 @@ class FakeServer {
     drawings = drawings.map(this.sanityCheck)
     console.log("Updating drawings database for scene ", scene.id, " : ", drawings)
     this.updating = true
-    let ret = await scene.setFlag("furnace", "drawings", drawings)
+    let ret = null;
+    if (game.user.isGM) {
+      ret = await this.updateFlag(scene, drawings);
+    } else {
+      // Only ask the first GM to update drawings to avoid race conditions in case more
+      // than one with GM permissions are online at the same time.
+      let target = game.users.entities.find(u => u.active && u.isGM);
+      if (target) {
+        let socketData = {
+          updateFlags: true,
+          scene: scene.id,
+          target: target.id,
+          drawings: drawings
+        }
+        let promise = new Promise((resolver) => this.update_promise_resolver = resolver);
+        game.socket.emit('module.furnace', socketData);
+        ret = await promise;
+        this.update_promise_resolver = null;
+      } else {
+        ui.notifications.error("No GM is currently active. Drawings cannot be updated.")
+        throw new Error("Cannot update drawings with no GM present");
+      }
+    }
     this.updating = false
     return ret
   }
@@ -144,10 +186,10 @@ class FakeServer {
     /* Float points is unnecessary */
     if (data.points !== undefined)
       data.points = data.points.map(c => [Math.round(c[0]), Math.round(c[1])])
-    for (key in ["x", "y", "width", "height"]) {
+    for (let key in ["x", "y", "width", "height"]) {
       data["key"] = Math.round(data["key"]);
     }
-    if (data.owner === undefined)
+    if (!data.owner)
       data.owner = game.user.id
     if (!update) {
       /* Sanitize content to have default values. Should do more, like ensure id exists and
@@ -234,16 +276,24 @@ class FurnaceDrawing {
     canvas.drawings.draw()
   }
 
+  static onReady() {
+    game.socket.on('module.furnace', FakeServer.onMessage);
+  }
+
   static onUpdateScene(scene, updated) {
     // FIXME: module-to-core: Add 'drawings' as the things to trigger a redraw in scene._onUpdate
     // In the meantime, only update if a drawing got created or deleted.. issue with updates is that
     // it makes it hard to move/rotate drawings because the redraw makes you lose the selection.
     // We use this.updating to avoid the problem and so redraws happen only if another user is doing
     // the changes.
-    if (!FakeServer.updating &&
-      updated["flags.furnace.drawings"] !== undefined &&
-      canvas.scene.id == scene.id)
-      canvas.drawings.draw()
+    
+    if (updated["flags.furnace.drawings"] !== undefined && canvas.scene.id == scene.id) {
+      if (!FakeServer.updating)
+        canvas.drawings.draw()
+      else if (FakeServer.update_promise_resolver)
+        FakeServer.update_promise_resolver(updated["flags.furnace.drawings"]);
+    }
+        
   }
   // FIXME: module-to-core: you know where this goes :)
   static renderSceneControls(obj, html, data) {
@@ -323,3 +373,4 @@ class FurnaceDrawing {
 Hooks.on('canvasInit', FurnaceDrawing.canvasInit);
 Hooks.on('renderSceneControls', FurnaceDrawing.renderSceneControls);
 Hooks.on('updateScene', FurnaceDrawing.onUpdateScene);
+Hooks.on('ready', FurnaceDrawing.onReady);

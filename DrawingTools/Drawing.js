@@ -12,7 +12,7 @@ class Drawing extends Tile {
 
   /**
    * Provide a singleton reference to the DrawingConfig sheet for this Drawing instance
-   * @type {TileConfig}
+   * @type {DrawingConfig}
    */
   get sheet() {
     if (!this._sheet) this._sheet = new DrawingConfig(this);
