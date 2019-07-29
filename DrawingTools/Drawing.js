@@ -297,18 +297,22 @@ class Drawing extends Tile {
     let point = this.data.points[0]
     let ox = point[0];
     let oy = point[1];
+    // an arc with radius 0 makes it not draw anything. so we put radius of 0.1 and let the strokeWidth do our circle
+    graphics.moveTo(0.1, 0)
+    graphics.arc(0, 0, 0.1, 0, Math.PI * 2)
     graphics.moveTo(0, 0)
-    // FIXME: why the strokeWidth / 4? in theory the width is in pixels, so half of it
-    // means the radius of the 
-    graphics.arc(0, 0, this.data.strokeWidth /4, 0, Math.PI * 2)
 
     for (let i = 1; i < this.data.points.length; i++) {
-      //for (let point of this.data.points) {
       point = this.data.points[i];
       graphics.lineTo(point[0] - ox, point[1] - oy)
-      //this.img.arc(point[0] - ox, point[1] - oy, this.data.strokeWidth /2, 0, Math.PI * 2)
+      // FIXME: Doing an arc on each point might not be a good idea in terms of performance.
+      // but it helps makes things look smoother.
+      graphics.moveTo(point[0] - ox + 0.1, point[1] - oy)
+      this.img.arc(point[0] - ox, point[1] - oy, 0.1, 0, Math.PI * 2)
+      graphics.moveTo(point[0] - ox, point[1] - oy)
     }
-    graphics.arc(point[0] - ox, point[1] - oy, this.data.strokeWidth / 4, 0, Math.PI * 2)
+    graphics.moveTo(point[0] - ox + 0.1, point[1] - oy)
+    graphics.arc(point[0] - ox, point[1] - oy, 0.1, 0, Math.PI * 2)
     this._handlePolygonBounds(graphics)
   }
   renderPolygon(graphics) {
