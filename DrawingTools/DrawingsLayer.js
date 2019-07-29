@@ -100,6 +100,7 @@ class DrawingsLayer extends PlaceablesLayer {
   getStartingData(type) {
     if (this._startingData[type] === undefined)
       this._startingData[type] = this.getDefaultData(type);
+    delete this._startingData[type].id
     return this._startingData[type]
   }
   getDefaultData(type) {
@@ -121,7 +122,6 @@ class DrawingsLayer extends PlaceablesLayer {
     if (data.points) delete data.points
     if (data.content) delete data.content
     mergeObject(this.getStartingData(data.type), data, { overwrite: true })
-    delete this._startingData[type].id
   }
 
   /**
