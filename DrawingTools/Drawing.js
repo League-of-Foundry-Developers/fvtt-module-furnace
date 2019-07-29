@@ -1,6 +1,7 @@
-// FIXME: keep as is or copy paste the functions?
+
 // Derive from Tile so we don't need to copy/paste all the scale-handle/rotate/dimension/control
 // functions here as they would be mostly the same.
+// FIXME: keep as is or derive from PlaceableObject and copy/paste the functions we need?
 class Drawing extends Tile {
   /**
    * Provide a reference to the canvas layer which contains placeable objects of this type
@@ -101,6 +102,9 @@ class Drawing extends Tile {
     this.clear();
     // Create child elements
     this.texture = null;
+    this.bg = null;
+
+    // Try to load the texture if one is set
     if (this.usesTexture) {
       try {
         this.texture = await loadTexture(this.data.texture);
@@ -111,20 +115,22 @@ class Drawing extends Tile {
           source.muted = true;
           source.play();
         }
+
+        if (this.texture) {
+          let sprite = null
+          if (this.data.fill == DRAWING_FILL_TYPE.PATTERN)
+            sprite = new PIXI.extras.TilingSprite(this.texture)
+          else if (this.data.fill == DRAWING_FILL_TYPE.STRETCH || this.data.fill == DRAWING_FILL_TYPE.CONTOUR)
+            sprite = new PIXI.Sprite(this.texture);
+          else
+            throw new Error("Should not happen") // FIXME: only seen this happen when data isn't sanitized
+          this.bg = this.addChild(new PIXI.Container());
+          this.bg.tile = this.bg.addChild(sprite)
+        }
       } catch {
         this.texture = null;
+        this.bg = null;
       }
-    }
-    if (this.texture) {
-      this.bg = this.addChild(new PIXI.Container());
-      let sprite = null
-      if (this.data.fill == DRAWING_FILL_TYPE.PATTERN)
-        sprite = new PIXI.extras.TilingSprite(this.texture)
-      else if (this.data.fill == DRAWING_FILL_TYPE.STRETCH || this.data.fill == DRAWING_FILL_TYPE.CONTOUR)
-        sprite = new PIXI.Sprite(this.texture);
-      this.bg.tile = this.bg.addChild(sprite)
-    } else {
-      this.bg = null
     }
 
     if (this.data.type == "text")
@@ -137,7 +143,7 @@ class Drawing extends Tile {
     // Render the Tile appearance
     this.refresh();
 
-    // Enable interaction - only if the Tile has an ID
+    // Enable interaction - only if the Drawing has an ID (not a preview)
     if (this.id) {
       this.interactive = true;
 
@@ -177,7 +183,6 @@ class Drawing extends Tile {
   updateDragPosition(position) {
     let type = this.data.type;
 
-    console.log("Update move position : ", position)
     if (type == "rectangle" || type == "ellipse") {
       this._updateDimensions(position, { snap: false })
     } else if (type == "freehand") {

@@ -121,8 +121,12 @@ class FakeServer {
   }
 
   static updateFlag(scene, drawings) {
-    console.log('updating flags');
-    return scene.setFlag("furnace", "drawings", drawings)
+    let promise = scene.setFlag("furnace", "drawings", drawings)
+    // FIXME: module-to-core: problem here is if we delete multiple drawings at the same time,
+    // we'll keep updating the list of drawings with the same original size and only one gets delete
+    // by the time the server responds to all the requests. This shouldn't be necessary in the actual server
+    scene.data.flags.furnace = { drawings: duplicate(drawings) };
+    return promise;
   }
 
   static onMessage(data) {
@@ -186,8 +190,8 @@ class FakeServer {
     /* Float points is unnecessary */
     if (data.points !== undefined)
       data.points = data.points.map(c => [Math.round(c[0]), Math.round(c[1])])
-    for (let key in ["x", "y", "width", "height"]) {
-      data[key] = Math.round(data[key]);
+    for (let key of ["x", "y", "width", "height"]) {
+      if (data[key]) data[key] = Math.round(data[key]);
     }
     if (!data.owner)
       data.owner = game.user.id

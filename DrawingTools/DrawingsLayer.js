@@ -172,6 +172,7 @@ class DrawingsLayer extends PlaceablesLayer {
 
   /* Difference with base class is that we don't need a minimum of half-grid to create the drawing  */
   _onDragCreate(event) {
+    // A single click could create 
     this.constructor.placeableClass.create(canvas.scene._id, event.data.object.data);
     this._onDragCancel(event);
   }
