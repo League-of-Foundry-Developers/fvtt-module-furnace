@@ -41,6 +41,7 @@ class DrawingConfig extends FormApplication {
     super.activateListeners(html);
     html.find("select[name=fill]").change((ev) => this.updateFields(html))
     html.find("button[name=reset]").click((ev) => this.reset(ev, html))
+    html.find("input").change((ev) => this.refresh(html))
     this.updateFields(html)
   }
 
@@ -59,6 +60,7 @@ class DrawingConfig extends FormApplication {
     html.find(".fill-section .notes,.texture-section").css(enableTextureOptions ? enable : disable)
     html.find("input[name=textureWidth],input[name=textureHeight]")
       .closest(".form-group").css(enableTextureSizeOptions ? enable : disable)
+    this.refresh(html)
   }
 
   reset(ev, html) {
@@ -72,7 +74,21 @@ class DrawingConfig extends FormApplication {
     }
     html.find("select[name=fill]").val(defaults["fill"])
     this.updateFields(html)
+    this.refresh(html)
+  }
 
+  refresh(html) {
+    
+    let oldData = this.object.data;
+
+    if (html) {
+      // Temporarily change the object's data in order to preview changes
+      let newData = validateForm(html[0]);
+      // Add missing items like 'type' from disabled field.
+      this.object.data = mergeObject(newData, oldData, { overwrite: false });
+    }
+    this.object.refresh();
+    this.object.data = oldData;
   }
 
   /* -------------------------------------------- */
@@ -104,6 +120,8 @@ class DrawingConfig extends FormApplication {
       this.preview.removeChildren();
       this.preview = null;
     }
+    // Refresh in case we changed anything
+    this.refresh();
   }
 }
 
@@ -162,6 +180,10 @@ class DrawingDefaultsConfig extends DrawingConfig {
     // Re-render the sheet with the new type data
     this.render(true);
   }
+
+  refresh() {
+    // We don't need to refresh anything in this case.
+  }
   /* -------------------------------------------- */
 
   /**
@@ -174,7 +196,6 @@ class DrawingDefaultsConfig extends DrawingConfig {
     // Get the data from the current page, and data saved from the other pages
     this._defaults[formData.type] = formData
     for (let type in this._defaults) {
-      this._defaults[type].fill = Number(this._defaults[type].fill);
       this.object.updateStartingData({ data: this._defaults[type] })
     }
   }

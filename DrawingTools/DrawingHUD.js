@@ -11,7 +11,10 @@ class DrawingHUD extends BasePlaceableHUD {
   static get defaultOptions() {
     return mergeObject(super.defaultOptions, {
       // FIXME: module-to-core need to replace tile-hud because I can't add
-      // a different id to the template.
+      // a different id to the template, so I'm just re-using this one...
+      // Actually, we could have both a token and a tile HUD open at the same time
+      // maybe it's better to just have a single <template id=hud> and have all
+      // the huds replacing that one ?
       id: "tile-hud",
       template: "public/modules/furnace/templates/drawing-hud.html"
     });
