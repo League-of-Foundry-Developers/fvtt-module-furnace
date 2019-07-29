@@ -382,6 +382,17 @@ class Drawing extends Tile {
   /*  Event Handlers                              */
   /* -------------------------------------------- */
 
+  /**
+   * Default handling for Placeable mouse-over hover event
+   * @private
+   * 
+   * _onMouseOver could be called if pressing Alt. Don't highlight Drawings we don't own
+   * 
+   */
+  _onMouseOver(event) {
+    if (this.owner)
+      super._onMouseOver(event);
+  }
 
   /**
    * Handle click event on a hovered tile
