@@ -297,7 +297,10 @@ class Drawing extends Tile {
     let point = this.data.points[0]
     let ox = point[0];
     let oy = point[1];
+
     // an arc with radius 0 makes it not draw anything. so we put radius of 0.1 and let the strokeWidth do our circle
+    // We also need to move to the angle 0 of the arc otherwise we'd cause a small line from 0, 0 to 0.1, 0 which can
+    // have huge effects visually if the stroke width is large enough.
     graphics.moveTo(0.1, 0)
     graphics.arc(0, 0, 0.1, 0, Math.PI * 2)
     graphics.moveTo(0, 0)
@@ -307,9 +310,10 @@ class Drawing extends Tile {
       graphics.lineTo(point[0] - ox, point[1] - oy)
       // FIXME: Doing an arc on each point might not be a good idea in terms of performance.
       // but it helps makes things look smoother.
-      graphics.moveTo(point[0] - ox + 0.1, point[1] - oy)
-      this.img.arc(point[0] - ox, point[1] - oy, 0.1, 0, Math.PI * 2)
-      graphics.moveTo(point[0] - ox, point[1] - oy)
+      //graphics.moveTo(point[0] - ox + 0.1, point[1] - oy)
+      // Adding arcs here causes filling to stop working.
+      //this.img.arc(point[0] - ox, point[1] - oy, 0.1, 0, Math.PI * 2)
+      //graphics.moveTo(point[0] - ox, point[1] - oy)
     }
     graphics.moveTo(point[0] - ox + 0.1, point[1] - oy)
     graphics.arc(point[0] - ox, point[1] - oy, 0.1, 0, Math.PI * 2)
