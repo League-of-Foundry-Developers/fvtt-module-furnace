@@ -84,7 +84,7 @@ class DrawingConfig extends FormApplication {
    * @private
    */
   _updateObject(event, formData) {
-    if (!this.object.canEdit()) throw "You do not have the ability to configure a Drawing object.";
+    if (!this.object.owner) throw "You do not have the ability to configure a Drawing object.";
     if (this.object.id) {
       formData["id"] = this.object.id;
       this.object.update(canvas.scene._id, formData)

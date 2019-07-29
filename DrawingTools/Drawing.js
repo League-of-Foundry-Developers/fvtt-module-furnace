@@ -19,8 +19,12 @@ class Drawing extends Tile {
     return this._sheet;
   }
 
-  canEdit() {
-    return game.user.isGM || (game.user.isTrusted && this.owner == game.user.id)
+  /**
+   * A Boolean flag for whether the current game User has permission to control this token
+   * @type {Boolean}
+   */
+  get owner() {
+    return game.user.isGM || (game.user.isTrusted && this.data.owner == game.user.id)
   }
   get type() {
     return this.data.type;
@@ -150,8 +154,8 @@ class Drawing extends Tile {
       }, {
           candrag: event => !this.data.locked,
           canright: event => this._controlled,
-          canclick: event => this._controlled || game.activeTool == "select",
-          canhover: event => this._controlled || game.activeTool == "select"
+          canclick: event => this._controlled || (this.owner && game.activeTool == "select"),
+          canhover: event => this._controlled || (this.owner && game.activeTool == "select")
         });
 
       // Scale handler

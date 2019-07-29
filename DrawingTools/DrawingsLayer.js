@@ -202,7 +202,7 @@ class DrawingsLayer extends PlaceablesLayer {
    */
   _onDeleteKey(event) {
     if (!game.user.isTrusted) throw new Error("You may not delete drawings!");
-    this.placeables.filter(d => d._controlled && d.canEdit())
+    this.placeables.filter(d => d._controlled && d.owner)
       .forEach(t => t.delete(canvas.scene._id));
   }
 }

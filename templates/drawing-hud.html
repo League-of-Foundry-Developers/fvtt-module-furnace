@@ -1,7 +1,6 @@
 <form id="{{id}}" class="{{classes}}" data-appid="{{appId}}" autocomplete="off">
 
     <div class="col left">
-        {{#if canEdit}}
         <div class="control-icon stroke">
             <label for="strokeColor"><i class="far fa-square" style="color: {{strokeColor}};"></i></label>
             <input id="strokeColor" type="color" name="strokeColor" value="{{strokeColor}}" data-dtype="String" hidden/>
@@ -13,14 +12,12 @@
         <div class="control-icon config">
             <i class="fas fa-cog"></i>
         </div> 
-        {{/if}} 
     </div>
 
     <div class="col middle">
     </div>
 
     <div class="col right">
-        {{#if canEdit}}
         <div class="control-icon visibility {{visibilityClass}}">
             <img src="{{visibilityControlIcon}}" width="36" height="36" title="Toggle Visibility"/>
         </div>
@@ -28,6 +25,5 @@
         <div class="control-icon locked {{lockedClass}}">
             <img src="{{lockedControlIcon}}" width="36" height="36" title="Tile Lock"/>
         </div>
-        {{/if}}
     </div>
 </form>

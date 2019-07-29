@@ -187,7 +187,7 @@ class FakeServer {
     if (data.points !== undefined)
       data.points = data.points.map(c => [Math.round(c[0]), Math.round(c[1])])
     for (let key in ["x", "y", "width", "height"]) {
-      data["key"] = Math.round(data["key"]);
+      data[key] = Math.round(data[key]);
     }
     if (!data.owner)
       data.owner = game.user.id

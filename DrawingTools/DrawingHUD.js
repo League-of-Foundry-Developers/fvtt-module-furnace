@@ -28,8 +28,7 @@ class DrawingHUD extends BasePlaceableHUD {
     mergeObject(data, CONFIG.Drawing, { inplace: true });
     return mergeObject(data, {
       lockedClass: data.locked ? "active" : "",
-      visibilityClass: data.hidden ? "active" : "",
-      canEdit: this.object.canEdit()
+      visibilityClass: data.hidden ? "active" : ""
     });
   }
 
