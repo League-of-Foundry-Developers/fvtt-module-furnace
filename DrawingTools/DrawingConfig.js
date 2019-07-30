@@ -232,6 +232,14 @@ class DrawingDefaultsConfig extends DrawingConfig {
     for (let type in this._defaults) {
       this.object.updateStartingData({ data: this._defaults[type] })
     }
+    // Set the tool to the last configured type.
+    let tool = formData.type;
+    if (tool == "rectangle")
+      tool = "shape";
+    else if (tool == "ellipse")
+      tool = "shape";
+    ui.controls.controls[ui.controls.activeControl].activeTool = tool;
+    ui.controls.render();
   }
 
 }
