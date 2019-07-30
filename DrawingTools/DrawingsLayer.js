@@ -118,7 +118,7 @@ class DrawingsLayer extends PlaceablesLayer {
 
   updateStartingData(drawing) {
     let data = duplicate(drawing.data)
-    mergeObject(data, { id: 1, x: 0, y: 0, width: 0, height: 0, owner: null, rotation: 0}, { overwrite: true })
+    mergeObject(data, { id: 1, x: 0, y: 0, width: 0, height: 0, owner: null, rotation: 0 }, { overwrite: true })
     if (data.points) delete data.points
     if (data.content) delete data.content
     mergeObject(this.getStartingData(data.type), data, { overwrite: true })
@@ -133,22 +133,27 @@ class DrawingsLayer extends PlaceablesLayer {
     new DrawingDefaultsConfig(this).render(true);
   }
 
-  _getNewDataFromEvent(event) {
+  getPosition(event, point) {
     // Snap to grid by default only for shapes
     // FIXME: maybe for polygons too? would make sense but having to press shift
     // constantly for non snapping could be annoying.
-    if (!event.data.originalEvent.shiftKey && game.activeTool == "shape") {
-      event.data.origin = canvas.grid.getSnappedPosition(event.data.origin.x,
-        event.data.origin.y);
+    let position = duplicate(point)
+    if (!event.data.originalEvent.shiftKey && ["shape", "polygon"].includes(game.activeTool)) {
+      position = canvas.grid.getSnappedPosition(position.x, position.y);
     }
+    return position;
+  }
+
+  _getNewDataFromEvent(event) {
     let type = game.activeTool;
+    let origin = this.getPosition(event, event.data.origin)
     if (type == "shape") {
       if (event.data.originalEvent.ctrlKey)
         type = "ellipse";
       else
         type = "rectangle";
     }
-    let data = mergeObject(this.getStartingData(type), event.data.origin, { inplace: false })
+    let data = mergeObject(this.getStartingData(type), origin, { inplace: false })
     if (type == "freehand" || type == "polygon")
       data.points.push([data.x, data.y])
 
@@ -157,6 +162,34 @@ class DrawingsLayer extends PlaceablesLayer {
   /* -------------------------------------------- */
   /*  Event Listeners and Handlers                */
   /* -------------------------------------------- */
+
+  /**
+   * Sequence of events : 
+   * Normal operation : 
+   * _onMouseDown --> (createState == 0)
+   *   --> _onDragStart --> createState = 1 --> if (type == text --> createState = 2)
+   * _onMouseMove --> createState = 2
+   * _onMouseUp --> (createState == 2)
+   *   --> _onDragCreate
+   *        --> Drawing.create
+   *        --> _onDragCancel --> createState = 0
+   * 
+   * Simple click, no move (non polygon)
+   * _onMouseDown --> (createState == 0)
+   *   --> _onDragStart --> createState = 1 --> (type == text --> createState = 2)
+   * _onMouseUp --> (createState == 1) --> (type != polygon)
+   *   --> _onDragCancel --> createState = 0
+   * 
+   * Simple click, (polygon) followed by move
+   * _onMouseDown --> (createState == 0)
+   *   --> _onDragStart --> createState = 1 --> (type == text --> createState = 2)
+   * _onMouseUp --> (createState == 1) --> (type == polygon)
+   * _onMouseMove --> createState = 2
+   * _onMouseDown --> (createState >= 1) --> (type == polygon)
+   *   --> object.addPolygonPoint --> createState = 1
+   *  == return to state @ line 3 == 
+   *
+   */
 
   /**
    * Default handling of drag start events by left click + dragging
@@ -169,7 +202,10 @@ class DrawingsLayer extends PlaceablesLayer {
     drawing.draw();
     drawing._controlled = true;
     event.data.object = this.preview.addChild(drawing);
-    event.data.createState = 1;
+    // You can place a text by simply clicking, no need to drag it first.
+    if (drawing.type == "text")
+      event.data.createState = 2;
+    event.data.createTime = Date.now();
   }
 
   /* Difference with base class is that we don't need a minimum of half-grid to create the drawing  */
@@ -186,13 +222,31 @@ class DrawingsLayer extends PlaceablesLayer {
       // Re-render the preview text
       this.preview.addChild(object);
       object.refresh();
-    } else {
+    } else if (!object.data.points || object.data.points.length > 1) {
+      // Only create the object if it's not a polygon/freehand or if it has at least 2 points
       this.constructor.placeableClass.create(canvas.scene._id, object.data);
     }
   }
 
   /* -------------------------------------------- */
 
+  _onMouseDown(event) {
+    if (event.data.createState >= 1) {
+      event.stopPropagation();
+
+      // Add point to polygon and reset the state
+      let drawing = event.data.object;
+      if (drawing && drawing.type == "polygon") {
+        let destination = this.getPosition(event, event.data.destination);
+        drawing.addPolygonPoint(destination);
+        drawing.refresh();
+        event.data.createState = 1;
+        event.data.createTime = Date.now();
+      }
+    } else {
+      super._onMouseDown(...arguments)
+    }
+  }
   /**
    * Default handling of mouse move events during a dragging workflow
    * @private
@@ -208,7 +262,54 @@ class DrawingsLayer extends PlaceablesLayer {
     }
   }
 
+  _onMouseUp(event) {
+    let { createState, object, createTime } = event.data;
+
+    if (object && object.type == "polygon") {
+      // Check for moving mouse during a polygon waypoint click
+      if (createState == 2) {
+        let now = Date.now();
+        let timeDiff = now - (createTime || 0);
+        if (keyboard.isCtrl(event) || timeDiff < 250)
+          createState = 1;
+      }
+      // Check for clicking on the origin point
+      if (createState == 1 && object.data.points.length > 2) {
+        let origin = object.data.points[0];
+        // The last point is our current cursor/end position. The last endpoint is the one before that
+        let destination = object.data.points[object.data.points.length - 2];
+        let distance = Math.hypot(origin[0] - destination[0], origin[1] - destination[1]);
+        if (distance < this.gridPrecision) {
+          // We're done, pop the last cursor position
+          object.data.points.pop()
+          createState = 2;
+        }
+      }
+    }
+
+    // Handle single clicks with no moves
+    if (createState === 1) {
+      event.stopPropagation();
+      // Don't cancel a click for polygons
+      if (!object || object.type != "polygon") {
+        this._onDragCancel(event);
+      }
+      // Handle successful creation and chaining
+    } else if (createState === 2) {
+      this._onDragCreate(event);
+      event.data.createState = 0;
+    }
+  }
   /* -------------------------------------------- */
+
+  // FIXME: taken as is from WallsLayer, maybe should move into PlaceablesLayer
+  get gridPrecision() {
+    let size = canvas.dimensions.size;
+    if (size >= 128) return 16;
+    else if (size >= 64) return 8;
+    else if (size >= 32) return 4;
+    else if (size >= 16) return 2;
+  }
 
   /* -------------------------------------------- */
 

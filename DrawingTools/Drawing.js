@@ -196,6 +196,17 @@ class Drawing extends Tile {
       this._updateDimensions(position, { snap: false })
     }
   }
+
+  addPolygonPoint(position) {
+    // Points should always have at least one point in it (the origin)
+    let points = this.data.points;
+    let last_point = points[points.length - 1];
+
+    // First update our position to have our last point set to the point we want to add
+    this.updateDragPosition(position)
+    // then add our drag position back to the list
+    points.push(last_point)
+  }
   /* -------------------------------------------- */
   refresh() {
     // PIXI.Text doesn't have a `.clear()`

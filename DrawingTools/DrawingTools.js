@@ -200,6 +200,8 @@ class FakeServer {
     /* Float points is unnecessary */
     if (data.points !== undefined)
       data.points = data.points.map(c => [Math.round(c[0]), Math.round(c[1])])
+    // FIXME: Should loop through the list of points and remove points that are at same coordinate
+    // as the next point.
     for (let key of ["x", "y", "width", "height"]) {
       if (data[key]) data[key] = Math.round(data[key]);
     }
