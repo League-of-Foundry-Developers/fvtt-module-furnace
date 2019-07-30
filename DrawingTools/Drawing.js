@@ -44,8 +44,13 @@ class Drawing extends Tile {
   get usesTexture() {
     return [DRAWING_FILL_TYPE.PATTERN,
     DRAWING_FILL_TYPE.STRETCH,
-    DRAWING_FILL_TYPE.CONTOUR].includes(this.data.fill) &&
+    DRAWING_FILL_TYPE.CONTOUR,
+    DRAWING_FILL_TYPE.FRAME].includes(this.data.fill) &&
       this.data.texture
+  }
+  get isTiled() {
+    return [DRAWING_FILL_TYPE.PATTERN,
+    DRAWING_FILL_TYPE.CONTOUR].includes(this.data.fill)
   }
 
   // FIXME: Server side code - unmodified create/update/delete functions other than for
@@ -117,12 +122,10 @@ class Drawing extends Tile {
 
         if (this.texture) {
           let sprite = null
-          if (this.data.fill == DRAWING_FILL_TYPE.PATTERN)
+          if (this.isTiled)
             sprite = new PIXI.extras.TilingSprite(this.texture)
-          else if (this.data.fill == DRAWING_FILL_TYPE.STRETCH || this.data.fill == DRAWING_FILL_TYPE.CONTOUR)
-            sprite = new PIXI.Sprite(this.texture);
           else
-            throw new Error("Should not happen") // FIXME: only seen this happen when data isn't sanitized
+            sprite = new PIXI.Sprite(this.texture);
           this.bg = this.addChild(new PIXI.Container());
           this.bg.tile = this.bg.addChild(sprite)
         }
@@ -223,7 +226,7 @@ class Drawing extends Tile {
     // If a texture background was set, then we render/mask it here.
     if (this.bg) {
       this.bg.alpha = this.data.textureAlpha
-      if (this.data.fill == DRAWING_FILL_TYPE.PATTERN) {
+      if (this.isTiled) {
         this.bg.tile.width = this.data.width;
         this.bg.tile.height = this.data.height;
       } else {
@@ -232,7 +235,7 @@ class Drawing extends Tile {
         this.bg.tile.width = Math.abs(this.data.width);
         this.bg.tile.height = Math.abs(this.data.height);
       }
-      if (this.data.fill == DRAWING_FILL_TYPE.PATTERN &&
+      if (this.isTiled &&
         this.data.textureWidth > 0 && this.data.textureHeight > 0) {
         let scale_x = this.data.textureWidth / this.texture.width;
         let scale_y = this.data.textureHeight / this.texture.height;

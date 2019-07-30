@@ -39,7 +39,17 @@ const DRAWING_FILL_TYPE = {
   "SOLID": 1,
   "PATTERN": 2,
   "STRETCH": 3,
-  "CONTOUR": 4
+  "CONTOUR": 4,
+  "FRAME": 5
+}
+
+CONFIG.drawingFillTypes = {
+  0: "None",
+  1: "Solid Color",
+  2: "Tiled Pattern",
+  3: "Stretched Texture",
+  4: "Tiled Contour",
+  5: "Stretched Contour"
 }
 
 // FIXME: module-to-core
@@ -52,13 +62,6 @@ CONFIG.drawingTypes = {
   freehand: "Freehand"
 }
 
-CONFIG.drawingFillTypes = {
-  0: "None",
-  1: "Solid Color",
-  2: "Tiled Pattern",
-  3: "Stretched Texture",
-  4: "Contour Texture"
-}
 
 CONFIG.WebSafeFonts = {
   "Arial": "Arial, Helvetica, sans-serif",

@@ -57,10 +57,12 @@ class DrawingConfig extends FormApplication {
     let drawingType = html.find("select[name=type]").val()
     // Determine what options are to be available and which aren't
     let enableFillOptions = (fillType != DRAWING_FILL_TYPE.NONE &&
-      fillType != DRAWING_FILL_TYPE.CONTOUR)
+      fillType != DRAWING_FILL_TYPE.CONTOUR &&
+      fillType != DRAWING_FILL_TYPE.FRAME)
     let enableTextureOptions = (fillType == DRAWING_FILL_TYPE.PATTERN ||
       fillType == DRAWING_FILL_TYPE.STRETCH ||
-      fillType == DRAWING_FILL_TYPE.CONTOUR)
+      fillType == DRAWING_FILL_TYPE.CONTOUR ||
+      fillType == DRAWING_FILL_TYPE.FRAME)
     let enableTextureSizeOptions = (fillType == DRAWING_FILL_TYPE.PATTERN)
     let showTextOptions = drawingType == "text";
 
@@ -76,7 +78,7 @@ class DrawingConfig extends FormApplication {
     html.find(".text-section")[showTextOptions ? "show" : "hide"]()
     html.find("input[name=fillAlpha]").closest(".form-group")[!showTextOptions ? "show" : "hide"]()
     // FIXME: module-to-core sanity check server side, contour fill isn't valid for text.
-    html.find(`option[value=${DRAWING_FILL_TYPE.CONTOUR}]`).attr("disabled", showTextOptions)
+    html.find(`option[value=${DRAWING_FILL_TYPE.CONTOUR}],option[value=${DRAWING_FILL_TYPE.FRAME}]`).attr("disabled", showTextOptions)
     this.resizeFormWindow(html)
   }
 
