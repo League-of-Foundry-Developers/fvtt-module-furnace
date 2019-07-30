@@ -121,7 +121,7 @@ class DrawingsLayer extends PlaceablesLayer {
     mergeObject(data, { id: 1, x: 0, y: 0, width: 0, height: 0, owner: null, rotation: 0 }, { overwrite: true })
     if (data.points) delete data.points
     if (data.content) delete data.content
-    mergeObject(this.getStartingData(data.type), data, { overwrite: true })
+    mergeObject(this.getStartingData(drawing.type), data, { overwrite: true })
   }
 
   /**
@@ -214,7 +214,7 @@ class DrawingsLayer extends PlaceablesLayer {
     let object = event.data.object;
     this._onDragCancel(event);
     // Text objects create their sheets for users to enter the text, otherwise create the drawing
-    if (object.data.type == "text") {
+    if (object.type == "text") {
       // Render the preview sheet
       object.sheet.preview = this.preview;
       object.sheet.render(true);
@@ -259,7 +259,7 @@ class DrawingsLayer extends PlaceablesLayer {
 
       // If the cursor has moved close to the edge of the window
       this._panCanvasEdge(gx, gy);
-      
+
       drawing.updateDragPosition(event.data.destination)
       drawing.refresh();
       event.data.createState = 2;

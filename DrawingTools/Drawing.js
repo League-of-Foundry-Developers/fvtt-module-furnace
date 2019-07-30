@@ -135,7 +135,7 @@ class Drawing extends Tile {
       }
     }
 
-    if (this.data.type == "text")
+    if (this.type == "text")
       this.img = this.addChild(new PIXI.Text());
     else
       this.img = this.addChild(new PIXI.Graphics());
@@ -183,12 +183,10 @@ class Drawing extends Tile {
   }
 
   updateDragPosition(position) {
-    let type = this.data.type;
-
-    if (type == "freehand") {
+    if (this.type == "freehand") {
       // FIXME: if straight line, merge points together?
       this.data.points.push([position.x, position.y])
-    } else if (type == "polygon") {
+    } else if (this.type == "polygon") {
       if (this.data.points.length > 1)
         this.data.points.pop()
       this.data.points.push([position.x, position.y])
@@ -218,15 +216,15 @@ class Drawing extends Tile {
         this.img.beginFill(this.fillColor, this.data.fillAlpha);
     }
     // Render the actual shape/drawing
-    if (this.data.type == "rectangle") {
+    if (this.type == "rectangle") {
       this.renderRectangle(this.img)
-    } else if (this.data.type == "ellipse") {
+    } else if (this.type == "ellipse") {
       this.renderEllipse(this.img)
-    } else if (this.data.type == "polygon") {
+    } else if (this.type == "polygon") {
       this.renderPolygon(this.img)
-    } else if (this.data.type == "freehand") {
+    } else if (this.type == "freehand") {
       this.renderFreehand(this.img)
-    } else if (this.data.type == "text") {
+    } else if (this.type == "text") {
       this.renderText(this.img)
     }
 
@@ -254,7 +252,7 @@ class Drawing extends Tile {
       }
       // Can't clone a PIXI.Text, if mask onto a text, we re-render it.
       if (this.bg.tile.mask) this.bg.removeChild(this.bg.tile.mask).destroy({ children: true })
-      if (this.data.type == "text") {
+      if (this.type == "text") {
         this.bg.tile.mask = this.bg.addChild(new PIXI.Text());
         this.renderText(this.bg.tile.mask)
         this.bg.tile.mask.alpha = 1.0;
@@ -284,7 +282,7 @@ class Drawing extends Tile {
     // Toggle visibility
     this.visible = !this.data.hidden || game.user.isGM;
     // Don't show the frame when we're creating a new drawing, unless it's text.
-    this.frame.visible = this._controlled && (this.id || this.data.type == "text");
+    this.frame.visible = this._controlled && (this.id || this.type == "text");
     this.scaleHandle.visible = this.frame.visible && !this.data.locked;
 
     // Reset hit area. img doesn't set a hit area automatically if we don't use 'fill',
