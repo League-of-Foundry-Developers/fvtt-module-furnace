@@ -243,7 +243,8 @@ class FakeServer {
       drawings.push(data)
       await FakeServer.setDrawings(scene, drawings)
 
-      return { parentId: parentId, created: data }
+      // We duplicate because multiple pastes will cause multiple objects to share the same data
+      return { parentId: parentId, created: duplicate(data) }
     } else if (hook == "updateDrawing") {
       let { parentId, data } = eventData
       const scene = game.scenes.get(parentId);
@@ -258,7 +259,7 @@ class FakeServer {
       await FakeServer.setDrawings(scene, drawings)
 
       this.sanityCheck(data, true)
-      return { parentId: parentId, updated: data }
+      return { parentId: parentId, updated: duplicate(data) }
     } else if (hook == "deleteDrawing") {
       let { parentId, childId } = eventData
       const scene = game.scenes.get(parentId);
