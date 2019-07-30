@@ -46,8 +46,8 @@ class DrawingsLayer extends PlaceablesLayer {
   }
 
   // FIXME: module-to-core : use of FakeServer.setDrawings instead of canvas.scene.update()
-  // The other reason for not just deleting this is that a trusted player could delete all drawings
-  // that he owns, but not others.
+  // The reason for not just deleting this is that a trusted player could delete all drawings
+  // that he owns, but not others' drawings, so the title and new list needs to be different.
   // This would need to be checked by the server I guess ?
   deleteAll() {
     const cls = this.constructor.placeableClass;
@@ -134,6 +134,9 @@ class DrawingsLayer extends PlaceablesLayer {
   }
 
   _getNewDataFromEvent(event) {
+    // Snap to grid by default only for shapes
+    // FIXME: maybe for polygons too? would make sense but having to press shift
+    // constantly for non snapping could be annoying.
     if (!event.data.originalEvent.shiftKey && game.activeTool == "shape") {
       event.data.origin = canvas.grid.getSnappedPosition(event.data.origin.x,
         event.data.origin.y);
@@ -166,7 +169,7 @@ class DrawingsLayer extends PlaceablesLayer {
     drawing.draw();
     drawing._controlled = true;
     event.data.object = this.preview.addChild(drawing);
-    event.data.createState = 2;
+    event.data.createState = 1;
   }
 
   /* Difference with base class is that we don't need a minimum of half-grid to create the drawing  */
@@ -196,11 +199,12 @@ class DrawingsLayer extends PlaceablesLayer {
    */
   _onMouseMove(event) {
     super._onMouseMove(event);
-    if (event.data.createState == 2) {
+    if (event.data.createState >= 1) {
       let drawing = event.data.object;
 
       drawing.updateDragPosition(event.data.destination)
       drawing.refresh();
+      event.data.createState = 2;
     }
   }
 
