@@ -118,7 +118,7 @@ class DrawingsLayer extends PlaceablesLayer {
 
   updateStartingData(drawing) {
     let data = duplicate(drawing.data)
-    mergeObject(data, { id: 1, x: 0, y: 0, width: 0, height: 0, owner: null }, { overwrite: true })
+    mergeObject(data, { id: 1, x: 0, y: 0, width: 0, height: 0, owner: null, rotation: 0}, { overwrite: true })
     if (data.points) delete data.points
     if (data.content) delete data.content
     mergeObject(this.getStartingData(data.type), data, { overwrite: true })
