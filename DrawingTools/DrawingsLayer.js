@@ -255,7 +255,11 @@ class DrawingsLayer extends PlaceablesLayer {
     super._onMouseMove(event);
     if (event.data.createState >= 1) {
       let drawing = event.data.object;
+      let [gx, gy] =[event.data.originalEvent.x, event.data.originalEvent.y];
 
+      // If the cursor has moved close to the edge of the window
+      this._panCanvasEdge(gx, gy);
+      
       drawing.updateDragPosition(event.data.destination)
       drawing.refresh();
       event.data.createState = 2;
@@ -309,6 +313,28 @@ class DrawingsLayer extends PlaceablesLayer {
     else if (size >= 64) return 8;
     else if (size >= 32) return 4;
     else if (size >= 16) return 2;
+  }
+
+  // FIXME: taken as is from WallsLayer, maybe should move into PlaceablesLayer
+  /**
+   * Pan the canvas view when the cursor position gets close to the edge of the frame
+   * @private
+   */
+  _panCanvasEdge(x, y) {
+    const pad = 50,
+          shift = 500 / canvas.stage.scale.x;
+    let dx = 0;
+    if ( x < pad ) dx = -shift;
+    else if ( x > window.innerWidth - pad ) dx = shift;
+    let dy = 0;
+    if ( y < pad ) dy = -shift;
+    else if ( y > window.innerHeight - pad ) dy = shift;
+    if (( dx || dy ) && !this._panning ) {
+      this._panning = true;
+      canvas.animatePan({x: canvas.stage.pivot.x + dx, y: canvas.stage.pivot.y + dy}, {duration: 100}).then(() => {
+        this._panning = false;
+      })
+    }
   }
 
   /* -------------------------------------------- */
