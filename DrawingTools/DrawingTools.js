@@ -74,7 +74,9 @@ CONFIG.WebSafeFonts = {
 
 
 class FakeServer {
-  upating = false;
+  // Firefox doesn't support static class fields
+  static get updating() { return this._upating || false };
+  static set updating(value) { this._upating = value };
 
   static DrawingDefaultData(type = "all") {
     return {
