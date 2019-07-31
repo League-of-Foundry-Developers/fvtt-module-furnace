@@ -255,7 +255,9 @@ class Drawing extends Tile {
       if (this.type == "text") {
         this.bg.tile.mask = this.bg.addChild(new PIXI.Text());
         this.renderText(this.bg.tile.mask)
+        // Mask is only applied on the red channel for some reason.
         this.bg.tile.mask.alpha = 1.0;
+        this.bg.tile.mask.style.fill = 0xFFFFFF;
       } else {
         this.bg.tile.mask = this.bg.addChild(this.img.clone());
       }
@@ -266,7 +268,6 @@ class Drawing extends Tile {
     }
 
     // Set Tile position, rotation and alpha
-    this.alpha = 1;
     this.pivot.set(this.data.width / 2, this.data.height / 2);
     this.rotation = toRadians(this.data.rotation);
     this.position.set(this.data.x + this.pivot.x, this.data.y + this.pivot.y);
