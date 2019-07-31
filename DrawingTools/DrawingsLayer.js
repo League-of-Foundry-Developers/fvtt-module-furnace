@@ -197,6 +197,7 @@ class DrawingsLayer extends PlaceablesLayer {
    */
   _onDragStart(event) {
     super._onDragStart(event);
+    canvas.app.view.oncontextmenu = ev => this._onRightClick(event);
     let data = this._getNewDataFromEvent(event);
     let drawing = new Drawing(data);
     drawing.draw();
@@ -228,6 +229,25 @@ class DrawingsLayer extends PlaceablesLayer {
     }
   }
 
+  _onRightClick(event) {
+    let { createState, object } = event.data;
+    if (createState >= 1 && object && object.type == "polygon") {
+      // Remove the current mouse position
+      let position = object.data.points.pop()
+      // If it was the last point, cancel the thing.
+      if (object.data.points.length > 1) {
+        // Remove the last point and re-add our cursor position
+        object.data.points.pop()
+        object.data.points.push(position);
+        object.refresh();
+      } else {
+        this._onDragCancel(event);
+      }
+    } else {
+      this._onDragCancel(event);
+    }
+  }
+
   /* -------------------------------------------- */
 
   _onMouseDown(event) {
@@ -255,7 +275,7 @@ class DrawingsLayer extends PlaceablesLayer {
     super._onMouseMove(event);
     if (event.data.createState >= 1) {
       let drawing = event.data.object;
-      let [gx, gy] =[event.data.originalEvent.x, event.data.originalEvent.y];
+      let [gx, gy] = [event.data.originalEvent.x, event.data.originalEvent.y];
 
       // If the cursor has moved close to the edge of the window
       this._panCanvasEdge(gx, gy);
@@ -277,13 +297,18 @@ class DrawingsLayer extends PlaceablesLayer {
         if (keyboard.isCtrl(event) || timeDiff < 250)
           createState = 1;
       }
-      // Check for clicking on the origin point
+      // Check for clicking on the origin point or the last point position
       if (createState == 1 && object.data.points.length > 2) {
+        // The last point is our current cursor/end position. The last clicked point is the one before that
         let origin = object.data.points[0];
-        // The last point is our current cursor/end position. The last endpoint is the one before that
+        let position = object.data.points[object.data.points.length - 1];
         let destination = object.data.points[object.data.points.length - 2];
-        let distance = Math.hypot(origin[0] - destination[0], origin[1] - destination[1]);
-        if (distance < this.gridPrecision) {
+        let previousPoint = object.data.points[object.data.points.length - 3];
+        // Check distance between origin point and current cursor position
+        let originDistance = Math.hypot(origin[0] - position[0], origin[1] - position[1]);
+        // Check distance between the last 2 points to see if user clicked on the last point twice.
+        let destinationDistance = Math.hypot(destination[0] - previousPoint[0], destination[1] - previousPoint[1]);
+        if (originDistance < this.gridPrecision || destinationDistance < this.gridPrecision) {
           // We're done, pop the last cursor position
           object.data.points.pop()
           createState = 2;
@@ -295,9 +320,8 @@ class DrawingsLayer extends PlaceablesLayer {
     if (createState === 1) {
       event.stopPropagation();
       // Don't cancel a click for polygons
-      if (!object || object.type != "polygon") {
+      if (!object || object.type != "polygon")
         this._onDragCancel(event);
-      }
       // Handle successful creation and chaining
     } else if (createState === 2) {
       this._onDragCreate(event);
@@ -322,16 +346,16 @@ class DrawingsLayer extends PlaceablesLayer {
    */
   _panCanvasEdge(x, y) {
     const pad = 50,
-          shift = 500 / canvas.stage.scale.x;
+      shift = 500 / canvas.stage.scale.x;
     let dx = 0;
-    if ( x < pad ) dx = -shift;
-    else if ( x > window.innerWidth - pad ) dx = shift;
+    if (x < pad) dx = -shift;
+    else if (x > window.innerWidth - pad) dx = shift;
     let dy = 0;
-    if ( y < pad ) dy = -shift;
-    else if ( y > window.innerHeight - pad ) dy = shift;
-    if (( dx || dy ) && !this._panning ) {
+    if (y < pad) dy = -shift;
+    else if (y > window.innerHeight - pad) dy = shift;
+    if ((dx || dy) && !this._panning) {
       this._panning = true;
-      canvas.animatePan({x: canvas.stage.pivot.x + dx, y: canvas.stage.pivot.y + dy}, {duration: 100}).then(() => {
+      canvas.animatePan({ x: canvas.stage.pivot.x + dx, y: canvas.stage.pivot.y + dy }, { duration: 100 }).then(() => {
         this._panning = false;
       })
     }
