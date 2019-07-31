@@ -1,8 +1,8 @@
 {
     "name": "furnace",
     "title": "The Furnace",
-    "description": "The Furnace is an essential part of every Foundry.",
-    "version": "0.1",
+    "description": "<p>The Furnace is an essential part of every Foundry.</p><p>This module contains a set of features that improve the Quality of Life of the DM/Players. The current features are : </p><p><strong>Drawing Tools :</strong>You (and trusted players) can draw on your map for a more dynamic gaming experience.</p>",
+    "version": "0.2",
     "author": "KaKaRoTo",
     "scripts": ["./DrawingTools/DrawingsLayer.js",
 		"./DrawingTools/Drawing.js",
