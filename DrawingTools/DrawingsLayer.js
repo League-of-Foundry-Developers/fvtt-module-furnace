@@ -302,12 +302,11 @@ class DrawingsLayer extends PlaceablesLayer {
         // The last point is our current cursor/end position. The last clicked point is the one before that
         let origin = object.data.points[0];
         let position = object.data.points[object.data.points.length - 1];
-        let destination = object.data.points[object.data.points.length - 2];
-        let previousPoint = object.data.points[object.data.points.length - 3];
+        let destination = object.data.points[object.data.points.length - 3];
         // Check distance between origin point and current cursor position
         let originDistance = Math.hypot(origin[0] - position[0], origin[1] - position[1]);
-        // Check distance between the last 2 points to see if user clicked on the last point twice.
-        let destinationDistance = Math.hypot(destination[0] - previousPoint[0], destination[1] - previousPoint[1]);
+        // Check distance between the previous point and current position to see if user clicked on the last point twice.
+        let destinationDistance = Math.hypot(destination[0] - position[0], destination[1] - position[1]);
         if (originDistance < this.gridPrecision || destinationDistance < this.gridPrecision) {
           // We're done, pop the last cursor position
           object.data.points.pop()
