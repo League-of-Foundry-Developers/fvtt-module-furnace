@@ -236,9 +236,7 @@ class DrawingDefaultsConfig extends DrawingConfig {
     }
     // Set the tool to the last configured type.
     let tool = formData.type;
-    if (tool == "rectangle")
-      tool = "shape";
-    else if (tool == "ellipse")
+    if (["rectangle", "ellipse"].includes(tool))
       tool = "shape";
     ui.controls.controls[ui.controls.activeControl].activeTool = tool;
     ui.controls.render();

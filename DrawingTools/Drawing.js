@@ -205,6 +205,7 @@ class Drawing extends Tile {
     // then add our drag position back to the list
     points.push(last_point)
   }
+
   /* -------------------------------------------- */
   refresh() {
     // PIXI.Text doesn't have a `.clear()`

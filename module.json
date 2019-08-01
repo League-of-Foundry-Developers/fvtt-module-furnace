@@ -14,5 +14,6 @@
     "url": "",
     "manifest": "",
     "download": "",
-    "socket": true
+    "socket": true,
+    "minimumCoreVersion": "0.3.3"
 }
