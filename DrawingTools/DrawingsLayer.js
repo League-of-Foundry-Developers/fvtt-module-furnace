@@ -261,7 +261,10 @@ class DrawingsLayer extends PlaceablesLayer {
         drawing.addPolygonPoint(destination);
         drawing.refresh();
         event.data.createState = 1;
-        event.data.createTime = Date.now();
+        let now = Date.now();
+        let timeDiff = now - (event.data.createTime || 0);
+        event.data.doubleclick = timeDiff < 250;
+        event.data.createTime = now;
       }
     } else {
       super._onMouseDown(...arguments)
@@ -302,12 +305,10 @@ class DrawingsLayer extends PlaceablesLayer {
         // The last point is our current cursor/end position. The last clicked point is the one before that
         let origin = object.data.points[0];
         let position = object.data.points[object.data.points.length - 1];
-        let destination = object.data.points[object.data.points.length - 3];
         // Check distance between origin point and current cursor position
         let originDistance = Math.hypot(origin[0] - position[0], origin[1] - position[1]);
-        // Check distance between the previous point and current position to see if user clicked on the last point twice.
-        let destinationDistance = Math.hypot(destination[0] - position[0], destination[1] - position[1]);
-        if (originDistance < this.gridPrecision || destinationDistance < this.gridPrecision) {
+        // Check if user double clicked on the end point.
+        if (originDistance < this.gridPrecision || event.data.doubleclick) {
           // We're done, pop the last cursor position
           object.data.points.pop()
           createState = 2;

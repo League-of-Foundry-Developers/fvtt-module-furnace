@@ -184,12 +184,18 @@ class Drawing extends Tile {
 
   updateDragPosition(position) {
     if (this.type == "freehand") {
-      // FIXME: if straight line, merge points together?
-      this.data.points.push([position.x, position.y])
+      let now = Date.now();
+      let lastMove = this._lastMoveTime || 0
+      if (this.data.points.length > 1 && now - lastMove < CONFIG.FREEHAND_SAMPLING_RATE)
+        this.data.points.pop();
+      else
+        this._lastMoveTime = now;
+
+      this.addPolygonPoint(position)
     } else if (this.type == "polygon") {
       if (this.data.points.length > 1)
         this.data.points.pop()
-      this.data.points.push([position.x, position.y])
+      this.data.points.push([parseInt(position.x), parseInt(position.y)])
     } else {
       this._updateDimensions(position, { snap: false })
     }
@@ -198,12 +204,21 @@ class Drawing extends Tile {
   addPolygonPoint(position) {
     // Points should always have at least one point in it (the origin)
     let points = this.data.points;
-    let last_point = points[points.length - 1];
+    let drag = this.data.points.pop();
+    let last_point = drag;
 
-    // First update our position to have our last point set to the point we want to add
-    this.updateDragPosition(position)
+    let point = [parseInt(position.x), parseInt(position.y)]
+
+    // Always keep our origin point as the first point
+    if (this.data.points.length == 0)
+      points.push(drag)
+    else
+      last_point = points[points.length - 1];
+    // First add our polygon point if it's a new point.
+    if (point[0] != last_point[0] || point[1] != last_point[1])
+      points.push(point)
     // then add our drag position back to the list
-    points.push(last_point)
+    points.push(drag)
   }
 
   /* -------------------------------------------- */
@@ -307,29 +322,68 @@ class Drawing extends Tile {
     graphics.drawEllipse(half_width, half_height, Math.abs(half_width) - half_stroke, Math.abs(half_height) - half_stroke);
   }
 
+  // given an array of x,y's, return distance between any two,
+  // note that i and j are indexes to the points, not directly into the array.
+  _distance(p0, p1) {
+    return Math.sqrt(Math.pow(p0[0] - p1[0], 2) + Math.pow(p0[1] - p1[1], 2));
+  }
+
+  _adjust(origin, point) {
+    return [point[0] - origin[0], point[1] - origin[1]]
+  }
+
+  _bezierControlPoints(factor, p0, p1, p2) {
+    // Get vector of the opposite line
+    var v = this._adjust(p0, p2);
+    var d01 = this._distance(p0, p1);
+    var d12 = this._distance(p1, p2);
+    var d012 = d01 + d12;
+    return [[p1[0] - v[0] * factor * d01 / d012, p1[1] - v[1] * factor * d01 / d012],
+            [p1[0] + v[0] * factor * d12 / d012, p1[1] + v[1] * factor * d12 / d012]];
+  }
   renderFreehand(graphics) {
-    let point = this.data.points[0]
-    let ox = point[0];
-    let oy = point[1];
+    let origin = this.data.points[0]
+    let point = [0, 0];
+    let previous = point;
+    let next = point;
+    let cp = null;
 
     graphics.moveTo(0, 0)
+    if (this.data.points.length < 2) {
+    } else if (this.data.points.length <= 2) {
+      point = this._adjust(origin, this.data.points[1]);
+      graphics.lineTo(point[0], point[1])
+    } else {
+      // TODO if last point == origin, then use bezier to close the loop
+      point = this._adjust(origin, this.data.points[1]);
+      next = this._adjust(origin, this.data.points[2]);
+      let [cp0, cp1] = this._bezierControlPoints(0.5, previous, point, next);
+      graphics.quadraticCurveTo(cp0[0], cp0[1], point[0], point[1]);
+      previous = point;
+      point = next;
+      cp = cp1;
 
-    for (let i = 1; i < this.data.points.length; i++) {
-      point = this.data.points[i];
-      graphics.lineTo(point[0] - ox, point[1] - oy)
+      for (let i = 2; i < this.data.points.length - 1; i++) {
+        next = this._adjust(origin, this.data.points[i + 1]);
+        //graphics.lineTo(point[0] - ox, point[1] - oy)
+        let [cp0, cp1] = this._bezierControlPoints(0.5, previous, point, next);
+        graphics.bezierCurveTo(cp[0], cp[1], cp0[0], cp0[1], point[0], point[1]);
+        previous = point;
+        point = next;
+        cp = cp1;
+      }
+      graphics.quadraticCurveTo(cp[0], cp[1], point[0], point[1]);
     }
-    // Draw circles on each point to make the lines look smoother.
+    // Draw circles on each end point to make it look nicer.
     // an arc with radius 0 makes it not draw anything. so we put radius of 0.1 and let the strokeWidth do our circle
     // We also need to move to the angle 0 of the arc otherwise we'd cause a small line from 0, 0 to 0.1, 0 which can
     // have huge effects visually if the stroke width is large enough.
     graphics.moveTo(0.1, 0)
     graphics.arc(0, 0, 0.1, 0, Math.PI * 2)
-    for (let i = 1; i < this.data.points.length; i++) {
-      point = this.data.points[i];
-      // FIXME: Doing an arc on each point might not be a good idea in terms of performance.
-      // but it helps makes things look smoother.
-      graphics.moveTo(point[0] - ox + 0.1, point[1] - oy)
-      this.img.arc(point[0] - ox, point[1] - oy, 0.1, 0, Math.PI * 2)
+    if (this.data.points.length > 1) {
+      point = this._adjust(origin, this.data.points[this.data.points.length - 1]);
+      graphics.moveTo(point[0] + 0.1, point[1])
+      this.img.arc(point[0], point[1], 0.1, 0, Math.PI * 2)
     }
     this._handlePolygonBounds(graphics)
   }

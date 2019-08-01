@@ -71,7 +71,7 @@ CONFIG.WebSafeFonts = {
   "Courier New": '"Courier New", Courier, monospace',
   // FIXME: There are more, but do we want to show all of the available options??
 }
-
+CONFIG.FREEHAND_SAMPLING_RATE = 100;
 
 class FakeServer {
   // Firefox doesn't support static class fields
