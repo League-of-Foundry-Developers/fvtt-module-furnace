@@ -322,74 +322,113 @@ class Drawing extends Tile {
     graphics.drawEllipse(half_width, half_height, Math.abs(half_width) - half_stroke, Math.abs(half_height) - half_stroke);
   }
 
-  // given an array of x,y's, return distance between any two,
-  // note that i and j are indexes to the points, not directly into the array.
-  _distance(p0, p1) {
-    return Math.sqrt(Math.pow(p0[0] - p1[0], 2) + Math.pow(p0[1] - p1[1], 2));
+  // Attribution : 
+  // The equations for how to calculate the bezier control points are derived from
+  // Rob Spencer's article from 2010.
+  // http://scaledinnovation.com/analytics/splines/aboutSplines.html
+  // Returns the cp1 of the previous point and cp0 of the current point.
+  // This is so it's a bit more optimized than calculating the distances
+  // twice for each point.
+  _bezierControlPoints(factor, previous, point, next) {
+    // Get vector of the opposite line
+    let vector = { x: next.x - previous.x, y: next.y - previous.y };
+    
+    // Calculate the proportional sizes of each neighboring line
+    let precedingDistance = Math.hypot(previous.x - point.x, previous.y - point.y);
+    let followingDistance = Math.hypot(point.x - next.x, point.y - next.y);
+    let totalDistance = precedingDistance + followingDistance;
+    let cp0Distance = factor * (precedingDistance / totalDistance);
+    let cp1Distance = factor * (followingDistance / totalDistance);
+    // Calculate the control points as porportional from our point in the direction of the
+    // hypothenus' vector, in either direction from our central point
+    return {
+      cp1: {
+        x: point.x - vector.x * cp0Distance,
+        y: point.y - vector.y * cp0Distance
+      },
+      next_cp0: {
+        x: point.x + vector.x * cp1Distance,
+        y: point.y + vector.y * cp1Distance
+      }
+    }
   }
 
   _adjust(origin, point) {
-    return [point[0] - origin[0], point[1] - origin[1]]
+    return {
+      x: point[0] - origin[0],
+      y: point[1] - origin[1]
+    }
   }
 
-  _bezierControlPoints(factor, p0, p1, p2) {
-    // Get vector of the opposite line
-    var v = this._adjust(p0, p2);
-    var d01 = this._distance(p0, p1);
-    var d12 = this._distance(p1, p2);
-    var d012 = d01 + d12;
-    return [[p1[0] - v[0] * factor * d01 / d012, p1[1] - v[1] * factor * d01 / d012],
-            [p1[0] + v[0] * factor * d12 / d012, p1[1] + v[1] * factor * d12 / d012]];
-  }
-  renderFreehand(graphics) {
-    let origin = this.data.points[0]
-    let point = [0, 0];
-    let previous = point;
-    let next = point;
-    let cp = null;
+  renderFreehand(graphics, bezierFactor = 0.5) {
+    let points = this.data.points;
+    let origin = points[0]
 
     graphics.moveTo(0, 0)
-    if (this.data.points.length < 2) {
-    } else if (this.data.points.length <= 2) {
-      point = this._adjust(origin, this.data.points[1]);
-      graphics.lineTo(point[0], point[1])
-    } else {
-      // TODO if last point == origin, then use bezier to close the loop
-      point = this._adjust(origin, this.data.points[1]);
-      next = this._adjust(origin, this.data.points[2]);
-      let [cp0, cp1] = this._bezierControlPoints(0.5, previous, point, next);
-      graphics.quadraticCurveTo(cp0[0], cp0[1], point[0], point[1]);
+    if (points.length > 2) {
+      let point = this._adjust(origin, points[1]);
+      let previous = this._adjust(origin, origin); // {x:0, y:0};
+      let next = this._adjust(origin, points[2]);
+      let last = this._adjust(origin, points[points.length - 1]);
+      let closedLoop = (last.x == previous.x && last.y == previous.y)
+      let cp0;
+
+      // Verify if we're closing a loop here and calculate the previous bezier control point
+      if (closedLoop) {
+        last = this._adjust(origin, points[points.length - 2]);
+        let { next_cp0 } = this._bezierControlPoints(bezierFactor, last, previous, point);
+        cp0 = next_cp0;
+      }
+      // Draw the first line
+      let { cp1, next_cp0 } = this._bezierControlPoints(bezierFactor, previous, point, next);
+      if (closedLoop)
+        graphics.bezierCurveTo(cp0.x, cp0.y, cp1.x, cp1.y, point.x, point.y);
+      else
+        graphics.quadraticCurveTo(cp1.x, cp1.y, point.x, point.y);
       previous = point;
       point = next;
-      cp = cp1;
+      cp0 = next_cp0;
 
-      for (let i = 2; i < this.data.points.length - 1; i++) {
-        next = this._adjust(origin, this.data.points[i + 1]);
-        //graphics.lineTo(point[0] - ox, point[1] - oy)
-        let [cp0, cp1] = this._bezierControlPoints(0.5, previous, point, next);
-        graphics.bezierCurveTo(cp[0], cp[1], cp0[0], cp0[1], point[0], point[1]);
+      // Draw subsequent lines
+      for (let i = 2; i < points.length; i++) {
+        if (i == points.length - 1)
+          next = this._adjust(origin, points[1]);
+        else
+          next = this._adjust(origin, points[i + 1]);
+        let { cp1, next_cp0 } = this._bezierControlPoints(bezierFactor, previous, point, next);
+        // If the last line, draw it as quadratic if it's not a closed loop.
+        if (i == points.length - 1 && !closedLoop)
+          graphics.quadraticCurveTo(cp0.x, cp0.y, point.x, point.y);
+        else
+          graphics.bezierCurveTo(cp0.x, cp0.y, cp1.x, cp1.y, point.x, point.y);
         previous = point;
         point = next;
-        cp = cp1;
+        cp0 = next_cp0;
       }
-      graphics.quadraticCurveTo(cp[0], cp[1], point[0], point[1]);
+    } else if (points.length == 2) { // if point.length < 2, don't do anything
+      let point = this._adjust(origin, points[1]);
+      graphics.lineTo(point.x, point.y)
     }
+
     // Draw circles on each end point to make it look nicer.
-    // an arc with radius 0 makes it not draw anything. so we put radius of 0.1 and let the strokeWidth do our circle
-    // We also need to move to the angle 0 of the arc otherwise we'd cause a small line from 0, 0 to 0.1, 0 which can
-    // have huge effects visually if the stroke width is large enough.
+    // an arc with radius 0 makes it not draw anything. so we put radius of 0.1 and let the
+    // strokeWidth take care of actually drawing our circle.
+    // We also need to move to the angle 0 of the arc otherwise we'd cause a small line
+    // from(0, 0) to(0.1, 0) which can have huge effects visually if the stroke width is large enough.
     graphics.moveTo(0.1, 0)
     graphics.arc(0, 0, 0.1, 0, Math.PI * 2)
-    if (this.data.points.length > 1) {
-      point = this._adjust(origin, this.data.points[this.data.points.length - 1]);
-      graphics.moveTo(point[0] + 0.1, point[1])
-      this.img.arc(point[0], point[1], 0.1, 0, Math.PI * 2)
+    if (points.length > 1) {
+      let point = this._adjust(origin, points[points.length - 1]);
+      graphics.moveTo(point.x + 0.1, point.y)
+      this.img.arc(point.x, point.y, 0.1, 0, Math.PI * 2)
     }
     this._handlePolygonBounds(graphics)
   }
+
   renderPolygon(graphics) {
     this.renderFreehand(graphics)
   }
+
   renderText(sprite) {
     let lineHeight = this.data.height / this.data.content.split("\n").length
     sprite.style = {
