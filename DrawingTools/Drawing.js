@@ -360,9 +360,10 @@ class Drawing extends Tile {
     }
   }
 
-  renderFreehand(graphics, bezierFactor = 0.5) {
+  renderFreehand(graphics) {
     let points = this.data.points;
-    let origin = points[0]
+    let origin = points[0];
+    let bezierFactor = this.data.bezierFactor;
 
     graphics.moveTo(0, 0)
     if (points.length > 2) {

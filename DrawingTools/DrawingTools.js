@@ -123,11 +123,13 @@ class FakeServer {
         type: "polygon",
         strokeWidth: 3,
         points: [],
+        bezierFactor: 0
       },
       freehand: {
         type: "freehand",
         strokeWidth: 3,
         points: [],
+        bezierFactor: 0.5,
       }
     }[type]
   }

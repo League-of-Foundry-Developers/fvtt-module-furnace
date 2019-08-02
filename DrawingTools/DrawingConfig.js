@@ -64,6 +64,7 @@ class DrawingConfig extends FormApplication {
       fillType == DRAWING_FILL_TYPE.CONTOUR ||
       fillType == DRAWING_FILL_TYPE.FRAME)
     let enableTextureSizeOptions = (fillType == DRAWING_FILL_TYPE.PATTERN)
+    let showBezierOptions = (drawingType == "polygon" || drawingType == "freehand");
     let showTextOptions = drawingType == "text";
 
     // Enable/Disable various options by setting their opacity and pointer-events.
@@ -77,6 +78,7 @@ class DrawingConfig extends FormApplication {
     // Show/hide text options and fillAlpha
     html.find(".text-section")[showTextOptions ? "show" : "hide"]()
     html.find("input[name=fillAlpha]").closest(".form-group")[!showTextOptions ? "show" : "hide"]()
+    html.find("input[name=bezierFactor]").closest(".form-group")[showBezierOptions ? "show" : "hide"]()
     // FIXME: module-to-core sanity check server side, contour fill isn't valid for text.
     html.find(`option[value=${DRAWING_FILL_TYPE.CONTOUR}],option[value=${DRAWING_FILL_TYPE.FRAME}]`).attr("disabled", showTextOptions)
     this.resizeFormWindow(html)
