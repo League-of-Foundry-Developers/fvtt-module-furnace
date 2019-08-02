@@ -339,6 +339,8 @@ class Drawing extends Tile {
     let totalDistance = precedingDistance + followingDistance;
     let cp0Distance = factor * (precedingDistance / totalDistance);
     let cp1Distance = factor * (followingDistance / totalDistance);
+    if (totalDistance == 0)
+      cp0Distance = cp1Distance = 0;
     // Calculate the control points as porportional from our point in the direction of the
     // hypothenus' vector, in either direction from our central point
     return {
@@ -363,7 +365,7 @@ class Drawing extends Tile {
   renderFreehand(graphics) {
     let points = this.data.points;
     let origin = points[0];
-    let bezierFactor = this.data.bezierFactor;
+    let bezierFactor = this.data.bezierFactor || 0;
 
     graphics.moveTo(0, 0)
     if (points.length > 2) {
