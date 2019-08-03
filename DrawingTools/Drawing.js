@@ -25,7 +25,7 @@ class Drawing extends Tile {
    * @type {Boolean}
    */
   get owner() {
-    return game.user.isGM || (game.user.isTrusted && this.data.owner == game.user.id)
+    return game.user.isGM || (game.user.isTrusted && this.data.author == game.user.id)
   }
   get type() {
     return this.data.type;
@@ -39,61 +39,19 @@ class Drawing extends Tile {
   get usesFill() {
     return [DRAWING_FILL_TYPE.SOLID,
     DRAWING_FILL_TYPE.PATTERN,
-    DRAWING_FILL_TYPE.STRETCH].includes(this.data.fill)
+    DRAWING_FILL_TYPE.STRETCH].includes(this.data.fillType)
   }
   get usesTexture() {
     return [DRAWING_FILL_TYPE.PATTERN,
     DRAWING_FILL_TYPE.STRETCH,
     DRAWING_FILL_TYPE.CONTOUR,
-    DRAWING_FILL_TYPE.FRAME].includes(this.data.fill) &&
+    DRAWING_FILL_TYPE.FRAME].includes(this.data.fillType) &&
       this.data.texture
   }
   get isTiled() {
     return [DRAWING_FILL_TYPE.PATTERN,
-    DRAWING_FILL_TYPE.CONTOUR].includes(this.data.fill)
+    DRAWING_FILL_TYPE.CONTOUR].includes(this.data.fillType)
   }
-
-  // FIXME: Server side code - unmodified create/update/delete functions other than for
-  // using FakeServer instead of SocketInterface.
-  static async create(sceneId, data, options = {}) {
-    const name = this.name,
-      preHook = 'preCreate' + name,
-      eventData = { parentId: sceneId, data: data };
-    return FakeServer.trigger('create' + name, eventData, options, preHook, this).then(response => {
-      const object = this.layer._createPlaceableObject(response);
-      if (options.displaySheet) object.sheet.render(true);
-      return object;
-    });
-  }
-  async update(sceneId, data, options = {}) {
-    const name = this.constructor.name,
-      preHook = 'preUpdate' + name;
-
-    // Diff the update data
-    delete data.id;
-    let changed = {};
-    for (let [k, v] of Object.entries(data)) {
-      let c = getProperty(this.data, k);
-      if (c !== v) changed[k] = v;
-    }
-    if (!Object.keys(changed).length) return Promise.resolve(this);
-    changed.id = this.id;
-
-    // Trigger the socket event and handle response
-    const eventData = { parentId: sceneId, data: changed };
-    await FakeServer.trigger('update' + name, eventData, options, preHook, this).then(response => {
-      return this.constructor.layer._updatePlaceableObject(response);
-    });
-  }
-  async delete(sceneId, options = {}) {
-    const name = this.constructor.name,
-      preHook = 'preDelete' + name,
-      eventData = { parentId: sceneId, childId: this.id };
-    return await FakeServer.trigger('delete' + name, eventData, options, preHook, this).then(response => {
-      return this.constructor.layer._deletePlaceableObject(response);
-    });
-  }
-
   /* -------------------------------------------- */
   /* Rendering                                    */
   /* -------------------------------------------- */
@@ -135,7 +93,7 @@ class Drawing extends Tile {
       }
     }
 
-    if (this.type == "text")
+    if (this.type == DRAWING_TYPE.TEXT)
       this.img = this.addChild(new PIXI.Text());
     else
       this.img = this.addChild(new PIXI.Graphics());
@@ -183,7 +141,7 @@ class Drawing extends Tile {
   }
 
   updateDragPosition(position) {
-    if (this.type == "freehand") {
+    if (this.type == DRAWING_TYPE.FREEHAND) {
       let now = Date.now();
       let lastMove = this._lastMoveTime || 0
       if (this.data.points.length > 1 && now - lastMove < CONFIG.FREEHAND_SAMPLING_RATE)
@@ -192,10 +150,10 @@ class Drawing extends Tile {
         this._lastMoveTime = now;
 
       this.addPolygonPoint(position)
-    } else if (this.type == "polygon") {
+    } else if (this.type == DRAWING_TYPE.POLYGON) {
       if (this.data.points.length > 1)
         this.data.points.pop()
-      this.data.points.push([parseInt(position.x), parseInt(position.y)])
+      this.data.points.push([Math.round(position.x), Math.round(position.y)])
     } else {
       this._updateDimensions(position, { snap: false })
     }
@@ -232,15 +190,15 @@ class Drawing extends Tile {
         this.img.beginFill(this.fillColor, this.data.fillAlpha);
     }
     // Render the actual shape/drawing
-    if (this.type == "rectangle") {
+    if (this.type == DRAWING_TYPE.RECTANGLE) {
       this.renderRectangle(this.img)
-    } else if (this.type == "ellipse") {
+    } else if (this.type == DRAWING_TYPE.ELLIPSE) {
       this.renderEllipse(this.img)
-    } else if (this.type == "polygon") {
+    } else if (this.type == DRAWING_TYPE.POLYGON) {
       this.renderPolygon(this.img)
-    } else if (this.type == "freehand") {
+    } else if (this.type == DRAWING_TYPE.FREEHAND) {
       this.renderFreehand(this.img)
-    } else if (this.type == "text") {
+    } else if (this.type == DRAWING_TYPE.TEXT) {
       this.renderText(this.img)
     }
 
@@ -268,7 +226,7 @@ class Drawing extends Tile {
       }
       // Can't clone a PIXI.Text, if mask onto a text, we re-render it.
       if (this.bg.tile.mask) this.bg.removeChild(this.bg.tile.mask).destroy({ children: true })
-      if (this.type == "text") {
+      if (this.type == DRAWING_TYPE.TEXT) {
         this.bg.tile.mask = this.bg.addChild(new PIXI.Text());
         this.renderText(this.bg.tile.mask)
         // Mask is only applied on the red channel for some reason.
@@ -299,7 +257,7 @@ class Drawing extends Tile {
     // Toggle visibility
     this.visible = !this.data.hidden || game.user.isGM;
     // Don't show the frame when we're creating a new drawing, unless it's text.
-    this.frame.visible = this._controlled && (this.id || this.type == "text");
+    this.frame.visible = this._controlled && (this.id || this.type == DRAWING_TYPE.TEXT);
     this.scaleHandle.visible = this.frame.visible && !this.data.locked;
 
     // Reset hit area. img doesn't set a hit area automatically if we don't use 'fill',
@@ -433,7 +391,7 @@ class Drawing extends Tile {
   }
 
   renderText(sprite) {
-    let lineHeight = this.data.height / this.data.content.split("\n").length
+    let lineHeight = this.data.height / this.data.text.split("\n").length
     sprite.style = {
       fontFamily: this.data.fontFamily,
       fontSize: this.data.fontSize,
@@ -445,7 +403,7 @@ class Drawing extends Tile {
       lineHeight: this.data.wordWrap ? lineHeight : undefined
     }
     sprite.alpha = this.data.strokeAlpha;
-    sprite.text = this.data.content;
+    sprite.text = this.data.text;
     this._handleUnshapedBounds(sprite)
   }
 

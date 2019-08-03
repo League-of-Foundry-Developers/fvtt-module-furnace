@@ -45,7 +45,7 @@ class DrawingConfig extends FormApplication {
   /* Make it interactive a little */
   activateListeners(html) {
     super.activateListeners(html);
-    html.find("select[name=fill]").change((ev) => this.updateFields(html))
+    html.find("select[name=fillType]").change((ev) => this.updateFields(html))
     html.find("button[name=reset]").click((ev) => this.reset(ev, html))
     html.find("input,textarea,select").change((ev) => this.refresh(html))
     this.updateFields(html)
@@ -53,7 +53,7 @@ class DrawingConfig extends FormApplication {
 
   updateFields(html) {
     // Get fill/drawing type. Use html because of the DrawingDefaultsConfig subclass.
-    let fillType = Number(html.find("select[name=fill]").val())
+    let fillType = Number(html.find("select[name=fillType]").val())
     let drawingType = html.find("select[name=type]").val()
     // Determine what options are to be available and which aren't
     let enableFillOptions = (fillType != DRAWING_FILL_TYPE.NONE &&
@@ -64,8 +64,8 @@ class DrawingConfig extends FormApplication {
       fillType == DRAWING_FILL_TYPE.CONTOUR ||
       fillType == DRAWING_FILL_TYPE.FRAME)
     let enableTextureSizeOptions = (fillType == DRAWING_FILL_TYPE.PATTERN)
-    let showBezierOptions = (drawingType == "polygon" || drawingType == "freehand");
-    let showTextOptions = drawingType == "text";
+    let showBezierOptions = (drawingType == DRAWING_TYPE.POLYGON || drawingType == DRAWING_TYPE.FREEHAND);
+    let showTextOptions = drawingType == DRAWING_TYPE.TEXT;
 
     // Enable/Disable various options by setting their opacity and pointer-events.
     let enable = { "pointer-events": "unset", "opacity": 1.0 };
@@ -96,10 +96,10 @@ class DrawingConfig extends FormApplication {
     let defaults = canvas.drawings.getDefaultData(type)
     for (let input of html.find("input")) {
       let name = input.getAttribute("name")
-      if (!["id", "x", "y", "width", "height", "owner", "hidden", "locked", "flags"].includes(name))
+      if (!["id", "x", "y", "width", "height", "author", "hidden", "locked", "flags"].includes(name))
         input.value = defaults[name]
     }
-    html.find("select[name=fill]").val(defaults["fill"])
+    html.find("select[name=fillType]").val(defaults["fillType"])
     this.updateFields(html)
     this.refresh(html)
   }
@@ -177,8 +177,8 @@ class DrawingDefaultsConfig extends DrawingConfig {
 
     // this.object here is actually the Drawingslayer
     this._defaults = {}
-    this.type = "rectangle"
-    for (let type of ["rectangle", "ellipse", "text", "polygon", "freehand"]) {
+    this.type = DRAWING_TYPE.RECTANGLE
+      for (let type of Object.keys(DRAWING_TYPE)) {
       this._defaults[type] = this.object.getStartingData(type);
     }
   }
@@ -238,8 +238,17 @@ class DrawingDefaultsConfig extends DrawingConfig {
     }
     // Set the tool to the last configured type.
     let tool = formData.type;
-    if (["rectangle", "ellipse"].includes(tool))
+    // FIXME: use enum
+    if (["r", "e"].includes(tool))
       tool = "shape";
+    else if (tool == "t")
+      tool = "text";
+    else if (tool == "p")
+      tool = "polygon";
+    else if (tool == "f")
+      tool = "freehand"
+    else
+      tool = "select";
     ui.controls.controls[ui.controls.activeControl].activeTool = tool;
     ui.controls.render();
   }

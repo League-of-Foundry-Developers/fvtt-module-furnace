@@ -66,7 +66,7 @@
       </div>
       <div class="form-group">
           <label>Text Content</label>
-          <textarea name="content" data-dtype="String">{{object.content}}</textarea>
+          <textarea name="text" data-dtype="String">{{object.text}}</textarea>
       </div>
   
     </div>
@@ -92,8 +92,8 @@
       <hr>
       <div class="form-group">
         <label>Fill Type</label>
-        <select name="fill" data-dtype="Number">
-            {{#select object.fill}}
+        <select name="fillType" data-dtype="Number">
+            {{#select object.fillType}}
             {{#each fillTypes as |type t|}}
             <option value="{{t}}">{{type}}</option>
             {{/each}}

@@ -29,26 +29,58 @@ class DrawingsLayer extends PlaceablesLayer {
     return Drawing;
   }
 
+  static DefaultData(type = "all") {
+    return {
+      // Special 'all' type which contains default values common to all types
+      all: {
+        id: 1,
+        x: 0,
+        y: 0, // FIXME: tiles have unused 'z', should drawings also have it now?
+        width: 0,
+        height: 0,
+        author: game.user.id,
+        hidden: false,
+        locked: false,
+        flags: {}, // lol
+        rotation: 0,
+        fillType: DRAWING_FILL_TYPE.NONE,
+        fillColor: "#ffffff",
+        fillAlpha: 1.0,
+        strokeColor: "#000000",
+        strokeAlpha: 1.0,
+        texture: null,
+        textureWidth: 0,
+        textureHeight: 0,
+        textureAlpha: 1.0,
+        text: "",
+        fontFamily: "Arial",
+        fontSize: 25,
+        points: [],
+      },
+      r: {
+        strokeWidth: 5,
+      },
+      e: {
+        strokeWidth: 5,
+      },
+      t: {
+        fill: DRAWING_FILL_TYPE.SOLID,
+        strokeWidth: 2
+      },
+      p: {
+        strokeWidth: 3,
+        bezierFactor: 0
+      },
+      f: {
+        strokeWidth: 3,
+        bezierFactor: 0.5,
+      }
+    }[type]
+  }
   /* -------------------------------------------- */
   /*  Rendering
 /* -------------------------------------------- */
 
-  /**
-   * Draw the DrawingsLayer.
-   * Draw each contained drawing within the scene as a child of the objects container
-   * @return {DrawingsLayer}
-   */
-  draw() {
-    // FIXME: module-to-core: remove
-    canvas.scene.data.drawings = FakeServer.getDrawings(canvas.scene)
-    super.draw();
-    return this;
-  }
-
-  // FIXME: module-to-core : use of FakeServer.setDrawings instead of canvas.scene.update()
-  // The reason for not just deleting this is that a trusted player could delete all drawings
-  // that he owns, but not others' drawings, so the title and new list needs to be different.
-  // This would need to be checked by the server I guess ?
   deleteAll() {
     const cls = this.constructor.placeableClass;
     let title = "Clear All Drawings"
@@ -58,7 +90,7 @@ class DrawingsLayer extends PlaceablesLayer {
       if (game.user.isTrusted) {
         title = "Clear Your Drawings"
         content = `<p>Clear your Drawings from this Scene?</p>`
-        new_drawings = FakeServer.getDrawings(canvas.scene).filter(d => d.owner !== game.user.id)
+        new_drawings = cnvas.scene.data[this.constructor.dataArray].filter(d => d.author !== game.user.id)
       } else {
         throw new Error(`You do not have permission to delete ${cls.name} placeables from the Scene.`);
       }
@@ -71,8 +103,8 @@ class DrawingsLayer extends PlaceablesLayer {
         yes: {
           icon: '<i class="fas fa-trash"></i>',
           label: "Yes",
-          // FIXME: module-to-core: Add 'drawings' as the things to trigger a redraw in _onUpdate
-          callback: () => FakeServer.setDrawings(canvas.scene, new_drawings).then(canvas.drawings.draw.bind(this))
+          callback: () => canvas.scene.update({[this.constructor.dataArray]: new_drawings})
+  
         },
         no: {
           icon: '<i class="fas fa-times"></i>',
@@ -103,24 +135,26 @@ class DrawingsLayer extends PlaceablesLayer {
     delete this._startingData[type].id
     return this._startingData[type]
   }
+
   getDefaultData(type) {
-    let defaultData = mergeObject(FakeServer.DrawingDefaultData("all"), FakeServer.DrawingDefaultData(type), { inplace: false });
+    let defaultData = mergeObject(DrawingsLayer.DefaultData("all"), DrawingsLayer.DefaultData(type), { inplace: false });
     // Set default colors as the user color
-    if (type == "text") {
+    if (type == DRAWING_TYPE.TEXT) {
       defaultData.fillColor = game.user.color;
     }
     else {
       defaultData.strokeColor = game.user.color;
       defaultData.fillColor = game.user.color;
     }
+    defaultData.type = type;
     return defaultData;
   }
 
   updateStartingData(drawing) {
     let data = duplicate(drawing.data)
-    mergeObject(data, { id: 1, x: 0, y: 0, width: 0, height: 0, owner: null, rotation: 0 }, { overwrite: true })
+    mergeObject(data, { id: 1, x: 0, y: 0, width: 0, height: 0, author: game.user.id, rotation: 0 }, { overwrite: true })
     if (data.points) delete data.points
-    if (data.content) delete data.content
+    if (data.text) delete data.text
     mergeObject(this.getStartingData(data.type), data, { overwrite: true })
   }
 
@@ -145,16 +179,22 @@ class DrawingsLayer extends PlaceablesLayer {
   }
 
   _getNewDataFromEvent(event) {
-    let type = game.activeTool;
+    let tool = game.activeTool;
+    let type = DRAWING_TYPE.RECTANGLE;
     let origin = this.getPosition(event, event.data.origin)
-    if (type == "shape") {
+    if (tool == "shape") {
       if (event.data.originalEvent.ctrlKey)
-        type = "ellipse";
+        type = DRAWING_TYPE.ELLIPSE;
       else
-        type = "rectangle";
-    }
+        type = DRAWING_TYPE.RECTANGLE;
+    } else if (tool == "text")
+      type = DRAWING_TYPE.TEXT
+    else if (tool == "polygon")
+      type = DRAWING_TYPE.POLYGON;
+    else if (tool == "freehand")
+      type = DRAWING_TYPE.FREEHAND;
     let data = mergeObject(this.getStartingData(type), origin, { inplace: false })
-    if (type == "freehand" || type == "polygon")
+    if (type == DRAWING_TYPE.FREEHAND || type == DRAWING_TYPE.POLYGON)
       data.points.push([data.x, data.y])
 
     return data;
@@ -204,7 +244,7 @@ class DrawingsLayer extends PlaceablesLayer {
     drawing._controlled = true;
     event.data.object = this.preview.addChild(drawing);
     // You can place a text by simply clicking, no need to drag it first.
-    if (drawing.type == "text")
+    if (drawing.type == DRAWING_TYPE.TEXT)
       event.data.createState = 2;
     event.data.createTime = Date.now();
   }
@@ -215,7 +255,7 @@ class DrawingsLayer extends PlaceablesLayer {
     let object = event.data.object;
     this._onDragCancel(event);
     // Text objects create their sheets for users to enter the text, otherwise create the drawing
-    if (object.type == "text") {
+    if (object.type == DRAWING_TYPE.TEXT) {
       // Render the preview sheet
       object.sheet.preview = this.preview;
       object.sheet.render(true);
@@ -223,15 +263,16 @@ class DrawingsLayer extends PlaceablesLayer {
       // Re-render the preview text
       this.preview.addChild(object);
       object.refresh();
-    } else if (!object.data.points || object.data.points.length > 1) {
+    } else if (object.data.points.length != 1) {
       // Only create the object if it's not a polygon/freehand or if it has at least 2 points
+      console.log("Creating with : ", object.data)
       this.constructor.placeableClass.create(canvas.scene._id, object.data);
     }
   }
 
   _onRightClick(event) {
     let { createState, object } = event.data;
-    if (createState >= 1 && object && object.type == "polygon") {
+    if (createState >= 1 && object && object.type == DRAWING_TYPE.POLYGON) {
       // Remove the current mouse position
       let position = object.data.points.pop()
       // If it was the last point, cancel the thing.
@@ -256,7 +297,7 @@ class DrawingsLayer extends PlaceablesLayer {
 
       // Add point to polygon and reset the state
       let drawing = event.data.object;
-      if (drawing && drawing.type == "polygon") {
+      if (drawing && drawing.type == DRAWING_TYPE.POLYGON) {
         let destination = this.getPosition(event, event.data.destination);
         drawing.addPolygonPoint(destination);
         drawing.refresh();
@@ -292,7 +333,7 @@ class DrawingsLayer extends PlaceablesLayer {
   _onMouseUp(event) {
     let { createState, object, createTime } = event.data;
 
-    if (object && object.type == "polygon") {
+    if (object && object.type == DRAWING_TYPE.POLYGON) {
       // Check for moving mouse during a polygon waypoint click
       if (createState == 2) {
         let now = Date.now();
@@ -320,7 +361,7 @@ class DrawingsLayer extends PlaceablesLayer {
     if (createState === 1) {
       event.stopPropagation();
       // Don't cancel a click for polygons
-      if (!object || object.type != "polygon")
+      if (!object || object.type != DRAWING_TYPE.POLYGON)
         this._onDragCancel(event);
       // Handle successful creation and chaining
     } else if (createState === 2) {
