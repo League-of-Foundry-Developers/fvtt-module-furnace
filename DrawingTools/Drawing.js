@@ -141,6 +141,7 @@ class Drawing extends Tile {
       this.img = this.addChild(new PIXI.Graphics());
     this.frame = this.addChild(new PIXI.Graphics());
     this.scaleHandle = this.addChild(new PIXI.Graphics());
+    this.rotateHandle = this.addChild(new PIXI.Graphics());
 
     // Render the Tile appearance
     this.refresh();
@@ -173,6 +174,17 @@ class Drawing extends Tile {
         mousedown: event => this._onHandleMouseDown(event),
         mousemove: event => this._onHandleMouseMove(event),
         mouseup: event => this._onHandleMouseUp(event)
+      }, {
+          canclick: event => !this.data.locked
+        });
+
+      // Rotate handler
+      new HandleManager(this.rotateHandle, this.layer, {
+        mouseover: event => this._onRotateMouseOver(event),
+        mouseout: event => this._onRotateMouseOut(event),
+        mousedown: event => this._onHandleMouseDown(event),
+        mousemove: event => this._onRotateMouseMove(event),
+        mouseup: event => this._onRotateMouseUp(event)
       }, {
           canclick: event => !this.data.locked
         });
@@ -293,6 +305,9 @@ class Drawing extends Tile {
     this.scaleHandle.position.set(this.data.width, this.data.height);
     this.scaleHandle.clear().lineStyle(2.0, 0x000000).beginFill(0xFF9829, 1.0).drawCircle(0, 0, 6.0);
 
+    // Draw Rotation handle
+    this._drawRotateHandle()
+
     // Draw border frame
     this.frame.clear().lineStyle(2.0, 0x000000).drawRect(0, 0, this.data.width, this.data.height);
 
@@ -300,7 +315,7 @@ class Drawing extends Tile {
     this.visible = !this.data.hidden || game.user.isGM;
     // Don't show the frame when we're creating a new drawing, unless it's text.
     this.frame.visible = this._controlled && (this.id || this.type == "text");
-    this.scaleHandle.visible = this.frame.visible && !this.data.locked;
+    this.scaleHandle.visible = this.rotateHandle.visible = this.frame.visible && !this.data.locked;
 
     // Reset hit area. img doesn't set a hit area automatically if we don't use 'fill',
     // so we need to manually define it. Also take into account negative width/height.
@@ -332,7 +347,7 @@ class Drawing extends Tile {
   _bezierControlPoints(factor, previous, point, next) {
     // Get vector of the opposite line
     let vector = { x: next.x - previous.x, y: next.y - previous.y };
-    
+
     // Calculate the proportional sizes of each neighboring line
     let precedingDistance = Math.hypot(previous.x - point.x, previous.y - point.y);
     let followingDistance = Math.hypot(point.x - next.x, point.y - next.y);
@@ -490,15 +505,13 @@ class Drawing extends Tile {
    * Get coordinates of a point after a rotation around another point
    * @param {Object} dest
    */
-  _rotatePosition(coordinates) {
+  _rotatePosition(coordinates, axis, angle) {
     // No need to do the math if there is no rotation
-    if (this.rotation) {
+    if (angle) {
       // Translate the coordinates so the rotation axis is (0, 0) 
-      let center = this.center
-      let x = coordinates.x - center.x;
-      let y = coordinates.y - center.y;
-      // this.rotation is the PIXI object's rotation which is already in radians
-      let angle = -this.rotation; 
+      let x = coordinates.x - axis.x;
+      let y = coordinates.y - axis.y;
+      
       /**
        *  Formula from https://academo.org/demos/rotation-about-point/
        * x′ = x*cos(θ) − y*sin(θ)
@@ -507,8 +520,8 @@ class Drawing extends Tile {
       let new_x = x * Math.cos(angle) - y * Math.sin(angle);
       let new_y = y * Math.cos(angle) + x * Math.sin(angle);
       // Translate back from origin point to our center
-      coordinates.x = new_x + center.x
-      coordinates.y = new_y + center.y
+      coordinates.x = new_x + axis.x
+      coordinates.y = new_y + axis.y
     }
     return coordinates;
   }
@@ -521,7 +534,8 @@ class Drawing extends Tile {
    */
   _updateDimensions(dest, { snap = true } = {}) {
 
-    dest = this._rotatePosition(dest)
+    // this.rotation is the PIXI object's rotation which is already in radians
+    dest = this._rotatePosition(dest, this.center, -this.rotation)
 
     // Determine destination position
     if (snap) dest = canvas.grid.getSnappedPosition(dest.x, dest.y);
@@ -536,6 +550,28 @@ class Drawing extends Tile {
     this.data.width = dest.x - this.data.x;
     this.data.height = dest.y - this.data.y;
 
+  }
+
+  /**
+   * Formula from : https://onlinemschool.com/math/library/vector/angl/
+   * cos(α) = (a·b) / (|a|·|b|)
+   * If we take our base (rotation 0) vector as (0, -1), then it simplifies
+   * the equation into : 
+   * cos(α) = -b.y / |b|
+   */
+  _updateRotation(coordinates) {
+    let center = this.center
+    let x = coordinates.x - center.x;
+    let y = coordinates.y - center.y;
+    let sign = Math.sign(this.data.height);
+
+    /**
+     * The equation always gives us the shortest angle (< 180), but if our X
+     * is positive then we're to the right of the angle 0, and if it's negative,
+     *  then we're to the left.
+     */
+    let angle = Math.acos(sign * -y / Math.hypot(x, y)) * Math.sign(x) * sign;
+    this.data.rotation = Math.round(toDegrees(angle))
   }
 
   /* -------------------------------------------- */
@@ -575,6 +611,70 @@ class Drawing extends Tile {
       state = hud._displayState;
     if (hud.object === this && state !== hud.constructor.DISPLAY_STATES.NONE) hud.clear();
     else hud.bind(this);
+  }
+
+  _drawRotateHandle(scale=1) {
+    this.rotateHandle.position.set(this.data.width / 2, 0);
+    let rotateHandleOffset = Math.sign(this.data.height) * 25;
+    let fromAngle = Math.PI / 4;
+    let toAngle = 3 * Math.PI / 4;
+    let fromPosition = this._rotatePosition({ x: rotateHandleOffset, y: 0 }, { x: 0, y: 0 }, -fromAngle)
+    let toPosition = this._rotatePosition({x: rotateHandleOffset, y: 0}, { x: 0, y: 0 }, -toAngle)
+    this.rotateHandle.clear()
+      // FIXME: PIXI 4.x doesn't finish star lines, so we make it not draw the outline
+      // and only use the fill instead.
+      .lineStyle(0.0, 0x000000)
+      .beginFill(0x000000, 1.0)
+      .moveTo(fromPosition.x, fromPosition.y)
+      .drawStar(fromPosition.x, fromPosition.y, 3, 6.0 * scale)
+      .moveTo(toPosition.x, toPosition.y)
+      .drawStar(toPosition.x, toPosition.y, 3, 6.0 * scale)
+      .endFill()
+      .lineStyle(4.0, 0x000000)
+      .moveTo(fromPosition.x, fromPosition.y)
+      .arc(0, 0, rotateHandleOffset, -fromAngle, -toAngle, true)
+      .lineStyle(2.0, 0x000000)
+      .moveTo(0, 0)
+      .lineTo(0, -rotateHandleOffset)
+      .beginFill(0xFF9829, 1.0)
+      .drawCircle(0, -rotateHandleOffset, 6.0 * scale)
+      .endFill()
+  }
+  /**
+   * Handle mouse-over event on a control handle
+   * @private
+   */
+  _onRotateMouseOver(event) {
+    let {handle} = event.data;
+    this._drawRotateHandle(1.5)
+  }
+
+  /* -------------------------------------------- */
+
+  /**
+   * Handle mouse-out event on a control handle
+   * @private
+   */
+  _onRotateMouseOut(event) {
+    let {handle} = event.data;
+    this._drawRotateHandle()
+  }
+  _onRotateMouseMove(event) {
+    this._updateRotation(event.data.destination);
+    this.refresh();
+    this._drawRotateHandle(1.5)
+  }
+
+  /* -------------------------------------------- */
+
+  _onRotateMouseUp(event) {
+    let { original, destination } = event.data;
+    this._updateRotation(destination);
+
+    // Update the tile
+    const data = { rotation: this.data.rotation };
+    this.data = original;
+    this.update(canvas.scene._id, data);
   }
 
 }
