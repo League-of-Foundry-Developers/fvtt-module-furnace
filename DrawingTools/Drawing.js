@@ -487,6 +487,32 @@ class Drawing extends Tile {
   /* -------------------------------------------- */
 
   /**
+   * Get coordinates of a point after a rotation around another point
+   * @param {Object} dest
+   */
+  _rotatePosition(coordinates) {
+    // No need to do the math if there is no rotation
+    if (this.rotation) {
+      // Translate the coordinates so the rotation axis is (0, 0) 
+      let center = this.center
+      let x = coordinates.x - center.x;
+      let y = coordinates.y - center.y;
+      // this.rotation is the PIXI object's rotation which is already in radians
+      let angle = -this.rotation; 
+      /**
+       *  Formula from https://academo.org/demos/rotation-about-point/
+       * x′ = x*cos(θ) − y*sin(θ)
+       * y′ = y*cos(θ) + x*sin(θ)
+       */
+      let new_x = x * Math.cos(angle) - y * Math.sin(angle);
+      let new_y = y * Math.cos(angle) + x * Math.sin(angle);
+      // Translate back from origin point to our center
+      coordinates.x = new_x + center.x
+      coordinates.y = new_y + center.y
+    }
+    return coordinates;
+  }
+  /**
    * Update the tile dimensions given a requested destination point
    * @param {Object} dest
    * @param {Boolean} snap
@@ -494,6 +520,8 @@ class Drawing extends Tile {
    * @private
    */
   _updateDimensions(dest, { snap = true } = {}) {
+
+    dest = this._rotatePosition(dest)
 
     // Determine destination position
     if (snap) dest = canvas.grid.getSnappedPosition(dest.x, dest.y);
