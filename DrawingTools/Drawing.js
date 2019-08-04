@@ -141,7 +141,7 @@ class Drawing extends Tile {
       this.img = this.addChild(new PIXI.Graphics());
     this.frame = this.addChild(new PIXI.Graphics());
     this.scaleHandle = this.addChild(new PIXI.Graphics());
-    this.rotateHandle = this.addChild(new PIXI.Graphics());
+    this.rotateHandle = this.addChild(new RotationHandle(this));
 
     // Render the Tile appearance
     this.refresh();
@@ -179,15 +179,9 @@ class Drawing extends Tile {
         });
 
       // Rotate handler
-      new HandleManager(this.rotateHandle, this.layer, {
-        mouseover: event => this._onRotateMouseOver(event),
-        mouseout: event => this._onRotateMouseOut(event),
-        mousedown: event => this._onHandleMouseDown(event),
-        mousemove: event => this._onRotateMouseMove(event),
-        mouseup: event => this._onRotateMouseUp(event)
-      }, {
-          canclick: event => !this.data.locked
-        });
+      this.rotateHandle.addEventListeners(this.layer, {
+        canclick: event => !this.data.locked
+      })
     }
 
     // Return the drawn Tile
@@ -306,7 +300,9 @@ class Drawing extends Tile {
     this.scaleHandle.clear().lineStyle(2.0, 0x000000).beginFill(0xFF9829, 1.0).drawCircle(0, 0, 6.0);
 
     // Draw Rotation handle
-    this._drawRotateHandle()
+    this.rotateHandle.position.set(this.data.width / 2, 0);
+    this.rotateHandle.scale.set(Math.sign(this.data.width), Math.sign(this.data.height));
+    this.rotateHandle.draw()
 
     // Draw border frame
     this.frame.clear().lineStyle(2.0, 0x000000).drawRect(0, 0, this.data.width, this.data.height);
@@ -611,70 +607,6 @@ class Drawing extends Tile {
       state = hud._displayState;
     if (hud.object === this && state !== hud.constructor.DISPLAY_STATES.NONE) hud.clear();
     else hud.bind(this);
-  }
-
-  _drawRotateHandle(scale=1) {
-    this.rotateHandle.position.set(this.data.width / 2, 0);
-    let rotateHandleOffset = Math.sign(this.data.height) * 25;
-    let fromAngle = Math.PI / 4;
-    let toAngle = 3 * Math.PI / 4;
-    let fromPosition = this._rotatePosition({ x: rotateHandleOffset, y: 0 }, { x: 0, y: 0 }, -fromAngle)
-    let toPosition = this._rotatePosition({x: rotateHandleOffset, y: 0}, { x: 0, y: 0 }, -toAngle)
-    this.rotateHandle.clear()
-      // FIXME: PIXI 4.x doesn't finish star lines, so we make it not draw the outline
-      // and only use the fill instead.
-      .lineStyle(0.0, 0x000000)
-      .beginFill(0x000000, 1.0)
-      .moveTo(fromPosition.x, fromPosition.y)
-      .drawStar(fromPosition.x, fromPosition.y, 3, 6.0 * scale)
-      .moveTo(toPosition.x, toPosition.y)
-      .drawStar(toPosition.x, toPosition.y, 3, 6.0 * scale)
-      .endFill()
-      .lineStyle(4.0, 0x000000)
-      .moveTo(fromPosition.x, fromPosition.y)
-      .arc(0, 0, rotateHandleOffset, -fromAngle, -toAngle, true)
-      .lineStyle(2.0, 0x000000)
-      .moveTo(0, 0)
-      .lineTo(0, -rotateHandleOffset)
-      .beginFill(0xFF9829, 1.0)
-      .drawCircle(0, -rotateHandleOffset, 6.0 * scale)
-      .endFill()
-  }
-  /**
-   * Handle mouse-over event on a control handle
-   * @private
-   */
-  _onRotateMouseOver(event) {
-    let {handle} = event.data;
-    this._drawRotateHandle(1.5)
-  }
-
-  /* -------------------------------------------- */
-
-  /**
-   * Handle mouse-out event on a control handle
-   * @private
-   */
-  _onRotateMouseOut(event) {
-    let {handle} = event.data;
-    this._drawRotateHandle()
-  }
-  _onRotateMouseMove(event) {
-    this._updateRotation(event.data.destination);
-    this.refresh();
-    this._drawRotateHandle(1.5)
-  }
-
-  /* -------------------------------------------- */
-
-  _onRotateMouseUp(event) {
-    let { original, destination } = event.data;
-    this._updateRotation(destination);
-
-    // Update the tile
-    const data = { rotation: this.data.rotation };
-    this.data = original;
-    this.update(canvas.scene._id, data);
   }
 
 }
