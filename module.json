@@ -10,7 +10,9 @@
     "DrawingTools/Drawing.js",
     "DrawingTools/DrawingHUD.js",
     "DrawingTools/DrawingConfig.js",
-    "DrawingTools/DrawingTools.js"
+    "DrawingTools/DrawingTools.js",
+    "Macros/h.min.js",
+    "Macros/Macros.js"
   ],
   "styles": [],
   "packs": [],
