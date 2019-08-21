@@ -6,7 +6,7 @@
  *
  * @type {PlaceablesLayer}
  */
-class DrawingsLayer extends PlaceablesLayer {
+class FurnaceDrawingsLayer extends PlaceablesLayer {
   constructor() {
     super()
 
@@ -18,7 +18,7 @@ class DrawingsLayer extends PlaceablesLayer {
    * @type {Array}
    */
   static get dataArray() {
-    return "drawings";
+    return "furnace_drawings";
   }
 
   /**
@@ -26,7 +26,7 @@ class DrawingsLayer extends PlaceablesLayer {
    * @type {PIXI.Container}
    */
   static get placeableClass() {
-    return Drawing;
+    return FurnaceDrawing;
   }
 
   /* -------------------------------------------- */
@@ -36,11 +36,11 @@ class DrawingsLayer extends PlaceablesLayer {
   /**
    * Draw the DrawingsLayer.
    * Draw each contained drawing within the scene as a child of the objects container
-   * @return {DrawingsLayer}
+   * @return {FurnaceDrawingsLayer}
    */
   draw() {
     // FIXME: module-to-core: remove
-    canvas.scene.data.drawings = FakeServer.getDrawings(canvas.scene)
+    canvas.scene.data.furnace_drawings = FurnaceFakeServer.getDrawings(canvas.scene)
     super.draw();
     return this;
   }
@@ -58,7 +58,7 @@ class DrawingsLayer extends PlaceablesLayer {
       if (game.user.isTrusted) {
         title = "Clear Your Drawings"
         content = `<p>Clear your Drawings from this Scene?</p>`
-        new_drawings = FakeServer.getDrawings(canvas.scene).filter(d => d.owner !== game.user.id)
+        new_drawings = FurnaceFakeServer.getDrawings(canvas.scene).filter(d => d.owner !== game.user.id)
       } else {
         throw new Error(`You do not have permission to delete ${cls.name} placeables from the Scene.`);
       }
@@ -72,7 +72,7 @@ class DrawingsLayer extends PlaceablesLayer {
           icon: '<i class="fas fa-trash"></i>',
           label: "Yes",
           // FIXME: module-to-core: Add 'drawings' as the things to trigger a redraw in _onUpdate
-          callback: () => FakeServer.setDrawings(canvas.scene, new_drawings).then(canvas.drawings.draw.bind(this))
+          callback: () => FurnaceFakeServer.setDrawings(canvas.scene, new_drawings).then(canvas.furnace_drawings.draw.bind(this))
         },
         no: {
           icon: '<i class="fas fa-times"></i>',
@@ -104,7 +104,7 @@ class DrawingsLayer extends PlaceablesLayer {
     return this._startingData[type]
   }
   getDefaultData(type) {
-    let defaultData = mergeObject(FakeServer.DrawingDefaultData("all"), FakeServer.DrawingDefaultData(type), { inplace: false });
+    let defaultData = mergeObject(FurnaceFakeServer.DrawingDefaultData("all"), FurnaceFakeServer.DrawingDefaultData(type), { inplace: false });
     // Set default colors as the user color
     if (type == "text") {
       defaultData.fillColor = game.user.color;
@@ -199,7 +199,7 @@ class DrawingsLayer extends PlaceablesLayer {
     super._onDragStart(event);
     canvas.app.view.oncontextmenu = ev => this._onRightClick(event);
     let data = this._getNewDataFromEvent(event);
-    let drawing = new Drawing(data);
+    let drawing = new FurnaceDrawing(data);
     drawing.draw();
     drawing._controlled = true;
     event.data.object = this.preview.addChild(drawing);

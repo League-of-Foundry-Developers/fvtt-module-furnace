@@ -6,11 +6,11 @@
  * @params options {Object}           Additional application rendering options
  * @params options.preview {Boolean}  Configure a preview version of a drawing which is not yet saved
  */
-class DrawingConfig extends FormApplication {
+class FurnaceDrawingConfig extends FormApplication {
 
   static get defaultOptions() {
     const options = super.defaultOptions;
-    options.id = "drawing-config";
+    options.id = "furnace-drawing-config";
     options.classes = ["sheet", "drawing-sheet"];
     options.title = "Drawing Configuration";
     // FIXME: module-to-core change path
@@ -35,8 +35,8 @@ class DrawingConfig extends FormApplication {
       object: duplicate(this.object.data),
       enableTypeSelection: false,
       options: this.options,
-      drawingTypes: CONFIG.drawingTypes,
-      fillTypes: CONFIG.drawingFillTypes,
+      drawingTypes: CONFIG.furnaceDrawingTypes,
+      fillTypes: CONFIG.furnaceDrawingFillTypes,
       availableFonts: availableFonts,
       submitText: this.preview ? "Create" : "Update"
     }
@@ -56,14 +56,14 @@ class DrawingConfig extends FormApplication {
     let fillType = Number(html.find("select[name=fill]").val())
     let drawingType = html.find("select[name=type]").val()
     // Determine what options are to be available and which aren't
-    let enableFillOptions = (fillType != DRAWING_FILL_TYPE.NONE &&
-      fillType != DRAWING_FILL_TYPE.CONTOUR &&
-      fillType != DRAWING_FILL_TYPE.FRAME)
-    let enableTextureOptions = (fillType == DRAWING_FILL_TYPE.PATTERN ||
-      fillType == DRAWING_FILL_TYPE.STRETCH ||
-      fillType == DRAWING_FILL_TYPE.CONTOUR ||
-      fillType == DRAWING_FILL_TYPE.FRAME)
-    let enableTextureSizeOptions = (fillType == DRAWING_FILL_TYPE.PATTERN)
+    let enableFillOptions = (fillType != FURNACE_DRAWING_FILL_TYPE.NONE &&
+      fillType != FURNACE_DRAWING_FILL_TYPE.CONTOUR &&
+      fillType != FURNACE_DRAWING_FILL_TYPE.FRAME)
+    let enableTextureOptions = (fillType == FURNACE_DRAWING_FILL_TYPE.PATTERN ||
+      fillType == FURNACE_DRAWING_FILL_TYPE.STRETCH ||
+      fillType == FURNACE_DRAWING_FILL_TYPE.CONTOUR ||
+      fillType == FURNACE_DRAWING_FILL_TYPE.FRAME)
+    let enableTextureSizeOptions = (fillType == FURNACE_DRAWING_FILL_TYPE.PATTERN)
     let showBezierOptions = (drawingType == "polygon" || drawingType == "freehand");
     let showTextOptions = drawingType == "text";
 
@@ -80,7 +80,7 @@ class DrawingConfig extends FormApplication {
     html.find("input[name=fillAlpha]").closest(".form-group")[!showTextOptions ? "show" : "hide"]()
     html.find("input[name=bezierFactor]").closest(".form-group")[showBezierOptions ? "show" : "hide"]()
     // FIXME: module-to-core sanity check server side, contour fill isn't valid for text.
-    html.find(`option[value=${DRAWING_FILL_TYPE.CONTOUR}],option[value=${DRAWING_FILL_TYPE.FRAME}]`).attr("disabled", showTextOptions)
+    html.find(`option[value=${FURNACE_DRAWING_FILL_TYPE.CONTOUR}],option[value=${FURNACE_DRAWING_FILL_TYPE.FRAME}]`).attr("disabled", showTextOptions)
     this.resizeFormWindow(html)
   }
 
@@ -171,7 +171,7 @@ class DrawingConfig extends FormApplication {
  * @params options {Object}           Additional application rendering options
  * @params options.preview {Boolean}  Configure a preview version of a drawing which is not yet saved
  */
-class DrawingDefaultsConfig extends DrawingConfig {
+class DrawingDefaultsConfig extends FurnaceDrawingConfig {
   constructor(object, options) {
     super(object, options);
 
@@ -194,8 +194,8 @@ class DrawingDefaultsConfig extends DrawingConfig {
       object: duplicate(this._defaults[this.type]),
       enableTypeSelection: true,
       options: this.options,
-      drawingTypes: CONFIG.drawingTypes,
-      fillTypes: CONFIG.drawingFillTypes,
+      drawingTypes: CONFIG.furnaceDrawingTypes,
+      fillTypes: CONFIG.furnaceDrawingFillTypes,
       submitText: "Set New Drawing Defaults"
     }
   }

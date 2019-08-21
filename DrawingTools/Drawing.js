@@ -2,21 +2,21 @@
 // Derive from Tile so we don't need to copy/paste all the scale-handle/rotate/dimension/control
 // functions here as they would be mostly the same.
 // FIXME: keep as is or derive from PlaceableObject and copy/paste the functions we need?
-class Drawing extends Tile {
+class FurnaceDrawing extends Tile {
   /**
    * Provide a reference to the canvas layer which contains placeable objects of this type
    * @type {PlaceablesLayer}
    */
   static get layer() {
-    return DrawingsLayer;
+    return FurnaceDrawingsLayer;
   }
 
   /**
    * Provide a singleton reference to the DrawingConfig sheet for this Drawing instance
-   * @type {DrawingConfig}
+   * @type {FurnaceDrawingConfig}
    */
   get sheet() {
-    if (!this._sheet) this._sheet = new DrawingConfig(this);
+    if (!this._sheet) this._sheet = new FurnaceDrawingConfig(this);
     return this._sheet;
   }
 
@@ -37,20 +37,20 @@ class Drawing extends Tile {
     return this.data.strokeColor ? this.data.strokeColor.replace("#", "0x") : 0x000000;
   }
   get usesFill() {
-    return [DRAWING_FILL_TYPE.SOLID,
-    DRAWING_FILL_TYPE.PATTERN,
-    DRAWING_FILL_TYPE.STRETCH].includes(this.data.fill)
+    return [FURNACE_DRAWING_FILL_TYPE.SOLID,
+    FURNACE_DRAWING_FILL_TYPE.PATTERN,
+    FURNACE_DRAWING_FILL_TYPE.STRETCH].includes(this.data.fill)
   }
   get usesTexture() {
-    return [DRAWING_FILL_TYPE.PATTERN,
-    DRAWING_FILL_TYPE.STRETCH,
-    DRAWING_FILL_TYPE.CONTOUR,
-    DRAWING_FILL_TYPE.FRAME].includes(this.data.fill) &&
+    return [FURNACE_DRAWING_FILL_TYPE.PATTERN,
+    FURNACE_DRAWING_FILL_TYPE.STRETCH,
+    FURNACE_DRAWING_FILL_TYPE.CONTOUR,
+    FURNACE_DRAWING_FILL_TYPE.FRAME].includes(this.data.fill) &&
       this.data.texture
   }
   get isTiled() {
-    return [DRAWING_FILL_TYPE.PATTERN,
-    DRAWING_FILL_TYPE.CONTOUR].includes(this.data.fill)
+    return [FURNACE_DRAWING_FILL_TYPE.PATTERN,
+    FURNACE_DRAWING_FILL_TYPE.CONTOUR].includes(this.data.fill)
   }
 
   // FIXME: Server side code - unmodified create/update/delete functions other than for
@@ -59,7 +59,7 @@ class Drawing extends Tile {
     const name = this.name,
       preHook = 'preCreate' + name,
       eventData = { parentId: sceneId, data: data };
-    return FakeServer.trigger('create' + name, eventData, options, preHook, this).then(response => {
+    return FurnaceFakeServer.trigger('create' + name, eventData, options, preHook, this).then(response => {
       const object = this.layer._createPlaceableObject(response);
       if (options.displaySheet) object.sheet.render(true);
       return object;
@@ -81,7 +81,7 @@ class Drawing extends Tile {
 
     // Trigger the socket event and handle response
     const eventData = { parentId: sceneId, data: changed };
-    await FakeServer.trigger('update' + name, eventData, options, preHook, this).then(response => {
+    await FurnaceFakeServer.trigger('update' + name, eventData, options, preHook, this).then(response => {
       return this.constructor.layer._updatePlaceableObject(response);
     });
   }
@@ -89,7 +89,7 @@ class Drawing extends Tile {
     const name = this.constructor.name,
       preHook = 'preDelete' + name,
       eventData = { parentId: sceneId, childId: this.id };
-    return await FakeServer.trigger('delete' + name, eventData, options, preHook, this).then(response => {
+    return await FurnaceFakeServer.trigger('delete' + name, eventData, options, preHook, this).then(response => {
       return this.constructor.layer._deletePlaceableObject(response);
     });
   }
@@ -387,21 +387,26 @@ class Drawing extends Tile {
       let closedLoop = (last.x == previous.x && last.y == previous.y)
       let cp0;
 
-      // Verify if we're closing a loop here and calculate the previous bezier control point
-      if (closedLoop) {
-        last = this._adjust(origin, points[points.length - 2]);
-        let { next_cp0 } = this._bezierControlPoints(bezierFactor, last, previous, point);
+      // With PIXI 5, line is broken when using bezierCurveTo and having a factor of 0
+      if (bezierFactor > 0) {
+        // Verify if we're closing a loop here and calculate the previous bezier control point
+        if (closedLoop) {
+          last = this._adjust(origin, points[points.length - 2]);
+          let { next_cp0 } = this._bezierControlPoints(bezierFactor, last, previous, point);
+          cp0 = next_cp0;
+        }
+        // Draw the first line
+        let { cp1, next_cp0 } = this._bezierControlPoints(bezierFactor, previous, point, next);
+        if (closedLoop)
+          graphics.bezierCurveTo(cp0.x, cp0.y, cp1.x, cp1.y, point.x, point.y);
+        else
+          graphics.quadraticCurveTo(cp1.x, cp1.y, point.x, point.y);
         cp0 = next_cp0;
+      } else {
+        graphics.lineTo(point.x, point.y)
       }
-      // Draw the first line
-      let { cp1, next_cp0 } = this._bezierControlPoints(bezierFactor, previous, point, next);
-      if (closedLoop)
-        graphics.bezierCurveTo(cp0.x, cp0.y, cp1.x, cp1.y, point.x, point.y);
-      else
-        graphics.quadraticCurveTo(cp1.x, cp1.y, point.x, point.y);
       previous = point;
       point = next;
-      cp0 = next_cp0;
 
       // Draw subsequent lines
       for (let i = 2; i < points.length; i++) {
@@ -409,15 +414,19 @@ class Drawing extends Tile {
           next = this._adjust(origin, points[1]);
         else
           next = this._adjust(origin, points[i + 1]);
-        let { cp1, next_cp0 } = this._bezierControlPoints(bezierFactor, previous, point, next);
-        // If the last line, draw it as quadratic if it's not a closed loop.
-        if (i == points.length - 1 && !closedLoop)
-          graphics.quadraticCurveTo(cp0.x, cp0.y, point.x, point.y);
-        else
-          graphics.bezierCurveTo(cp0.x, cp0.y, cp1.x, cp1.y, point.x, point.y);
+        if (bezierFactor > 0) {
+          let { cp1, next_cp0 } = this._bezierControlPoints(bezierFactor, previous, point, next);
+          // If the last line, draw it as quadratic if it's not a closed loop.
+          if (i == points.length - 1 && !closedLoop)
+            graphics.quadraticCurveTo(cp0.x, cp0.y, point.x, point.y);
+          else
+            graphics.bezierCurveTo(cp0.x, cp0.y, cp1.x, cp1.y, point.x, point.y);
+          cp0 = next_cp0;
+        } else {
+          graphics.lineTo(point.x, point.y)
+        }
         previous = point;
         point = next;
-        cp0 = next_cp0;
       }
     } else if (points.length == 2) { // if point.length < 2, don't do anything
       let point = this._adjust(origin, points[1]);
@@ -539,12 +548,18 @@ class Drawing extends Tile {
     // Determine change
     let dx = dest.x - this.data.x,
       dy = dest.y - this.data.y;
-    if (dx === 0) dest.x = this.data.x + canvas.dimensions.size * Math.sign(this.data.width);
-    if (dy === 0) dest.y = this.data.y + canvas.dimensions.size * Math.sign(this.data.height);
+    if (dx === 0) dx = canvas.dimensions.size * Math.sign(this.data.width);
+    if (dy === 0) dy = canvas.dimensions.size * Math.sign(this.data.height);
 
+    let angle = ((a) => ((a % 360) + 360) % 360)(this.data.rotation)
+    if (angle > 90 && angle < 270) {
+      /*this.data.rotation = angle - 180;
+      dx *= -1;
+      dy *= -1;*/
+    }
     // Resize, ignoring aspect ratio
-    this.data.width = dest.x - this.data.x;
-    this.data.height = dest.y - this.data.y;
+    this.data.width = dx;
+    this.data.height = dy;
 
   }
 
@@ -592,7 +607,7 @@ class Drawing extends Tile {
    */
   _onMouseDown(event) {
     // Remove the active Drawing HUD
-    canvas.hud.drawing.clear();
+    canvas.hud.furnace_drawing.clear();
     // Control the Tile
     this.control();
   }
@@ -603,7 +618,7 @@ class Drawing extends Tile {
    * @private
    */
   _onRightDown(event) {
-    const hud = canvas.hud.drawing,
+    const hud = canvas.hud.furnace_drawing,
       state = hud._displayState;
     if (hud.object === this && state !== hud.constructor.DISPLAY_STATES.NONE) hud.clear();
     else hud.bind(this);

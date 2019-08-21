@@ -34,7 +34,7 @@
  * share the same id, so moving one will move all of them.
  */
 
-const DRAWING_FILL_TYPE = {
+const FURNACE_DRAWING_FILL_TYPE = {
   "NONE": 0,
   "SOLID": 1,
   "PATTERN": 2,
@@ -43,7 +43,7 @@ const DRAWING_FILL_TYPE = {
   "FRAME": 5
 }
 
-CONFIG.drawingFillTypes = {
+CONFIG.furnaceDrawingFillTypes = {
   0: "None",
   1: "Solid Color",
   2: "Tiled Pattern",
@@ -53,8 +53,7 @@ CONFIG.drawingFillTypes = {
 }
 
 // FIXME: module-to-core
-CONFIG.Drawing = duplicate(CONFIG.Tile)
-CONFIG.drawingTypes = {
+CONFIG.furnaceDrawingTypes = {
   rectangle: "Rectangle",
   ellipse: "Ellipse",
   text: "Text",
@@ -73,7 +72,7 @@ CONFIG.WebSafeFonts = {
 }
 CONFIG.FREEHAND_SAMPLING_RATE = 100;
 
-class FakeServer {
+class FurnaceFakeServer {
   // Firefox doesn't support static class fields
   static get updating() { return this._upating || false };
   static set updating(value) { this._upating = value };
@@ -92,7 +91,7 @@ class FakeServer {
         locked: false,
         flags: {}, // lol
         rotation: 0,
-        fill: DRAWING_FILL_TYPE.NONE,
+        fill: FURNACE_DRAWING_FILL_TYPE.NONE,
         fillColor: "#ffffff",
         fillAlpha: 1.0,
         strokeColor: "#000000",
@@ -112,7 +111,7 @@ class FakeServer {
       },
       text: {
         type: "text",
-        fill: DRAWING_FILL_TYPE.SOLID,
+        fill: FURNACE_DRAWING_FILL_TYPE.SOLID,
         strokeWidth: 2,
         content: "",
         fontFamily: "Arial",
@@ -154,7 +153,7 @@ class FakeServer {
     console.log("Got message : ", data)
     if (data.updateFlags === true && game.user.isGM && data.target == game.user.id) {
       let scene = game.scenes.get(data.scene);
-      return FakeServer.updateFlag(scene, data.drawings);
+      return FurnaceFakeServer.updateFlag(scene, data.drawings);
     }
   }
 
@@ -198,8 +197,8 @@ class FakeServer {
     if (data.id !== undefined) data.id = Number(data.id)
     if (data.fill !== undefined) {
       data.fill = Number(data.fill)
-      if (!Object.values(DRAWING_FILL_TYPE).includes(data.fill))
-        data.fill = DRAWING_FILL_TYPE.NONE
+      if (!Object.values(FURNACE_DRAWING_FILL_TYPE).includes(data.fill))
+        data.fill = FURNACE_DRAWING_FILL_TYPE.NONE
     }
     /* Float points is unnecessary */
     if (data.points !== undefined)
@@ -215,8 +214,8 @@ class FakeServer {
       /* Sanitize content to have default values. Should do more, like ensure id exists and
        * is unique, type is known, values are not out bounds, etc..
        */
-      mergeObject(data, FakeServer.DrawingDefaultData("all"), { overwrite: false })
-      mergeObject(data, FakeServer.DrawingDefaultData(data.type), { overwrite: false })
+      mergeObject(data, FurnaceFakeServer.DrawingDefaultData("all"), { overwrite: false })
+      mergeObject(data, FurnaceFakeServer.DrawingDefaultData(data.type), { overwrite: false })
     }
     return data
   }
@@ -231,14 +230,14 @@ class FakeServer {
         return new Promise(resolve => null);   // Deliberately return an unresolved Promise
       }
     }
-    if (hook == "createDrawing") {
+    if (hook == "createFurnaceDrawing") {
       let { parentId, data } = eventData
       const scene = game.scenes.get(parentId);
       if (!scene) throw new Error(`Parent Scene ${parentId} not found`);
       let id = 1;
 
       // Get the current drawings and assign a new id
-      let drawings = FakeServer.getDrawings(scene)
+      let drawings = FurnaceFakeServer.getDrawings(scene)
       for (let drawing of drawings) {
         if (drawing.id >= id)
           id = drawing.id + 1
@@ -247,36 +246,36 @@ class FakeServer {
 
       // Add to database
       drawings.push(data)
-      await FakeServer.setDrawings(scene, drawings)
+      await FurnaceFakeServer.setDrawings(scene, drawings)
 
       // We duplicate because multiple pastes will cause multiple objects to share the same data
       return { parentId: parentId, created: duplicate(data) }
-    } else if (hook == "updateDrawing") {
+    } else if (hook == "updateFurnaceDrawing") {
       let { parentId, data } = eventData
       const scene = game.scenes.get(parentId);
       if (!scene) throw new Error(`Parent Scene ${parentId} not found`);
 
       // Update database
-      let drawings = FakeServer.getDrawings(scene)
+      let drawings = FurnaceFakeServer.getDrawings(scene)
       let original = drawings.find(o => o.id === Number(data.id));
       if (!original) throw new Error(`Drawing ${parentId} not found`);
 
       mergeObject(original, data, { inplace: true });
-      await FakeServer.setDrawings(scene, drawings)
+      await FurnaceFakeServer.setDrawings(scene, drawings)
 
       this.sanityCheck(data, true)
       return { parentId: parentId, updated: duplicate(data) }
-    } else if (hook == "deleteDrawing") {
+    } else if (hook == "deleteFurnaceDrawing") {
       let { parentId, childId } = eventData
       const scene = game.scenes.get(parentId);
       if (!scene) throw new Error(`Parent Scene ${parentId} not found`);
 
       // Update database
-      let drawings = FakeServer.getDrawings(scene)
+      let drawings = FurnaceFakeServer.getDrawings(scene)
       let idx = drawings.findIndex(o => o.id === Number(childId));
       if (idx !== -1) {
         drawings.splice(idx, 1);
-        await FakeServer.setDrawings(scene, drawings)
+        await FurnaceFakeServer.setDrawings(scene, drawings)
       }
 
       return { parentId: parentId, deleted: childId }
@@ -286,19 +285,19 @@ class FakeServer {
   }
 }
 
-class FurnaceDrawing {
+class FurnaceDrawingTools {
   static canvasInit() {
-    if (canvas.drawings === undefined) {
-      canvas.hud.drawing = new DrawingHUD()
+    if (canvas.furnace_drawings === undefined) {
+      canvas.hud.furnace_drawing = new FurnaceDrawingHUD()
       let gridIdx = canvas.stage.children.indexOf(canvas.grid)
-      canvas.drawings = canvas.stage.addChildAt(new DrawingsLayer(), gridIdx)
+      canvas.furnace_drawings = canvas.stage.addChildAt(new FurnaceDrawingsLayer(), gridIdx)
     }
     // Should probably 'await' this, but the hook isn't async
-    canvas.drawings.draw()
+    canvas.furnace_drawings.draw()
   }
 
   static onReady() {
-    game.socket.on('module.furnace', FakeServer.onMessage);
+    game.socket.on('module.furnace', FurnaceFakeServer.onMessage);
   }
 
   static onUpdateScene(scene, updated) {
@@ -309,16 +308,16 @@ class FurnaceDrawing {
     // the changes.
     
     if (updated["flags.furnace.drawings"] !== undefined && canvas.scene.id == scene.id) {
-      if (!FakeServer.updating)
-        canvas.drawings.draw()
-      else if (FakeServer.update_promise_resolver)
-        FakeServer.update_promise_resolver(updated["flags.furnace.drawings"]);
+      if (!FurnaceFakeServer.updating)
+        canvas.furnace_drawings.draw()
+      else if (FurnaceFakeServer.update_promise_resolver)
+        FurnaceFakeServer.update_promise_resolver(updated["flags.furnace.drawings"]);
     }
         
   }
   // FIXME: module-to-core: you know where this goes :)
   static renderSceneControls(obj, html, data) {
-    if (obj.controls.drawings == undefined) {
+    if (obj.controls["furnace-drawings"] == undefined) {
       // FIXME: module-to-core: currently, trusted players can't update a scene.
       // Having them able to modify the drawings field would be great. Otherwise, this 
       // needs to become isGM.
@@ -330,10 +329,10 @@ class FurnaceDrawing {
       for (let control in controls) {
         obj.controls[control] = controls[control]
         if (control == "tiles") {
-          obj.controls["drawings"] = {
+          obj.controls["furnace-drawings"] = {
             name: "Drawing Tools",
-            layer: "DrawingsLayer",
-            icon: "fas fa-pencil-alt",
+            layer: "FurnaceDrawingsLayer",
+            icon: "fas fa-paint-brush",
             tools: {
               select: {
                 name: "Select Drawings",
@@ -364,7 +363,7 @@ class FurnaceDrawing {
                 name: "Clear all Drawings",
                 icon: "fas fa-trash",
                 onClick: () => {
-                  canvas.drawings.deleteAll();
+                  canvas.furnace_drawings.deleteAll();
                   ui.controls.controls[ui.controls.activeControl].activeTool = "select";
                   ui.controls.render();
                 },
@@ -374,7 +373,7 @@ class FurnaceDrawing {
                 name: "Clear all Drawings",
                 icon: "fas fa-cog",
                 onClick: () => {
-                  canvas.drawings.configureStartingData();
+                  canvas.furnace_drawings.configureStartingData();
                   ui.controls.controls[ui.controls.activeControl].activeTool = "select";
                   ui.controls.render();
                 },
@@ -391,7 +390,7 @@ class FurnaceDrawing {
   }
 }
 
-Hooks.on('canvasInit', FurnaceDrawing.canvasInit);
-Hooks.on('renderSceneControls', FurnaceDrawing.renderSceneControls);
-Hooks.on('updateScene', FurnaceDrawing.onUpdateScene);
-Hooks.on('ready', FurnaceDrawing.onReady);
+Hooks.on('canvasInit', FurnaceDrawingTools.canvasInit);
+Hooks.on('renderSceneControls', FurnaceDrawingTools.renderSceneControls);
+Hooks.on('updateScene', FurnaceDrawingTools.onUpdateScene);
+Hooks.on('ready', FurnaceDrawingTools.onReady);

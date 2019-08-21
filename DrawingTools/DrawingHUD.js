@@ -3,7 +3,7 @@
  * An implementation of the PlaceableHUD base class which renders a heads-up-display interface for Drawing objects.
  * @type {BasePlaceableHUD}
  */
-class DrawingHUD extends BasePlaceableHUD {
+class FurnaceDrawingHUD extends BasePlaceableHUD {
   /**
    * Assign the default options which are supported by the entity edit sheet
    * @type {Object}
@@ -15,7 +15,7 @@ class DrawingHUD extends BasePlaceableHUD {
       // Actually, we could have both a token and a tile HUD open at the same time
       // maybe it's better to just have a single <template id=hud> and have all
       // the huds replacing that one ?
-      id: "tile-hud",
+      id: "drawing-hud",
       template: "public/modules/furnace/templates/drawing-hud.html"
     });
   }
@@ -28,7 +28,6 @@ class DrawingHUD extends BasePlaceableHUD {
    */
   getData() {
     const data = super.getData();
-    mergeObject(data, CONFIG.Drawing, { inplace: true });
     return mergeObject(data, {
       lockedClass: data.locked ? "active" : "",
       visibilityClass: data.hidden ? "active" : ""
@@ -72,8 +71,8 @@ class DrawingHUD extends BasePlaceableHUD {
     let data = {}
     data[event.target.name] = event.target.value
     // If user sets a fill color but fill is NONE then change it
-    if (event.target.name == "fillColor" && this.object.data.fill == DRAWING_FILL_TYPE.NONE)
-      data.fill = DRAWING_FILL_TYPE.SOLID;
+    if (event.target.name == "fillColor" && this.object.data.fill == FURNACE_DRAWING_FILL_TYPE.NONE)
+      data.fill = FURNACE_DRAWING_FILL_TYPE.SOLID;
     this.object.update(canvas.scene._id, data).then(() => {
       this.render()
       this.object.layer.updateStartingData(this.object)
