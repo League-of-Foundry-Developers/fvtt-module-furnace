@@ -2,20 +2,37 @@ class FurnaceMacros {
     constructor() {
         let helpers = {
             now: () => new Date(),
-            roll: (formula) => new Roll(formula).roll().total + ""
+            roll: (formula) => new Roll(formula).roll().total
         }
         H.registerHelpers(Handlebars)
-        for (let helper in helpers)
-            Handlebars.registerHelper(helper, helpers[helper])
+        Handlebars.registerHelper(helpers)
+
+        Hooks.on('init', this.init.bind(this));
+    }
+
+    init() {
+        // Register module configuration settings
+        game.settings.register("furnace", "enableMacros", {
+            name: "Furnace: Enable Macros",
+            hint: "Enable the parsing of the text chat as a Handlebars template acting as a macro system (experimental feature).",
+            scope: "world",
+            config: true,
+            default: false,
+            type: Boolean,
+        });
+        game.macros = this;
+        Hooks.on('preCreateChatMessage', this.parseMessage.bind(this))
     }
 
     static getTemplateContext() {
-        return {game: game, ui: ui, canvas: canvas}
+        return { game: game, ui: ui, canvas: canvas }
     }
-    
+
     parseMessage(message_class, data) {
-        let template = data.content;
-        let command = data.content.match(`^/([^ !"#%&'\(\)\*+,\./;<=>@[\\]\^\`{\|}~\]\+)(.*)`);
+        if (!game.settings.get("furnace", "enableMacros")) return;
+
+        let template = data.content || "";
+        let command = template.match(`^/([^ !"#%&'\(\)\*+,\./;<=>@[\\]\^\`{\|}~\]\+)(.*)`);
         if (command !== null) {
             let macro = command[1]
             let macro_args = command[2]
@@ -28,14 +45,17 @@ class FurnaceMacros {
         }
 
         if (template.includes("{{") || template.includes("[[")) {
+            console.log("Compiling Macro : ", template)
             let compiled = Handlebars.compile(template);
             let context = this.constructor.getTemplateContext()
             context["createData"] = data
+
             data.content = compiled(context)
+            console.log("Result : ", data.content)
             mergeObject(data, { "flags.furnace.macros.template": template })
         }
-        
+        return data.content !== undefined && data.content.length > 0;
     }
 }
-game.macros = new FurnaceMacros()
-Hooks.on('preCreateChatMessage', game.macros.parseMessage.bind(game.macros))
+
+new FurnaceMacros();
