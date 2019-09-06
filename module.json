@@ -12,7 +12,9 @@
     "DrawingTools/DrawingConfig.js",
     "DrawingTools/DrawingTools.js",
     "Macros/h.min.js",
-    "Macros/Macros.js"
+    "Macros/Macros.js",
+    "QoL/split-html.js",
+    "QoL/SplitJournal.js"
   ],
   "styles": [],
   "packs": [],
