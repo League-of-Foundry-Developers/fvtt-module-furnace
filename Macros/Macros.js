@@ -30,6 +30,7 @@ class FurnaceMacros {
 
     parseMessage(message_class, data) {
         if (!game.settings.get("furnace", "enableMacros")) return;
+        if (data.content === undefined || data.content.length == 0) return;
 
         let template = data.content || "";
         let command = template.match(`^/([^ !"#%&'\(\)\*+,\./;<=>@[\\]\^\`{\|}~\]\+)(.*)`);
