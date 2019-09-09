@@ -2,7 +2,7 @@
   "name": "furnace",
   "title": "The Furnace",
   "description": "<p>The Furnace is an essential part of every Foundry.</p><p>This module contains a set of features that improve the Quality of Life of the DM/Players. The current features are : </p><p><strong>Drawing Tools :</strong>You (and trusted players) can draw on your map for a more dynamic gaming experience.</p><p><strong>Split Journal :</strong> Select the split option from the content menu on a journal entry to split it into multiple entries.</p>",
-  "version": "0.4",
+  "version": "0.5",
   "author": "KaKaRoTo",
   "scripts": [
     "DrawingTools/DrawingsLayer.js",
@@ -18,9 +18,9 @@
   ],
   "styles": [],
   "packs": [],
-  "url": "",
-  "manifest": "",
-  "download": "",
+  "url": "https://github.com/kakaroto/fvtt-module-furnace",
+  "manifest": "https://raw.githubusercontent.com/kakaroto/fvtt-module-furnace/master/module.json",
+  "download": "https://github.com/kakaroto/fvtt-module-furnace/raw/master/furnace.zip",
   "socket": true,
-  "minimumCoreVersion": "0.3.3"
+  "minimumCoreVersion": "0.3.5"
 }
