@@ -18,7 +18,7 @@ class FurnaceDrawingsLayer extends PlaceablesLayer {
    * @type {Array}
    */
   static get dataArray() {
-    return "furnace_drawings";
+    return "drawings";
   }
 
   /**
@@ -30,25 +30,9 @@ class FurnaceDrawingsLayer extends PlaceablesLayer {
   }
 
   /* -------------------------------------------- */
-  /*  Rendering
-/* -------------------------------------------- */
+  /*  Rendering                                   */
+  /* -------------------------------------------- */
 
-  /**
-   * Draw the DrawingsLayer.
-   * Draw each contained drawing within the scene as a child of the objects container
-   * @return {FurnaceDrawingsLayer}
-   */
-  draw() {
-    // FIXME: module-to-core: remove
-    canvas.scene.data.furnace_drawings = FurnaceFakeServer.getDrawings(canvas.scene)
-    super.draw();
-    return this;
-  }
-
-  // FIXME: module-to-core : use of FakeServer.setDrawings instead of canvas.scene.update()
-  // The reason for not just deleting this is that a trusted player could delete all drawings
-  // that he owns, but not others' drawings, so the title and new list needs to be different.
-  // This would need to be checked by the server I guess ?
   deleteAll() {
     const cls = this.constructor.placeableClass;
     let title = "Clear All Drawings"
@@ -58,12 +42,12 @@ class FurnaceDrawingsLayer extends PlaceablesLayer {
       if (game.user.isTrusted) {
         title = "Clear Your Drawings"
         content = `<p>Clear your Drawings from this Scene?</p>`
-        new_drawings = FurnaceFakeServer.getDrawings(canvas.scene).filter(d => d.owner !== game.user.id)
+        new_drawings = canvas.scene.data.drawings.filter(d => d.author !== game.user.id)
       } else {
-        throw new Error(`You do not have permission to delete ${cls.name} placeables from the Scene.`);
+        throw new Error(`You do not have permission to delete Drawings from the Scene.`);
       }
     }
-    let layer = this;
+    
     new Dialog({
       title: title,
       content: content,
@@ -71,8 +55,7 @@ class FurnaceDrawingsLayer extends PlaceablesLayer {
         yes: {
           icon: '<i class="fas fa-trash"></i>',
           label: "Yes",
-          // FIXME: module-to-core: Add 'drawings' as the things to trigger a redraw in _onUpdate
-          callback: () => FurnaceFakeServer.setDrawings(canvas.scene, new_drawings).then(canvas.furnace_drawings.draw.bind(this))
+          callback: () => canvas.scene.update({"drawings": new_drawings })
         },
         no: {
           icon: '<i class="fas fa-times"></i>',
@@ -98,15 +81,20 @@ class FurnaceDrawingsLayer extends PlaceablesLayer {
   /* -------------------------------------------- */
 
   getStartingData(type) {
+    type = type[0]
     if (this._startingData[type] === undefined)
       this._startingData[type] = this.getDefaultData(type);
     delete this._startingData[type].id
     return this._startingData[type]
   }
   getDefaultData(type) {
-    let defaultData = mergeObject(FurnaceFakeServer.DrawingDefaultData("all"), FurnaceFakeServer.DrawingDefaultData(type), { inplace: false });
+    type = type[0]
+    let defaultData = mergeObject(FurnaceDrawingTools.DrawingDefaultData("all"),
+                                  FurnaceDrawingTools.DrawingDefaultData(type),
+                                  { inplace: false });
+    defaultData.type = type
     // Set default colors as the user color
-    if (type == "text") {
+    if (type == DRAWING_TYPES.TEXT) {
       defaultData.fillColor = game.user.color;
     }
     else {
@@ -118,9 +106,9 @@ class FurnaceDrawingsLayer extends PlaceablesLayer {
 
   updateStartingData(drawing) {
     let data = duplicate(drawing.data)
-    mergeObject(data, { id: 1, x: 0, y: 0, width: 0, height: 0, owner: null, rotation: 0 }, { overwrite: true })
+    mergeObject(data, { id: 1, x: 0, y: 0, z: 0, width: 0, height: 0, author: null, rotation: 0 }, { overwrite: true })
     if (data.points) delete data.points
-    if (data.content) delete data.content
+    if (data.text) delete data.text
     mergeObject(this.getStartingData(data.type), data, { overwrite: true })
   }
 
@@ -134,11 +122,9 @@ class FurnaceDrawingsLayer extends PlaceablesLayer {
   }
 
   getPosition(event, point) {
-    // Snap to grid by default only for shapes
-    // FIXME: maybe for polygons too? would make sense but having to press shift
-    // constantly for non snapping could be annoying.
+    // Snap to grid by default only for shapes and polygons
     let position = duplicate(point)
-    if (!event.data.originalEvent.shiftKey && ["shape", "polygon"].includes(game.activeTool)) {
+    if (!event.data.originalEvent.shiftKey && ["rectangle", "ellipse", "polygon"].includes(game.activeTool)) {
       position = canvas.grid.getSnappedPosition(position.x, position.y);
     }
     return position;
@@ -147,12 +133,6 @@ class FurnaceDrawingsLayer extends PlaceablesLayer {
   _getNewDataFromEvent(event) {
     let type = game.activeTool;
     let origin = this.getPosition(event, event.data.origin)
-    if (type == "shape") {
-      if (event.data.originalEvent.ctrlKey)
-        type = "ellipse";
-      else
-        type = "rectangle";
-    }
     let data = mergeObject(this.getStartingData(type), origin, { inplace: false })
     if (type == "freehand" || type == "polygon")
       data.points.push([data.x, data.y])
@@ -204,7 +184,7 @@ class FurnaceDrawingsLayer extends PlaceablesLayer {
     drawing._controlled = true;
     event.data.object = this.preview.addChild(drawing);
     // You can place a text by simply clicking, no need to drag it first.
-    if (drawing.type == "text")
+    if (drawing.type == DRAWING_TYPES.TEXT)
       event.data.createState = 2;
     event.data.createTime = Date.now();
   }
@@ -215,7 +195,7 @@ class FurnaceDrawingsLayer extends PlaceablesLayer {
     let object = event.data.object;
     this._onDragCancel(event);
     // Text objects create their sheets for users to enter the text, otherwise create the drawing
-    if (object.type == "text") {
+    if (object.type == DRAWING_TYPES.TEXT) {
       // Render the preview sheet
       object.sheet.preview = this.preview;
       object.sheet.render(true);
@@ -231,7 +211,7 @@ class FurnaceDrawingsLayer extends PlaceablesLayer {
 
   _onRightClick(event) {
     let { createState, object } = event.data;
-    if (createState >= 1 && object && object.type == "polygon") {
+    if (createState >= 1 && object && object.type == DRAWING_TYPES.POLYGON) {
       // Remove the current mouse position
       let position = object.data.points.pop()
       // If it was the last point, cancel the thing.
@@ -256,7 +236,7 @@ class FurnaceDrawingsLayer extends PlaceablesLayer {
 
       // Add point to polygon and reset the state
       let drawing = event.data.object;
-      if (drawing && drawing.type == "polygon") {
+      if (drawing && drawing.type == DRAWING_TYPES.POLYGON) {
         let destination = this.getPosition(event, event.data.destination);
         drawing.addPolygonPoint(destination);
         drawing.refresh();
@@ -292,7 +272,7 @@ class FurnaceDrawingsLayer extends PlaceablesLayer {
   _onMouseUp(event) {
     let { createState, object, createTime } = event.data;
 
-    if (object && object.type == "polygon") {
+    if (object && object.type == DRAWING_TYPES.POLYGON) {
       // Check for moving mouse during a polygon waypoint click
       if (createState == 2) {
         let now = Date.now();
@@ -320,7 +300,7 @@ class FurnaceDrawingsLayer extends PlaceablesLayer {
     if (createState === 1) {
       event.stopPropagation();
       // Don't cancel a click for polygons
-      if (!object || object.type != "polygon")
+      if (!object || object.type != DRAWING_TYPES.POLYGON)
         this._onDragCancel(event);
       // Handle successful creation and chaining
     } else if (createState === 2) {
@@ -329,15 +309,6 @@ class FurnaceDrawingsLayer extends PlaceablesLayer {
     }
   }
   /* -------------------------------------------- */
-
-  // FIXME: taken as is from WallsLayer, maybe should move into PlaceablesLayer
-  get gridPrecision() {
-    let size = canvas.dimensions.size;
-    if (size >= 128) return 16;
-    else if (size >= 64) return 8;
-    else if (size >= 32) return 4;
-    else if (size >= 16) return 2;
-  }
 
   // FIXME: taken as is from WallsLayer, maybe should move into PlaceablesLayer
   /**
@@ -367,9 +338,21 @@ class FurnaceDrawingsLayer extends PlaceablesLayer {
    * Handle a DELETE keypress while the TilesLayer is active
    * @private
    */
-  _onDeleteKey(event) {
+  async _onDeleteKey(event) {
     if (!game.user.isTrusted) throw new Error("You may not delete drawings!");
-    this.placeables.filter(d => d._controlled && d.owner)
-      .forEach(t => t.delete(canvas.scene._id));
+    
+    // If the user is a GM, we can do a batch deletion by modifying the scene directly
+    if ( game.user.isGM ) {
+      const toDelete = new Set(Object.keys(this._controlled).map(Number));
+      const objects = canvas.scene.data[this.constructor.dataArray].filter(o => !toDelete.has(o.id));
+      canvas.scene.update({[this.constructor.dataArray]: objects});
+    }
+
+    // Otherwise we need to use the Drawing.delete API
+    else {
+      for ( let obj of Object.values(this._controlled) ) {
+        await obj.delete(obj.scene._id);
+      }
+    }
   }
 }

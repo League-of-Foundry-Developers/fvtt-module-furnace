@@ -19,9 +19,14 @@
     </div>
 
     <div class="form-group">
-        <label for="y">Y-Position <span class="units">(pixels)</span></label>
-        <input type="text" name="y" value="{{object.y}}" data-dtype="Number"/>
-    </div>
+      <label for="y">Y-Position <span class="units">(pixels)</span></label>
+      <input type="text" name="y" value="{{object.y}}" data-dtype="Number"/>
+  </div>
+
+  <div class="form-group">
+      <label for="z">Z-Position</label>
+      <input type="text" name="z" value="{{object.z}}" data-dtype="Number"/>
+  </div>
 
     <div class="form-group">
         <label for="width">Width <span class="units">(pixels)</span></label>
@@ -61,12 +66,8 @@
         <input type="text" name="fontSize" value="{{object.fontSize}}" data-dtype="Number"/>
       </div>
       <div class="form-group">
-          <label>Wrap text</label>
-          <input type="checkbox" name="wordWrap" data-dtype="Boolean" {{checked object.wordWrap}}/>
-      </div>
-      <div class="form-group">
           <label>Text Content</label>
-          <textarea name="content" data-dtype="String">{{object.content}}</textarea>
+          <textarea name="text" data-dtype="String">{{object.text}}</textarea>
       </div>
   
     </div>
@@ -92,8 +93,8 @@
       <hr>
       <div class="form-group">
         <label>Fill Type</label>
-        <select name="fill" data-dtype="Number">
-            {{#select object.fill}}
+        <select name="fillType" data-dtype="Number">
+            {{#select object.fillType}}
             {{#each fillTypes as |type t|}}
             <option value="{{t}}">{{type}}</option>
             {{/each}}

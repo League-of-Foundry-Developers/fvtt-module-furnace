@@ -1,8 +1,6 @@
 
-// Derive from Tile so we don't need to copy/paste all the scale-handle/rotate/dimension/control
-// functions here as they would be mostly the same.
-// FIXME: keep as is or derive from PlaceableObject and copy/paste the functions we need?
-class FurnaceDrawing extends Tile {
+
+class FurnaceDrawing extends Drawing {
   /**
    * Provide a reference to the canvas layer which contains placeable objects of this type
    * @type {PlaceablesLayer}
@@ -20,55 +18,42 @@ class FurnaceDrawing extends Tile {
     return this._sheet;
   }
 
-  /**
-   * A Boolean flag for whether the current game User has permission to control this token
-   * @type {Boolean}
+  /* Create/update/delete actual Drawing objects so the trigger name is 
+   * correctly set to createDrawing/updateDrawing/deleteDrawing instead of
+   * createFurnaceDrawing/updateFurnaceDrawing/deleteFurnaceDrawing
    */
-  get owner() {
-    return game.user.isGM || (game.user.isTrusted && this.data.owner == game.user.id)
-  }
-  get type() {
-    return this.data.type;
-  }
-  get fillColor() {
-    return this.data.fillColor ? this.data.fillColor.replace("#", "0x") : 0x000000;
-  }
-  get strokeColor() {
-    return this.data.strokeColor ? this.data.strokeColor.replace("#", "0x") : 0x000000;
-  }
-  get usesFill() {
-    return [FURNACE_DRAWING_FILL_TYPE.SOLID,
-    FURNACE_DRAWING_FILL_TYPE.PATTERN,
-    FURNACE_DRAWING_FILL_TYPE.STRETCH].includes(this.data.fill)
-  }
-  get usesTexture() {
-    return [FURNACE_DRAWING_FILL_TYPE.PATTERN,
-    FURNACE_DRAWING_FILL_TYPE.STRETCH,
-    FURNACE_DRAWING_FILL_TYPE.CONTOUR,
-    FURNACE_DRAWING_FILL_TYPE.FRAME].includes(this.data.fill) &&
-      this.data.texture
-  }
-  get isTiled() {
-    return [FURNACE_DRAWING_FILL_TYPE.PATTERN,
-    FURNACE_DRAWING_FILL_TYPE.CONTOUR].includes(this.data.fill)
-  }
-
-  // FIXME: Server side code - unmodified create/update/delete functions other than for
-  // using FakeServer instead of SocketInterface.
   static async create(sceneId, data, options = {}) {
-    const name = this.name,
-      preHook = 'preCreate' + name,
-      eventData = { parentId: sceneId, data: data };
-    return FurnaceFakeServer.trigger('create' + name, eventData, options, preHook, this).then(response => {
+    // Sanitize data
+    if (data.points && data.points.length > 0)
+      data.points = data.points.map(c => [Math.round(c[0]), Math.round(c[1])])
+    for (let key of ["x", "y", "width", "height"]) {
+      if (data[key]) data[key] = Math.round(data[key]);
+    }
+    if (!data.author)
+      data.author = game.user.id
+    if (data.z == 0) {
+      let scene = game.scenes.get(sceneId)
+      let drawings = scene ? scene.data.drawings || [] : []
+      if (drawings.length > 0)
+        data.z = drawings.reduce((a, v) => { return { z: Math.max(a.z, v.z) } }).z + 1
+    }
+    mergeObject(data, this._adjustPoints(0, 0, data.points));
+    
+    const name = "Drawing",
+          preHook = 'preCreate'+name,
+          eventData = {parentId: sceneId, data: data};
+    return SocketInterface.trigger('create'+name, eventData, options, preHook, this).then(response => {
       const object = this.layer._createPlaceableObject(response);
-      if (options.displaySheet) object.sheet.render(true);
+      if ( options.displaySheet ) object.sheet.render(true);
       return object;
     });
   }
+
   async update(sceneId, data, options = {}) {
-    const name = this.constructor.name,
+    const name = "Drawing",
       preHook = 'preUpdate' + name;
 
+    mergeObject(data, this.constructor._adjustPoints(data.x, data.y, data.points));
     // Diff the update data
     delete data.id;
     let changed = {};
@@ -81,17 +66,75 @@ class FurnaceDrawing extends Tile {
 
     // Trigger the socket event and handle response
     const eventData = { parentId: sceneId, data: changed };
-    await FurnaceFakeServer.trigger('update' + name, eventData, options, preHook, this).then(response => {
+    await SocketInterface.trigger('update' + name, eventData, options, preHook, this).then(response => {
       return this.constructor.layer._updatePlaceableObject(response);
     });
   }
+
+  /* -------------------------------------------- */
+
+  /**
+   * Delete an existing placeable object within a specific Scene
+   *
+   * @param {String} sceneId      The ID of the Scene within which to update the placeable object
+   * @param {Object} options      Additional options which customize the deletion workflow
+   *
+   * @return {Promise}            A Promise which resolves to the returned socket response (if successful)
+   */
   async delete(sceneId, options = {}) {
-    const name = this.constructor.name,
+    const name = "Drawing",
       preHook = 'preDelete' + name,
       eventData = { parentId: sceneId, childId: this.id };
-    return await FurnaceFakeServer.trigger('delete' + name, eventData, options, preHook, this).then(response => {
+    return SocketInterface.trigger('delete' + name, eventData, options, preHook, this).then(response => {
       return this.constructor.layer._deletePlaceableObject(response);
     });
+  }
+
+  /* -------------------------------------------- */
+
+  /**
+   * A Boolean flag for whether the current game User has permission to control this token
+   * @type {Boolean}
+   */
+  get owner() {
+    return game.user.isGM || (game.user.isTrusted && this.data.author == game.user.id)
+  }
+  get type() {
+    return this.data.type;
+  }
+  get fillColor() {
+    return this.data.fillColor ? this.data.fillColor.replace("#", "0x") : 0x000000;
+  }
+  get strokeColor() {
+    return this.data.strokeColor ? this.data.strokeColor.replace("#", "0x") : 0x000000;
+  }
+  get fillType() {
+    return this.data.flags.furnace ? this.data.flags.furnace.fillType || this.data.fillType : this.data.fillType;
+  }
+  get textureWidth() {
+    return this.data.flags.furnace ? this.data.flags.furnace.textureWidth || 0 : 0;
+  }
+  get textureHeight() {
+    return this.data.flags.furnace ? this.data.flags.furnace.textureHeight || 0 : 0;
+  }
+  get textureAlpha() {
+    return this.data.flags.furnace ? this.data.flags.furnace.textureAlpha || 1 : 1;
+  }
+  get usesFill() {
+    return [FURNACE_DRAWING_FILL_TYPE.SOLID,
+    FURNACE_DRAWING_FILL_TYPE.PATTERN,
+    FURNACE_DRAWING_FILL_TYPE.STRETCH].includes(this.fillType)
+  }
+  get usesTexture() {
+    return [FURNACE_DRAWING_FILL_TYPE.PATTERN,
+    FURNACE_DRAWING_FILL_TYPE.STRETCH,
+    FURNACE_DRAWING_FILL_TYPE.CONTOUR,
+    FURNACE_DRAWING_FILL_TYPE.FRAME].includes(this.fillType) &&
+      this.data.texture
+  }
+  get isTiled() {
+    return [FURNACE_DRAWING_FILL_TYPE.PATTERN,
+    FURNACE_DRAWING_FILL_TYPE.CONTOUR].includes(this.fillType)
   }
 
   /* -------------------------------------------- */
@@ -135,7 +178,7 @@ class FurnaceDrawing extends Tile {
       }
     }
 
-    if (this.type == "text")
+    if (this.type == DRAWING_TYPES.TEXT)
       this.img = this.addChild(new PIXI.Text());
     else
       this.img = this.addChild(new PIXI.Graphics());
@@ -161,11 +204,11 @@ class FurnaceDrawing extends Tile {
         rightdown: event => this._onRightDown(event),
         cancel: event => this._onDragCancel(event)
       }, {
-          candrag: event => !this.data.locked,
-          canright: event => this._controlled,
-          canclick: event => this._controlled || (this.owner && game.activeTool == "select"),
-          canhover: event => this._controlled || (this.owner && game.activeTool == "select")
-        });
+        candrag: event => !this.data.locked,
+        canright: event => this._controlled,
+        canclick: event => this._controlled || (this.owner && game.activeTool == "select"),
+        canhover: event => this._controlled || (this.owner && game.activeTool == "select")
+      });
 
       // Scale handler
       new HandleManager(this.scaleHandle, this.layer, {
@@ -175,8 +218,8 @@ class FurnaceDrawing extends Tile {
         mousemove: event => this._onHandleMouseMove(event),
         mouseup: event => this._onHandleMouseUp(event)
       }, {
-          canclick: event => !this.data.locked
-        });
+        canclick: event => !this.data.locked
+      });
 
       // Rotate handler
       this.rotateHandle.addEventListeners(this.layer, {
@@ -189,7 +232,7 @@ class FurnaceDrawing extends Tile {
   }
 
   updateDragPosition(position) {
-    if (this.type == "freehand") {
+    if (this.type == DRAWING_TYPES.FREEHAND) {
       let now = Date.now();
       let lastMove = this._lastMoveTime || 0
       if (this.data.points.length > 1 && now - lastMove < CONFIG.FREEHAND_SAMPLING_RATE)
@@ -198,7 +241,7 @@ class FurnaceDrawing extends Tile {
         this._lastMoveTime = now;
 
       this.addPolygonPoint(position)
-    } else if (this.type == "polygon") {
+    } else if (this.type == DRAWING_TYPES.POLYGON) {
       if (this.data.points.length > 1)
         this.data.points.pop()
       this.data.points.push([parseInt(position.x), parseInt(position.y)])
@@ -238,16 +281,22 @@ class FurnaceDrawing extends Tile {
         this.img.beginFill(this.fillColor, this.data.fillAlpha);
     }
     // Render the actual shape/drawing
-    if (this.type == "rectangle") {
-      this.renderRectangle(this.img)
-    } else if (this.type == "ellipse") {
-      this.renderEllipse(this.img)
-    } else if (this.type == "polygon") {
-      this.renderPolygon(this.img)
-    } else if (this.type == "freehand") {
-      this.renderFreehand(this.img)
-    } else if (this.type == "text") {
-      this.renderText(this.img)
+    switch (this.type) {
+      case DRAWING_TYPES.RECTANGLE:
+        this.renderRectangle(this.img)
+        break;
+      case DRAWING_TYPES.ELLIPSE:
+        this.renderEllipse(this.img)
+        break;
+      case DRAWING_TYPES.POLYGON:
+        this.renderPolygon(this.img)
+        break;
+      case DRAWING_TYPES.FREEHAND:
+        this.renderFreehand(this.img)
+        break;
+      case DRAWING_TYPES.TEXT:
+        this.renderText(this.img)
+        break;
     }
 
     // Finish filling data
@@ -256,7 +305,7 @@ class FurnaceDrawing extends Tile {
 
     // If a texture background was set, then we render/mask it here.
     if (this.bg) {
-      this.bg.alpha = this.data.textureAlpha
+      this.bg.alpha = this.textureAlpha
       if (this.isTiled) {
         this.bg.tile.width = this.data.width;
         this.bg.tile.height = this.data.height;
@@ -267,14 +316,14 @@ class FurnaceDrawing extends Tile {
         this.bg.tile.height = Math.abs(this.data.height);
       }
       if (this.isTiled &&
-        this.data.textureWidth > 0 && this.data.textureHeight > 0) {
-        let scale_x = this.data.textureWidth / this.texture.width;
-        let scale_y = this.data.textureHeight / this.texture.height;
+        this.textureWidth > 0 && this.textureHeight > 0) {
+        let scale_x = this.textureWidth / this.texture.width;
+        let scale_y = this.textureHeight / this.texture.height;
         this.bg.tile.tileScale.set(scale_x, scale_y)
       }
       // Can't clone a PIXI.Text, if mask onto a text, we re-render it.
       if (this.bg.tile.mask) this.bg.removeChild(this.bg.tile.mask).destroy({ children: true })
-      if (this.type == "text") {
+      if (this.type == DRAWING_TYPES.TEXT) {
         this.bg.tile.mask = this.bg.addChild(new PIXI.Text());
         this.renderText(this.bg.tile.mask)
         // Mask is only applied on the red channel for some reason.
@@ -282,6 +331,7 @@ class FurnaceDrawing extends Tile {
         this.bg.tile.mask.style.fill = 0xFFFFFF;
       } else {
         this.bg.tile.mask = this.bg.addChild(this.img.clone());
+        this.bg.tile.mask.alpha = 1.0;
       }
       // In case of polygons being out of bounds/scaled, the `this.img.cone()`
       // does not copy the position/scale so we need to do it manually.
@@ -310,7 +360,7 @@ class FurnaceDrawing extends Tile {
     // Toggle visibility
     this.visible = !this.data.hidden || game.user.isGM;
     // Don't show the frame when we're creating a new drawing, unless it's text.
-    this.frame.visible = this._controlled && (this.id || this.type == "text");
+    this.frame.visible = this._controlled && (this.id || this.type == DRAWING_TYPES.TEXT);
     this.scaleHandle.visible = this.rotateHandle.visible = this.frame.visible && !this.data.locked;
 
     // Reset hit area. img doesn't set a hit area automatically if we don't use 'fill',
@@ -453,19 +503,19 @@ class FurnaceDrawing extends Tile {
   }
 
   renderText(sprite) {
-    let lineHeight = this.data.height / this.data.content.split("\n").length
+    let lineHeight = this.data.height / this.data.text.split("\n").length
     sprite.style = {
       fontFamily: this.data.fontFamily,
       fontSize: this.data.fontSize,
-      fill: this.usesFill ? this.data.fillColor : "transparent",
+      fill: this.data.textColor,
       stroke: this.data.strokeColor,
       strokeThickness: this.data.strokeWidth,
       wordWrap: this.data.wordWrap,
       wordWrapWidth: this.data.width,
       lineHeight: this.data.wordWrap ? lineHeight : undefined
     }
-    sprite.alpha = this.data.strokeAlpha;
-    sprite.text = this.data.content;
+    sprite.alpha = this.data.textAlpha;
+    sprite.text = this.data.text;
     this._handleUnshapedBounds(sprite)
   }
 
@@ -516,7 +566,7 @@ class FurnaceDrawing extends Tile {
       // Translate the coordinates so the rotation axis is (0, 0) 
       let x = coordinates.x - axis.x;
       let y = coordinates.y - axis.y;
-      
+
       /**
        *  Formula from https://academo.org/demos/rotation-about-point/
        * x′ = x*cos(θ) − y*sin(θ)
@@ -597,8 +647,21 @@ class FurnaceDrawing extends Tile {
    * 
    */
   _onMouseOver(event) {
-    if (this.owner)
+    if (this.owner) {
       super._onMouseOver(event);
+      if (this.layer._active) this.frame.visible = true;
+    }
+  }
+  _onMouseOut(event) {
+    super._onMouseOut(event);
+    this.frame.visible = this.layer._active && this._controlled;
+  }
+  _onHandleMouseOver(event) {
+    this.scaleHandle.scale.set(1.5, 1.5);
+  }
+
+  _onHandleMouseOut(event) {
+    this.scaleHandle.scale.set(1.0, 1.0);
   }
 
   /**
@@ -607,7 +670,7 @@ class FurnaceDrawing extends Tile {
    */
   _onMouseDown(event) {
     // Remove the active Drawing HUD
-    canvas.hud.furnace_drawing.clear();
+    canvas.hud.drawing.clear();
     // Control the Tile
     this.control();
   }
@@ -618,7 +681,7 @@ class FurnaceDrawing extends Tile {
    * @private
    */
   _onRightDown(event) {
-    const hud = canvas.hud.furnace_drawing,
+    const hud = canvas.hud.drawing,
       state = hud._displayState;
     if (hud.object === this && state !== hud.constructor.DISPLAY_STATES.NONE) hud.clear();
     else hud.bind(this);

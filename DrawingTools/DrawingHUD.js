@@ -10,11 +10,6 @@ class FurnaceDrawingHUD extends BasePlaceableHUD {
    */
   static get defaultOptions() {
     return mergeObject(super.defaultOptions, {
-      // FIXME: module-to-core need to replace tile-hud because I can't add
-      // a different id to the template, so I'm just re-using this one...
-      // Actually, we could have both a token and a tile HUD open at the same time
-      // maybe it's better to just have a single <template id=hud> and have all
-      // the huds replacing that one ?
       id: "drawing-hud",
       template: "public/modules/furnace/templates/drawing-hud.html"
     });
@@ -37,15 +32,13 @@ class FurnaceDrawingHUD extends BasePlaceableHUD {
   /* -------------------------------------------- */
 
   setPosition() {
-    // FIXME: not really a fixme, but this is how setPosition should be for TileHUD too,
-    // otherwise, with negative width/height, the HUD appears in the wrong place
     let width = this.object.data.width
     let height = this.object.data.height
     let x = this.object.data.x + (width > 0 ? 0 : width)
     let y = this.object.data.y + (height > 0 ? 0 : height)
     const position = {
-      width: Math.abs(width) + 140,
-      height: Math.abs(height) + 10,
+      width: Math.abs(width) + 150,
+      height: Math.abs(height) + 20,
       left: x - 70,
       top: y - 5
     };
@@ -59,48 +52,24 @@ class FurnaceDrawingHUD extends BasePlaceableHUD {
    * @param html
    */
   activateListeners(html) {
-    html.find(".visibility").click(this._onToggleVisibility.bind(this));
-    html.find(".locked").click(this._onToggleLocked.bind(this));
+    super.activateListeners(html);
     html.find(".config").click(this._onDrawingConfig.bind(this));
     // Color change inputs
     html.find('input[type="color"]').change(this._onColorPickerChange.bind(this));
   }
 
+  /* -------------------------------------------- */
   _onColorPickerChange(event) {
     event.preventDefault();
     let data = {}
     data[event.target.name] = event.target.value
     // If user sets a fill color but fill is NONE then change it
-    if (event.target.name == "fillColor" && this.object.data.fill == FURNACE_DRAWING_FILL_TYPE.NONE)
-      data.fill = FURNACE_DRAWING_FILL_TYPE.SOLID;
+    if (event.target.name == "fillColor" && this.object.fillType == FURNACE_DRAWING_FILL_TYPE.NONE)
+      data.fillType = FURNACE_DRAWING_FILL_TYPE.SOLID;
     this.object.update(canvas.scene._id, data).then(() => {
       this.render()
       this.object.layer.updateStartingData(this.object)
     })
-  }
-
-  /* -------------------------------------------- */
-
-  /**
-   * Toggle Drawing visibility state
-   * @private
-   */
-  async _onToggleVisibility(event) {
-    event.preventDefault();
-    await this.object.update(canvas.scene._id, { hidden: !this.object.data.hidden });
-    $(event.currentTarget).toggleClass("active");
-  }
-
-  /* -------------------------------------------- */
-
-  /**
-   * Toggle Drawing locked state
-   * @private
-   */
-  async _onToggleLocked(event) {
-    event.preventDefault();
-    await this.object.update(canvas.scene._id, { locked: !this.object.data.locked });
-    $(event.currentTarget).toggleClass("active");
   }
 
   /**

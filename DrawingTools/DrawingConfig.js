@@ -13,7 +13,6 @@ class FurnaceDrawingConfig extends FormApplication {
     options.id = "furnace-drawing-config";
     options.classes = ["sheet", "drawing-sheet"];
     options.title = "Drawing Configuration";
-    // FIXME: module-to-core change path
     options.template = "public/modules/furnace/templates/drawing-config.html";
     options.width = 400;
     return options;
@@ -31,8 +30,13 @@ class FurnaceDrawingConfig extends FormApplication {
       availableFonts[font] = font;
     for (let font in CONFIG.WebSafeFonts)
       availableFonts[CONFIG.WebSafeFonts[font]] = font;
+    let data = duplicate(this.object.data)
+    data.fillType = this.object.fillType
+    data.textureWidth = this.object.textureWidth
+    data.textureHeight = this.object.textureHeight
+    data.textureAlpha = this.object.textureAlpha
     return {
-      object: duplicate(this.object.data),
+      object: data,
       enableTypeSelection: false,
       options: this.options,
       drawingTypes: CONFIG.furnaceDrawingTypes,
@@ -45,7 +49,7 @@ class FurnaceDrawingConfig extends FormApplication {
   /* Make it interactive a little */
   activateListeners(html) {
     super.activateListeners(html);
-    html.find("select[name=fill]").change((ev) => this.updateFields(html))
+    html.find("select[name=fillType]").change((ev) => this.updateFields(html))
     html.find("button[name=reset]").click((ev) => this.reset(ev, html))
     html.find("input,textarea,select").change((ev) => this.refresh(html))
     this.updateFields(html)
@@ -53,7 +57,7 @@ class FurnaceDrawingConfig extends FormApplication {
 
   updateFields(html) {
     // Get fill/drawing type. Use html because of the DrawingDefaultsConfig subclass.
-    let fillType = Number(html.find("select[name=fill]").val())
+    let fillType = Number(html.find("select[name=fillType]").val())
     let drawingType = html.find("select[name=type]").val()
     // Determine what options are to be available and which aren't
     let enableFillOptions = (fillType != FURNACE_DRAWING_FILL_TYPE.NONE &&
@@ -64,8 +68,8 @@ class FurnaceDrawingConfig extends FormApplication {
       fillType == FURNACE_DRAWING_FILL_TYPE.CONTOUR ||
       fillType == FURNACE_DRAWING_FILL_TYPE.FRAME)
     let enableTextureSizeOptions = (fillType == FURNACE_DRAWING_FILL_TYPE.PATTERN)
-    let showBezierOptions = (drawingType == "polygon" || drawingType == "freehand");
-    let showTextOptions = drawingType == "text";
+    let showBezierOptions = (drawingType == DRAWING_TYPES.POLYGON || drawingType == DRAWING_TYPES.FREEHAND);
+    let showTextOptions = drawingType == DRAWING_TYPES.TEXT;
 
     // Enable/Disable various options by setting their opacity and pointer-events.
     let enable = { "pointer-events": "unset", "opacity": 1.0 };
@@ -96,12 +100,26 @@ class FurnaceDrawingConfig extends FormApplication {
     let defaults = canvas.drawings.getDefaultData(type)
     for (let input of html.find("input")) {
       let name = input.getAttribute("name")
-      if (!["id", "x", "y", "width", "height", "owner", "hidden", "locked", "flags"].includes(name))
+      // FIXME: flags
+      if (!["id", "x", "y", "z", "width", "height", "owner", "hidden", "locked", "flags"].includes(name))
         input.value = defaults[name]
     }
-    html.find("select[name=fill]").val(defaults["fill"])
+    html.find("select[name=fillType]").val(defaults["fillType"])
     this.updateFields(html)
     this.refresh(html)
+  }
+
+  fixData(data) {
+    data["flags.furnace.fillType"] = data.fillType
+    data["flags.furnace.textureWidth"] = data.textureWidth
+    data["flags.furnace.textureHeight"] = data.textureHeight
+    data["flags.furnace.textureAlpha"] = data.textureAlpha
+    if (!Object.values(DRAWING_FILL_TYPES).includes(data.fillType))
+      data.fillType = DRAWING_FILL_TYPES.NONE
+    delete data.textureWidth
+    delete data.textureHeight
+    delete data.textureAlpha
+    return data
   }
 
   async refresh(html) {
@@ -110,9 +128,9 @@ class FurnaceDrawingConfig extends FormApplication {
 
     if (html) {
       // Temporarily change the object's data in order to preview changes
-      let newData = validateForm(html[0]);
+      let newData = this.fixData(validateForm(html[0]));
       // Add missing items like 'type' from disabled field.
-      this.object.data = mergeObject(newData, realData, { overwrite: false });
+      this.object.data = mergeObject(realData, newData, { inplace: false });
     }
     // We actually call draw here and not refresh in case we changed the texture but also
     // because if we get a full redraw due to another user creating their own drawings,
@@ -133,6 +151,7 @@ class FurnaceDrawingConfig extends FormApplication {
    */
   _updateObject(event, formData) {
     if (!this.object.owner) throw "You do not have the ability to configure a Drawing object.";
+    formData = this.fixData(formData)
     if (this.object.id) {
       formData["id"] = this.object.id;
       this.object.update(canvas.scene._id, formData)
@@ -177,8 +196,8 @@ class DrawingDefaultsConfig extends FurnaceDrawingConfig {
 
     // this.object here is actually the Drawingslayer
     this._defaults = {}
-    this.type = "rectangle"
-    for (let type of ["rectangle", "ellipse", "text", "polygon", "freehand"]) {
+    this.type = DRAWING_TYPES.RECTANGLE
+    for (let type of Object.values(DRAWING_TYPES)) {
       this._defaults[type] = this.object.getStartingData(type);
     }
   }
@@ -237,9 +256,13 @@ class DrawingDefaultsConfig extends FurnaceDrawingConfig {
       this.object.updateStartingData({ data: this._defaults[type] })
     }
     // Set the tool to the last configured type.
-    let tool = formData.type;
-    if (["rectangle", "ellipse"].includes(tool))
-      tool = "shape";
+    let tool = "select";
+    let tools = Object.keys(ui.controls.controls[ui.controls.activeControl])
+    for (tool of tools) {
+      if (tool[0] == formData.type) {
+        break;
+      }
+    }
     ui.controls.controls[ui.controls.activeControl].activeTool = tool;
     ui.controls.render();
   }
