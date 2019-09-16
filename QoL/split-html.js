@@ -1,3 +1,5 @@
+// https://github.com/apostrophecms/split-html
+
 (function() {
   var cheerio;
   if (typeof window === 'undefined') {
