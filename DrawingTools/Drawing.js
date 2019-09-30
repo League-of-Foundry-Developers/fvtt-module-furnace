@@ -153,6 +153,10 @@ class FurnaceDrawing extends Drawing {
     FURNACE_DRAWING_FILL_TYPE.CONTOUR].includes(this.fillType)
   }
 
+  /* Put the stroke on the outisde */
+  get alignment() {
+    return 1;
+  }
   /* -------------------------------------------- */
   /* Rendering                                    */
   /* -------------------------------------------- */
@@ -290,7 +294,7 @@ class FurnaceDrawing extends Drawing {
   refresh() {
     // PIXI.Text doesn't have a `.clear()`
     if (this.img instanceof PIXI.Graphics) {
-      this.img.clear().lineStyle(this.data.strokeWidth, this.strokeColor, this.strokeAlpha)
+      this.img.clear().lineStyle(this.data.strokeWidth, this.strokeColor, this.strokeAlpha, this.alignment)
 
       // Set fill if needed
       if (this.usesFill)
@@ -388,14 +392,14 @@ class FurnaceDrawing extends Drawing {
   }
 
   renderRectangle(graphics) {
-    let half_stroke = this.data.strokeWidth / 2;
+    let half_stroke = this.data.strokeWidth * this.alignment;
     graphics.drawRect(half_stroke, half_stroke, this.data.width - 2 * half_stroke, this.data.height - 2 * half_stroke);
   }
 
   renderEllipse(graphics) {
     let half_width = this.data.width / 2;
     let half_height = this.data.height / 2;
-    let half_stroke = this.data.strokeWidth / 2;
+    let half_stroke = this.data.strokeWidth * this.alignment;
     graphics.drawEllipse(half_width, half_height, Math.abs(half_width) - half_stroke, Math.abs(half_height) - half_stroke);
   }
 
