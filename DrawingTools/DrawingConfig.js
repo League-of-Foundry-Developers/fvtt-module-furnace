@@ -80,7 +80,7 @@ class FurnaceDrawingConfig extends FormApplication {
     html.find("input[name=textureWidth],input[name=textureHeight]")
       .closest(".form-group").css(enableTextureSizeOptions ? enable : disable)
     // Show/hide text options and fillAlpha
-    html.find(".text-section")[showTextOptions ? "show" : "hide"]()
+    //html.find(".text-section")[showTextOptions ? "show" : "hide"]()
     html.find("input[name=fillAlpha]").closest(".form-group")[!showTextOptions ? "show" : "hide"]()
     html.find("input[name=bezierFactor]").closest(".form-group")[showBezierOptions ? "show" : "hide"]()
     // FIXME: module-to-core sanity check server side, contour fill isn't valid for text.

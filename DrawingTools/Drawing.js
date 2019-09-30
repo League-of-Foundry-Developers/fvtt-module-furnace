@@ -198,10 +198,13 @@ class FurnaceDrawing extends Drawing {
       }
     }
 
-    if (this.type == DRAWING_TYPES.TEXT)
+    if (this.type == DRAWING_TYPES.TEXT) {
       this.img = this.addChild(new PIXI.Text());
-    else
+      this.text = null;
+    } else {
       this.img = this.addChild(new PIXI.Graphics());
+      this.text = this.addChild(new PIXI.Text());
+    }
     this.frame = this.addChild(new PIXI.Graphics());
     this.scaleHandle = this.addChild(new PIXI.Graphics());
     this.rotateHandle = this.addChild(new RotationHandle(this));
@@ -304,15 +307,19 @@ class FurnaceDrawing extends Drawing {
     switch (this.type) {
       case DRAWING_TYPES.RECTANGLE:
         this.renderRectangle(this.img)
+        this.renderSubText(this.text)
         break;
       case DRAWING_TYPES.ELLIPSE:
         this.renderEllipse(this.img)
+        this.renderSubText(this.text)
         break;
       case DRAWING_TYPES.POLYGON:
         this.renderPolygon(this.img)
+        this.renderSubText(this.text)
         break;
       case DRAWING_TYPES.FREEHAND:
         this.renderFreehand(this.img)
+        this.renderSubText(this.text)
         break;
       case DRAWING_TYPES.TEXT:
         this.renderText(this.img)
@@ -523,20 +530,37 @@ class FurnaceDrawing extends Drawing {
   }
 
   renderText(sprite) {
-    let lineHeight = this.data.height / this.data.text.split("\n").length
-    sprite.style = {
+    sprite.style = new PIXI.TextStyle({
       fontFamily: this.data.fontFamily,
       fontSize: this.data.fontSize,
       fill: this.data.textColor,
       stroke: this.data.strokeColor,
-      strokeThickness: this.data.strokeWidth,
-      wordWrap: this.data.wordWrap,
-      wordWrapWidth: this.data.width,
-      lineHeight: this.data.wordWrap ? lineHeight : undefined
-    }
+      strokeThickness: this.data.strokeWidth
+    });
     sprite.alpha = this.data.textAlpha;
     sprite.text = this.data.text;
     this._handleUnshapedBounds(sprite)
+  }
+  renderSubText(sprite) {
+    sprite.style = new PIXI.TextStyle({
+      fontFamily: this.data.fontFamily,
+      fontSize: this.data.fontSize,
+      fill: this.data.textColor,
+      stroke: "#111111",
+      strokeThickness: Math.max(Math.round(this.data.fontSize / 32), 2),
+      dropShadow: true,
+      dropShadowColor: "#000000",
+      dropShadowBlur: Math.max(Math.round(this.data.fontSize / 16), 2),
+      dropShadowAngle: 0,
+      dropShadowDistance: 0,
+      align: "center",
+      wordWrap: true,
+      wordWrapWidth: this.data.width
+    });
+    sprite.alpha = this.data.textAlpha;
+    sprite.text = this.data.text;
+    let bounds = sprite.getLocalBounds()
+    sprite.position.set(this.data.width / 2 - bounds.width / 2, this.data.height / 2 - bounds.height / 2)
   }
 
   _handlePolygonBounds(graphics) {
