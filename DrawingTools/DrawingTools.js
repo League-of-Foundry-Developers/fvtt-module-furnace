@@ -55,6 +55,15 @@ class FurnaceDrawingTools {
       if (drawings !== undefined)
         await FurnaceDrawingTools.migrateDrawingsToCore(scene, drawings)
     }
+    let hooks = ['hover', 'control', 'create', 'preCreate', 'create', 'preUpdate', 'update', 'preDelete', 'delete']
+    for (let hook of hooks) {
+      Hooks.on(hook + 'FurnaceDrawing', function () {
+        if (hook.startsWith("pre"))
+          return Hooks.call(hook + 'Drawing', ...arguments)
+        else
+          return Hooks.callAll(hook + 'Drawing', ...arguments)
+      });
+    }
   }
   static canvasInit(canvas) {
     if (!game.settings.get("furnace", "enableDrawingTools")) return;
