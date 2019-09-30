@@ -110,12 +110,15 @@ class FurnaceDrawingConfig extends FormApplication {
   }
 
   fixData(data) {
-    data["flags.furnace.fillType"] = data.fillType
-    data["flags.furnace.textureWidth"] = data.textureWidth
-    data["flags.furnace.textureHeight"] = data.textureHeight
-    data["flags.furnace.textureAlpha"] = data.textureAlpha
-    if (!Object.values(DRAWING_FILL_TYPES).includes(data.fillType))
-      data.fillType = DRAWING_FILL_TYPES.NONE
+    data["flags.furnace"] = {
+      textureWidth: data.textureWidth,
+      textureHeight: data.textureHeight,
+      textureAlpha: data.textureAlpha
+    }
+    if (!Object.values(DRAWING_FILL_TYPES).includes(data.fillType)) {
+      data["flags.furnace"]["fillType"] = data.fillType;
+      data.fillType = DRAWING_FILL_TYPES.NONE;
+    }
     delete data.textureWidth
     delete data.textureHeight
     delete data.textureAlpha

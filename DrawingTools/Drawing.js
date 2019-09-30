@@ -38,13 +38,13 @@ class FurnaceDrawing extends Drawing {
         data.z = drawings.reduce((a, v) => { return { z: Math.max(a.z, v.z) } }).z + 1
     }
     mergeObject(data, this._adjustPoints(0, 0, data.points));
-    
+
     const name = "Drawing",
-          preHook = 'preCreate'+name,
-          eventData = {parentId: sceneId, data: data};
-    return SocketInterface.trigger('create'+name, eventData, options, preHook, this).then(response => {
+      preHook = 'preCreate' + name,
+      eventData = { parentId: sceneId, data: data };
+    return SocketInterface.trigger('create' + name, eventData, options, preHook, this).then(response => {
       const object = this.layer._createPlaceableObject(response);
-      if ( options.displaySheet ) object.sheet.render(true);
+      if (options.displaySheet) object.sheet.render(true);
       return object;
     });
   }
@@ -92,6 +92,12 @@ class FurnaceDrawing extends Drawing {
 
   /* -------------------------------------------- */
 
+  getFlag(scope, name, def) {
+    if (this.data.flags[scope] !== undefined &&
+      this.data.flags[scope][name] !== undefined)
+      return this.data.flags[scope][name];
+    return def;
+  }
   /**
    * A Boolean flag for whether the current game User has permission to control this token
    * @type {Boolean}
@@ -105,20 +111,30 @@ class FurnaceDrawing extends Drawing {
   get fillColor() {
     return this.data.fillColor ? this.data.fillColor.replace("#", "0x") : 0x000000;
   }
+  /* HACK: PIXI v5 seems to think an alpha of 0 means 'do not draw', so having alpha 0 fill with a texture means
+   * the texture doesn't get rendered at all. So we force a alpha of 0.0001 to make it draw and avoid
+   * having a tinted texture as well.
+   */
+  get fillAlpha() {
+    return this.data.fillAlpha > 0 ? this.data.fillAlpha : 0.0001;
+  }
   get strokeColor() {
     return this.data.strokeColor ? this.data.strokeColor.replace("#", "0x") : 0x000000;
   }
+  get strokeAlpha() {
+    return this.data.strokeAlpha > 0 ? this.data.strokeAlpha : 0.0001;
+  }
   get fillType() {
-    return this.data.flags.furnace ? this.data.flags.furnace.fillType || this.data.fillType : this.data.fillType;
+    return this.getFlag("furnace", "fillType", this.data.fillType)
   }
   get textureWidth() {
-    return this.data.flags.furnace ? this.data.flags.furnace.textureWidth || 0 : 0;
+    return this.getFlag("furnace", "textureWidth", 0);
   }
   get textureHeight() {
-    return this.data.flags.furnace ? this.data.flags.furnace.textureHeight || 0 : 0;
+    return  this.getFlag("furnace", "textureHeight", 0);
   }
   get textureAlpha() {
-    return this.data.flags.furnace ? this.data.flags.furnace.textureAlpha || 1 : 1;
+    return  this.getFlag("furnace", "textureAlpha", 1);
   }
   get usesFill() {
     return [FURNACE_DRAWING_FILL_TYPE.SOLID,
@@ -130,7 +146,7 @@ class FurnaceDrawing extends Drawing {
     FURNACE_DRAWING_FILL_TYPE.STRETCH,
     FURNACE_DRAWING_FILL_TYPE.CONTOUR,
     FURNACE_DRAWING_FILL_TYPE.FRAME].includes(this.fillType) &&
-      this.data.texture
+      this.data.texture && this.textureAlpha > 0
   }
   get isTiled() {
     return [FURNACE_DRAWING_FILL_TYPE.PATTERN,
@@ -274,11 +290,11 @@ class FurnaceDrawing extends Drawing {
   refresh() {
     // PIXI.Text doesn't have a `.clear()`
     if (this.img instanceof PIXI.Graphics) {
-      this.img.clear().lineStyle(this.data.strokeWidth, this.strokeColor, this.data.strokeAlpha)
+      this.img.clear().lineStyle(this.data.strokeWidth, this.strokeColor, this.strokeAlpha)
 
       // Set fill if needed
       if (this.usesFill)
-        this.img.beginFill(this.fillColor, this.data.fillAlpha);
+          this.img.beginFill(this.fillColor, this.fillAlpha);
     }
     // Render the actual shape/drawing
     switch (this.type) {
