@@ -82,6 +82,8 @@ class FurnaceDrawingConfig extends FormApplication {
     // Show/hide text options and fillAlpha
     //html.find(".text-section")[showTextOptions ? "show" : "hide"]()
     html.find("input[name=fillAlpha]").closest(".form-group")[!showTextOptions ? "show" : "hide"]()
+    html.find("input[name=fillColor]").closest(".form-group")[!showTextOptions ? "show" : "hide"]()
+    html.find("input[name=strokeAlpha]").closest(".form-group")[!showTextOptions ? "show" : "hide"]()
     html.find("input[name=bezierFactor]").closest(".form-group")[showBezierOptions ? "show" : "hide"]()
     // FIXME: module-to-core sanity check server side, contour fill isn't valid for text.
     html.find(`option[value=${FURNACE_DRAWING_FILL_TYPE.CONTOUR}],option[value=${FURNACE_DRAWING_FILL_TYPE.FRAME}]`).attr("disabled", showTextOptions)

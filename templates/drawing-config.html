@@ -69,6 +69,16 @@
           <label>Text Content</label>
           <textarea name="text" data-dtype="String">{{object.text}}</textarea>
       </div>
+      
+      <div class="form-group">
+        <label>Text Color:</label>
+        <input type="color" name="textColor" value="{{object.textColor}}" data-dtype="String"/>
+      </div>
+
+      <div class="form-group">
+        <label>Text Opacity:</label>
+        <input type="range" name="textAlpha" value="{{object.textAlpha}}" min="0" max="1" step="0.05" data-dtype="Number"/>
+      </div>
   
     </div>
     <div class="stroke-section">
