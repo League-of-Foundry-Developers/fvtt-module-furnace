@@ -14,7 +14,9 @@
     "Macros/h.min.js",
     "Macros/Macros.js",
     "QoL/split-html.js",
-    "QoL/SplitJournal.js"
+    "QoL/SplitJournal.js",
+    "QoL/Debug.js",
+    "Patches/Patches.js"
   ],
   "styles": [],
   "packs": [],
@@ -22,5 +24,5 @@
   "manifest": "https://raw.githubusercontent.com/kakaroto/fvtt-module-furnace/master/module.json",
   "download": "https://github.com/kakaroto/fvtt-module-furnace/raw/master/furnace.zip",
   "socket": true,
-  "minimumCoreVersion": "0.3.5"
+  "minimumCoreVersion": "0.3.7"
 }
