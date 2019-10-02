@@ -33,7 +33,6 @@ CONFIG.WebSafeFonts = {
   "Courier New": '"Courier New", Courier, monospace',
   // FIXME: There are more, but do we want to show all of the available options??
 }
-CONFIG.FREEHAND_SAMPLING_RATE = 50;
 
 class FurnaceDrawingTools {
 
@@ -48,31 +47,31 @@ class FurnaceDrawingTools {
         type: Boolean,
         onChange: value => window.location.reload()
     })
+    game.settings.register("furnace", "freehandSampleRate", {
+      name: "Freehand Sample Rate",
+      hint: "The sample rate in millisecond for the smoothing of Freehand drawings. Lower value means more accurate drawings but less smooth and containing more points",
+      scope: "core",
+      config: true,
+      choices: {25: "25 ms", 50: "50 ms", 75: "75 ms", 100: "100 ms"},
+      default: 50,
+      type: Number,
+      onChange: value => {
+        Drawing.FREEHAND_SAMPLE_RATE = value
+      }
+  })
+    if (game.settings.get("furnace", "enableDrawingTools")) {
+      Drawing = FurnaceDrawing;
+      DrawingsLayer = FurnaceDrawingsLayer;
+      DrawingHUD = FurnaceDrawingHUD;
+      DrawingConfig = FurnaceDrawingConfig;
+    }
+    Drawing.FREEHAND_SAMPLE_RATE = game.settings.get("furnace", "freehandSampleRate");
   }
   static async ready() {
     for (let scene of game.scenes.entities) {
       let drawings = scene.getFlag("furnace", "drawings")
       if (drawings !== undefined)
         await FurnaceDrawingTools.migrateDrawingsToCore(scene, drawings)
-    }
-    let hooks = ['hover', 'control', 'create', 'preCreate', 'create', 'preUpdate', 'update', 'preDelete', 'delete']
-    for (let hook of hooks) {
-      Hooks.on(hook + 'FurnaceDrawing', function () {
-        if (hook.startsWith("pre"))
-          return Hooks.call(hook + 'Drawing', ...arguments)
-        else
-          return Hooks.callAll(hook + 'Drawing', ...arguments)
-      });
-    }
-  }
-  static canvasInit(canvas) {
-    if (!game.settings.get("furnace", "enableDrawingTools")) return;
-    if (!(canvas.drawings instanceof FurnaceDrawingsLayer)) {
-      canvas.hud.drawing = new FurnaceDrawingHUD()
-      let gridIdx = canvas.stage.children.indexOf(canvas.drawings)
-      canvas.stage.removeChild(canvas.drawings)
-      canvas.drawings = canvas.stage.addChildAt(new FurnaceDrawingsLayer(), gridIdx)
-      canvas.drawings.draw()
     }
   }
   
@@ -83,7 +82,7 @@ class FurnaceDrawingTools {
       obj.controls["drawings"] = {
         furnace: true,
         name: "Drawing Tools",
-        layer: "FurnaceDrawingsLayer",
+        layer: "DrawingsLayer",
         icon: "fas fa-pencil-alt",
         visible: game.user.isTrusted,
         tools: {
@@ -152,7 +151,9 @@ class FurnaceDrawingTools {
       textColor: "#FFFFFF",
       z: 0
     }
-    let max_id = scene.data.drawings.reduce((a, v) => { return { id: Math.max(a.id, v.id) } }).id
+    let max_id = 1
+    if (scene.data.drawings.length > 0)
+      max_id = scene.data.drawings.reduce((a, v) => { return { id: Math.max(a.id, v.id) } }).id
     let new_drawings = []
 
     for (let drawing of drawings) {
@@ -279,7 +280,6 @@ class FurnaceDrawingTools {
   }
 }
 
-Hooks.on('canvasInit', FurnaceDrawingTools.canvasInit);
 Hooks.on('renderSceneControls', FurnaceDrawingTools.renderSceneControls);
 Hooks.on('init', FurnaceDrawingTools.init)
 Hooks.on('ready', FurnaceDrawingTools.ready)

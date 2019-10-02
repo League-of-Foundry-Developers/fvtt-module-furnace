@@ -6,15 +6,17 @@
  * @params options {Object}           Additional application rendering options
  * @params options.preview {Boolean}  Configure a preview version of a drawing which is not yet saved
  */
-class FurnaceDrawingConfig extends FormApplication {
-
+class FurnaceDrawingConfig extends DrawingConfig {
+  // Override the constructor's name
+  static get name() {
+    return "DrawingConfig"
+  }
   static get defaultOptions() {
     const options = super.defaultOptions;
-    options.id = "furnace-drawing-config";
     options.classes = ["sheet", "drawing-sheet"];
     options.title = "Drawing Configuration";
     options.template = "public/modules/furnace/templates/drawing-config.html";
-    options.width = 400;
+    delete options.height;
     return options;
   }
 
@@ -96,9 +98,9 @@ class FurnaceDrawingConfig extends FormApplication {
     html.closest(".app").height(app_height - div_height);
   }
 
-  reset(ev, html) {
-    let type = html.find("select[name=type]").val()
+  _onResetDefaults(ev, html) {
     ev.preventDefault();
+    let type = html.find("select[name=type]").val()
     let defaults = canvas.drawings.getDefaultData(type)
     for (let input of html.find("input")) {
       let name = input.getAttribute("name")
@@ -178,10 +180,6 @@ class FurnaceDrawingConfig extends FormApplication {
    */
   close() {
     super.close();
-    if (this.preview) {
-      this.preview.removeChildren();
-      this.preview = null;
-    }
     // Refresh in case we changed anything
     this.refresh();
   }

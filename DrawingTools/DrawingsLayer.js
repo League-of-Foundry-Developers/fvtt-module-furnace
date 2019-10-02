@@ -7,6 +7,10 @@
  * @type {PlaceablesLayer}
  */
 class FurnaceDrawingsLayer extends PlaceablesLayer {
+  // Override the constructor's name
+  static get name() {
+    return "DrawingsLayer"
+  }
   constructor() {
     super()
 
@@ -356,3 +360,8 @@ class FurnaceDrawingsLayer extends PlaceablesLayer {
     }
   }
 }
+
+// Needed so core doesn't break due to our change of the DrawingsLayer.
+// We also don't want to derive from DrawingsLayer because it can cause issues
+// with things like super._onDragStart
+FurnaceDrawingsLayer.DEFAULT_CONFIG_SETTING = "defaultDrawingConfig";

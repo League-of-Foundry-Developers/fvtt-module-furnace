@@ -1,6 +1,11 @@
 
 
 class FurnaceDrawing extends Drawing {
+
+  /* Override the constructor's name so we get createDrawing instead of createFurnaceDrawing */
+  static get name() {
+    return "Drawing"
+  }
   /**
    * Provide a reference to the canvas layer which contains placeable objects of this type
    * @type {PlaceablesLayer}
@@ -24,8 +29,12 @@ class FurnaceDrawing extends Drawing {
    */
   static async create(sceneId, data, options = {}) {
     // Sanitize data
-    if (data.points && data.points.length > 0)
+    if (data.points && data.points.length > 0) {
       data.points = data.points.map(c => [Math.round(c[0]), Math.round(c[1])])
+      // The _adjustPoints will set the x/y properly
+      data.x = 0
+      data.y = 0
+    }
     for (let key of ["x", "y", "width", "height"]) {
       if (data[key]) data[key] = Math.round(data[key]);
     }
@@ -37,57 +46,7 @@ class FurnaceDrawing extends Drawing {
       if (drawings.length > 0)
         data.z = drawings.reduce((a, v) => { return { z: Math.max(a.z, v.z) } }).z + 1
     }
-    mergeObject(data, this._adjustPoints(0, 0, data.points));
-
-    const name = "Drawing",
-      preHook = 'preCreate' + name,
-      eventData = { parentId: sceneId, data: data };
-    return SocketInterface.trigger('create' + name, eventData, options, preHook, this).then(response => {
-      const object = this.layer._createPlaceableObject(response);
-      if (options.displaySheet) object.sheet.render(true);
-      return object;
-    });
-  }
-
-  async update(sceneId, data, options = {}) {
-    const name = "Drawing",
-      preHook = 'preUpdate' + name;
-
-    mergeObject(data, this.constructor._adjustPoints(data.x || this.data.x, data.y || this.data.y, data.points));
-    // Diff the update data
-    delete data.id;
-    let changed = {};
-    for (let [k, v] of Object.entries(data)) {
-      let c = getProperty(this.data, k);
-      if (c !== v) changed[k] = v;
-    }
-    if (!Object.keys(changed).length) return Promise.resolve(this);
-    changed.id = this.id;
-
-    // Trigger the socket event and handle response
-    const eventData = { parentId: sceneId, data: changed };
-    await SocketInterface.trigger('update' + name, eventData, options, preHook, this).then(response => {
-      return this.constructor.layer._updatePlaceableObject(response);
-    });
-  }
-
-  /* -------------------------------------------- */
-
-  /**
-   * Delete an existing placeable object within a specific Scene
-   *
-   * @param {String} sceneId      The ID of the Scene within which to update the placeable object
-   * @param {Object} options      Additional options which customize the deletion workflow
-   *
-   * @return {Promise}            A Promise which resolves to the returned socket response (if successful)
-   */
-  async delete(sceneId, options = {}) {
-    const name = "Drawing",
-      preHook = 'preDelete' + name,
-      eventData = { parentId: sceneId, childId: this.id };
-    return SocketInterface.trigger('delete' + name, eventData, options, preHook, this).then(response => {
-      return this.constructor.layer._deletePlaceableObject(response);
-    });
+    return super.create(sceneId, data, options);
   }
 
   /* -------------------------------------------- */
@@ -261,7 +220,7 @@ class FurnaceDrawing extends Drawing {
     if (this.type == DRAWING_TYPES.FREEHAND) {
       let now = Date.now();
       let lastMove = this._lastMoveTime || 0
-      if (this.data.points.length > 1 && now - lastMove < CONFIG.FREEHAND_SAMPLING_RATE)
+      if (this.data.points.length > 1 && now - lastMove < Drawing.FREEHAND_SAMPLE_RATE)
         this.data.points.pop();
       else
         this._lastMoveTime = now;

@@ -3,31 +3,22 @@
  * An implementation of the PlaceableHUD base class which renders a heads-up-display interface for Drawing objects.
  * @type {BasePlaceableHUD}
  */
-class FurnaceDrawingHUD extends BasePlaceableHUD {
+class FurnaceDrawingHUD extends DrawingHUD {
+  // Override the constructor's name
+  static get name() {
+    return "DrawingHUD"
+  }
   /**
    * Assign the default options which are supported by the entity edit sheet
    * @type {Object}
    */
   static get defaultOptions() {
     return mergeObject(super.defaultOptions, {
-      id: "drawing-hud",
       template: "public/modules/furnace/templates/drawing-hud.html"
     });
   }
 
   /* -------------------------------------------- */
-
-  /**
-   * Extend the data object provided to render HTML for the Drawing HUD
-   * @return {Object}
-   */
-  getData() {
-    const data = super.getData();
-    return mergeObject(data, {
-      lockedClass: data.locked ? "active" : "",
-      visibilityClass: data.hidden ? "active" : ""
-    });
-  }
 
   /* -------------------------------------------- */
 

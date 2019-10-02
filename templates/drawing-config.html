@@ -46,6 +46,7 @@
     <div class="form-group">
       <label>Bezier smoothing factor:</label>
       <input type="range" name="bezierFactor" value="{{object.bezierFactor}}" min="0" max="1" step="0.05" data-dtype="Number"/>
+      <span class="range-value">{{object.bezierFactor}}</span>
     </div>
 
     <div class="text-section">
@@ -78,6 +79,7 @@
       <div class="form-group">
         <label>Text Opacity:</label>
         <input type="range" name="textAlpha" value="{{object.textAlpha}}" min="0" max="1" step="0.05" data-dtype="Number"/>
+        <span class="range-value">{{object.textAlpha}}</span>
       </div>
   
     </div>
@@ -96,6 +98,7 @@
       <div class="form-group">
         <label>Stroke Opacity:</label>
         <input type="range" name="strokeAlpha" value="{{object.strokeAlpha}}" min="0" max="1" step="0.05" data-dtype="Number"/>
+        <span class="range-value">{{object.strokeAlpha}}</span>
       </div>
     </div>
 
@@ -117,8 +120,9 @@
       </div>
 
       <div class="form-group">
-	<label>Fill Opacity:</label>
+	      <label>Fill Opacity:</label>
         <input type="range" name="fillAlpha" value="{{object.fillAlpha}}" min="0" max="1" step="0.05" data-dtype="Number"/>
+        <span class="range-value">{{object.fillAlpha}}</span>
       </div>
     </div>
 
@@ -136,6 +140,7 @@
       <div class="form-group">
         <label>Texture Opacity:</label>
         <input type="range" name="textureAlpha" value="{{object.textureAlpha}}" min="0" max="1" step="0.05" data-dtype="Number"/>
+        <span class="range-value">{{object.textureAlpha}}</span>
       </div>
 
 
@@ -155,7 +160,7 @@
 
     <hr>
     <div style="display: flex;">
-      <button type="button" name="reset" value="1"><i class="fas fa-sync"></i> Reset to Default</button>
+      <button type="button" name="resetDefault" value="1"><i class="fas fa-sync"></i> Reset to Default</button>
       <button type="submit" name="submit" value="1"><i class="far fa-save"></i> {{submitText}} </button>
     </div>
 </form>
