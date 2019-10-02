@@ -53,7 +53,7 @@ class FurnaceDrawing extends Drawing {
     const name = "Drawing",
       preHook = 'preUpdate' + name;
 
-    mergeObject(data, this.constructor._adjustPoints(data.x, data.y, data.points));
+    mergeObject(data, this.constructor._adjustPoints(data.x || this.data.x, data.y || this.data.y, data.points));
     // Diff the update data
     delete data.id;
     let changed = {};
@@ -155,7 +155,10 @@ class FurnaceDrawing extends Drawing {
 
   /* Put the stroke on the outisde */
   get alignment() {
-    return 1;
+    if (this.isPolygon)
+      return 0.5
+    else
+      return 1;
   }
   /* -------------------------------------------- */
   /* Rendering                                    */
@@ -706,6 +709,11 @@ class FurnaceDrawing extends Drawing {
 
   _onHandleMouseOut(event) {
     this.scaleHandle.scale.set(1.0, 1.0);
+  }
+  _rescaleDimensions(original, dx, dy) {
+    const {width, height} = original;
+    this.data.width = width + dx;
+    this.data.height = height + dy;
   }
 
   /**
