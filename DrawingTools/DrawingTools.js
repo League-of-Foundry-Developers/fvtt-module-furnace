@@ -151,7 +151,7 @@ class FurnaceDrawingTools {
       textColor: "#FFFFFF",
       z: 0
     }
-    let max_id = 1
+    let max_id = 0
     if (scene.data.drawings.length > 0)
       max_id = scene.data.drawings.reduce((a, v) => { return { id: Math.max(a.id, v.id) } }).id
     let new_drawings = []
@@ -189,32 +189,36 @@ class FurnaceDrawingTools {
         data.textAlpha = data.strokeAlpha
         data.strokeWidth = 0
         data.fillType = FURNACE_DRAWING_FILL_TYPE.NONE
+        data.flags.furnace.fillType = FURNACE_DRAWING_FILL_TYPE.NONE
         delete data.content
       } else {
         data.type = data.type[0]
         if (data.points.length > 0) {
-          mergeObject(data, Drawing._adjustPoints(0, 0, data.points))
+          // Data is already using the shifted x/y so we use _adjustPoints only to adjust 
+          // the actual points, not the x/y/width/height
+          let { points } = Drawing._adjustPoints(0, 0, data.points)
+          mergeObject(data, {points})
+          /*
+          if ((drawing.type == "polygon" || drawing.type == "freehand") && (data.width * data.height != 0)) {
+            let scaleX = drawing.width / data.width
+            let scaleY = drawing.height / data.height
+            if (scaleX != 1 || scaleY != 1) {
+              // TODO: Don't change point data. Just change width/height and scale dynamically.
+              data.points = data.points.map(p => [Math.round(p[0] * scaleX), Math.round(p[1] * scaleY)]);
+            }
+          }*/
         }
       }
 
       max_id += 1
       data.id = max_id
-      if ((drawing.type == "polygon" || drawing.type == "freehand") && (data.width * data.height != 0)) {
-        let scaleX = drawing.width / data.width
-        let scaleY = drawing.height / data.height
-        if (scaleX != 1 || scaleY != 1) {
-          // TODO: Don't change point data. Just change width/height and scale dynamically.
-          data.points = data.points.map(p => [Math.round(p[0] * scaleX), Math.round(p[1] * scaleY)]);
-        }
-      }
       new_drawings.push(data)
     }
-    let flags = scene.data.flags.furnace || {}
+    let flags = duplicate(scene.data.flags.furnace || {})
     delete flags.drawings
     let final_drawings = duplicate(scene.data.drawings).concat(new_drawings)
     console.log("Migrating scene : ", scene, " with new data ", { "flags.furnace": flags, "drawings": final_drawings})
-    //return scene.update({ "flags.furnace": flags, "drawings": final_drawings})
-    return new Promise(r => r())
+    return scene.update({ "flags.furnace": flags, "drawings": final_drawings})
   }
   
   static DrawingDefaultData(type = "all") {
