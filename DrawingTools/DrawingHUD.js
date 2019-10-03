@@ -63,6 +63,24 @@ class FurnaceDrawingHUD extends DrawingHUD {
     })
   }
 
+  _onToggleVisibility(event) {
+    this._onToggleField(event, "hidden")
+  }
+  _onToggleLocked(event) {
+    this._onToggleField(event, "locked")
+  }
+
+  async _onToggleField(event, field) {
+    event.preventDefault();
+    let btn = $(event.currentTarget);
+    let isEnabled = this.object.data[field];
+    const drawings = this.object._controlled ? canvas.drawings.controlled : [this.object];
+    for (let d of drawings) {
+      await d.update(canvas.scene._id, { [field]: !isEnabled });
+    }
+    btn.toggleClass("active");
+  }
+
   /**
    * Handle Drawing configuration button click
    * @private
