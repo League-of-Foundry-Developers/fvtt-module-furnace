@@ -50,17 +50,20 @@ class FurnaceDrawingHUD extends DrawingHUD {
   }
 
   /* -------------------------------------------- */
-  _onColorPickerChange(event) {
+  async _onColorPickerChange(event) {
     event.preventDefault();
     let data = {}
     data[event.target.name] = event.target.value
-    // If user sets a fill color but fill is NONE then change it
-    if (event.target.name == "fillColor" && this.object.fillType == FURNACE_DRAWING_FILL_TYPE.NONE)
-      data.fillType = FURNACE_DRAWING_FILL_TYPE.SOLID;
-    this.object.update(canvas.scene._id, data).then(() => {
-      this.render()
-      this.object.layer.updateStartingData(this.object)
-    })
+    const drawings = this.object._controlled ? canvas.drawings.controlled : [this.object];
+    for (let d of drawings) {
+      // If user sets a fill color but fill is NONE then change it
+      if (event.target.name == "fillColor" && d.fillType == FURNACE_DRAWING_FILL_TYPE.NONE)
+        data.fillType = FURNACE_DRAWING_FILL_TYPE.SOLID;
+      await d.update(canvas.scene._id, data)
+      delete data.fillType
+    }
+    this.render()
+    this.object.layer.updateStartingData(this.object)
   }
 
   _onToggleVisibility(event) {
