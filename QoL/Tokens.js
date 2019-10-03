@@ -1,4 +1,16 @@
 class FurnaceTokenQoL {
+    static init() {
+        game.settings.register("furnace", "tokenIgnoreVision", {
+            name: "Ignore Token Vision for the GM",
+            scope: "world",
+            config: false,
+            default: false,
+            type: Boolean,
+            onChange: value => {
+                canvas.sight.updateSight({updateFog: true})
+            }
+        });
+    }
     static ready() {
         FurnacePatching.replaceMethod(Token, "_onUpdateTokenActor", function (updateData) {
             if (this.actor != null)
@@ -82,7 +94,35 @@ class FurnaceTokenQoL {
                 }
             }
         });
+
+        FurnacePatching.replaceMethod(SightLayer, "updateSight", function (options) {
+            const vision = ui.controls.controls.token.tools.vision,
+                isToggled = vision && vision.active;
+            if (game.user.isGM && isToggled) {
+                this.map.visible = false;
+                this.fog.visible = false;
+                return;
+            }
+            return FurnacePatching.callOriginalFunction(this, "updateSight", options);
+        });
+
+    }
+  
+    static renderSceneControls(obj, html, data) {
+        if (obj.controls.token.tools.vision === undefined) {
+            obj.controls.token.tools["vision"] = {
+                name: "Ignore Token Vision",
+                icon: "far fa-eye-slash",
+                toggle: true,
+                active: game.settings.get("furnace", "tokenIgnoreVision"),
+                visible: game.user.isGM,
+                onClick:  (value) => game.settings.set("furnace", "tokenIgnoreVision", value)
+            }
+            obj.render();
+        }
     }
 }
 
+Hooks.on('init', FurnaceTokenQoL.init)
 Hooks.on('ready', FurnaceTokenQoL.ready)
+Hooks.on('renderSceneControls', FurnaceTokenQoL.renderSceneControls);
