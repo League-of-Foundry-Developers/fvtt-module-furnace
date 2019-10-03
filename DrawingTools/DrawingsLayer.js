@@ -14,7 +14,7 @@ class FurnaceDrawingsLayer extends PlaceablesLayer {
   constructor() {
     super()
 
-    this._startingData = {};
+    this._startingData = game.settings.get("furnace", FurnaceDrawingsLayer.DEFAULT_CONFIG_SETTING);
   }
 
   /**
@@ -41,12 +41,10 @@ class FurnaceDrawingsLayer extends PlaceablesLayer {
     const cls = this.constructor.placeableClass;
     let title = "Clear All Drawings"
     let content = `<p>Clear all Drawings from this Scene?</p>`
-    let new_drawings = []
     if (!game.user.isGM) {
       if (game.user.isTrusted) {
         title = "Clear Your Drawings"
         content = `<p>Clear your Drawings from this Scene?</p>`
-        new_drawings = canvas.scene.data.drawings.filter(d => d.author !== game.user.id)
       } else {
         throw new Error(`You do not have permission to delete Drawings from the Scene.`);
       }
@@ -59,7 +57,16 @@ class FurnaceDrawingsLayer extends PlaceablesLayer {
         yes: {
           icon: '<i class="fas fa-trash"></i>',
           label: "Yes",
-          callback: () => canvas.scene.update({"drawings": new_drawings })
+          callback: async function() {
+            if (game.user.isGM) {
+              canvas.scene.update({ "drawings": [] })
+            } else {
+              let to_delete = canvas.scene.data.drawings.filter(d => d.author == game.user.id)
+              for (let d of to_delete) {
+                await d.delete(canvas.scene.id)
+              }
+            }
+          }
         },
         no: {
           icon: '<i class="fas fa-times"></i>',
@@ -107,41 +114,32 @@ class FurnaceDrawingsLayer extends PlaceablesLayer {
         },
         rotation: 0,
         fillType: FURNACE_DRAWING_FILL_TYPE.NONE,
-        fillColor: "#ffffff",
+        fillColor: game.user.color,
         fillAlpha: 1.0,
-        strokeColor: "#000000",
+        strokeColor: game.user.color,
         strokeAlpha: 1.0,
+        strokeWidth: 8,
         texture: null,
         fontFamily: "Signika",
         fontSize: 48,
         text: "",
         textAlpha: 1,
-        textColor: "#FFFFFF",
-        bezierFactor: 0
+        textColor: game.user.color,
+        bezierFactor: 0,
+        points: [],
       },
       [DRAWING_TYPES.RECTANGLE]: {
-        strokeWidth: 8,
       },
       [DRAWING_TYPES.ELLIPSE]: {
-        strokeWidth: 8,
       },
       [DRAWING_TYPES.TEXT]: {
-        // FIXME: Text should be Rectangle or add native text support in core
         fillType: FURNACE_DRAWING_FILL_TYPE.SOLID,
         strokeWidth: 2,
-        content: "",
-        fontFamily: "Signika",
-        fontSize: 48,
-        wordWrap: false
       },
       [DRAWING_TYPES.POLYGON]: {
-        strokeWidth: 8,
-        points: [],
         bezierFactor: 0
       },
       [DRAWING_TYPES.FREEHAND]: {
-        strokeWidth: 8,
-        points: [],
         bezierFactor: 0.5,
       }
     }[type]
@@ -159,14 +157,6 @@ class FurnaceDrawingsLayer extends PlaceablesLayer {
                                   this.constructor.DrawingDefaultData(type),
                                   { inplace: false });
     defaultData.type = type
-    // Set default colors as the user color
-    if (type == DRAWING_TYPES.TEXT) {
-      defaultData.textColor = game.user.color;
-    }
-    else {
-      defaultData.strokeColor = game.user.color;
-      defaultData.fillColor = game.user.color;
-    }
     return defaultData;
   }
 
@@ -176,6 +166,7 @@ class FurnaceDrawingsLayer extends PlaceablesLayer {
     if (data.points) delete data.points
     if (data.text) delete data.text
     mergeObject(this.getStartingData(data.type), data, { overwrite: true })
+    game.settings.set("furnace", DrawingsLayer.DEFAULT_CONFIG_SETTING, this._startingData)
   }
 
   /**
@@ -269,7 +260,7 @@ class FurnaceDrawingsLayer extends PlaceablesLayer {
       // Re-render the preview text
       this.preview.addChild(object);
       object.refresh();
-    } else if (!object.data.points || object.data.points.length > 1) {
+    } else if (!object.isPolygon || object.data.points.length > 1) {
       // Only create the object if it's not a polygon/freehand or if it has at least 2 points
       this.constructor.placeableClass.create(canvas.scene._id, object.data);
     }

@@ -59,6 +59,13 @@ class FurnaceDrawingTools {
         Drawing.FREEHAND_SAMPLE_RATE = value
       }
     })
+    game.settings.register("furnace", FurnaceDrawingsLayer.DEFAULT_CONFIG_SETTING, {
+      name: "Default Drawing Configuration",
+      scope: "client",
+      config: false,
+      default: {},
+      type: Object,
+    })
     if (game.settings.get("furnace", "enableDrawingTools")) {
       Drawing = FurnaceDrawing;
       DrawingsLayer = FurnaceDrawingsLayer;

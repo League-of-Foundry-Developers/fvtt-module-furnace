@@ -98,7 +98,7 @@ class FurnaceDrawingConfig extends DrawingConfig {
     html.closest(".app").height(app_height - div_height);
   }
 
-  _onResetDefaults(ev, html) {
+  reset(ev, html) {
     ev.preventDefault();
     let type = html.find("select[name=type]").val()
     let defaults = canvas.drawings.getDefaultData(type)
