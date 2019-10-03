@@ -19,15 +19,15 @@ class FurnaceDebug {
 }
 Hooks._furnace_original_callAll = Hooks.callAll;
 Hooks._furnace_original_call = Hooks.call;
-Hooks.callAll = function (hook, ...args) {
+FurnacePatching.replaceFunction(Hooks, "callAll", function (hook, ...args) {
     if (CONFIG.FurnaceEnableDebug)
         console.log("Calling All Hooks : " + hook + "(", args, ")")
-    Hooks._furnace_original_callAll(hook, ...args)
-}
-Hooks.call = function (hook, ...args) {
+    FurnacePatching.callOriginalFunction(this, "callAll", hook, ...args)
+});
+FurnacePatching.replaceFunction(Hooks, "call", function (hook, ...args) {
     if (CONFIG.FurnaceEnableDebug)
         console.log("Calling Hook : " + hook + "(", args, ")")
-    Hooks._furnace_original_call(hook, ...args)
-}
+    FurnacePatching.callOriginalFunction(this, "call", hook, ...args)
+});
 
 Hooks.on('init', FurnaceDebug.init)

@@ -5,6 +5,7 @@
   "version": "0.5",
   "author": "KaKaRoTo",
   "scripts": [
+    "Patches/Patches.js",
     "DrawingTools/DrawingsLayer.js",
     "DrawingTools/RotationHandle.js",
     "DrawingTools/Drawing.js",
@@ -15,8 +16,8 @@
     "Macros/Macros.js",
     "QoL/split-html.js",
     "QoL/SplitJournal.js",
-    "QoL/Debug.js",
-    "Patches/Patches.js"
+    "QoL/Tokens.js",
+    "QoL/Debug.js"
   ],
   "styles": [],
   "packs": [],

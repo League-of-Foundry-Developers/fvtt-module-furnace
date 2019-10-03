@@ -13,5 +13,19 @@ class FurnacePatching {
             console.log("Cannot patch function. It has wrong content at line ", line_number, " : ", lines[line_number].trim(), " != ", line.trim(), "\n", funcStr)
         }
     }
+
+    static replaceFunction(klass, name, func) {
+        klass[this.ORIG_PRREFIX + name] = klass[name]
+        klass[name] = func
+    }
+    static replaceMethod(klass, name, func) {
+        return this.replaceFunction(klass.prototype, name, func)
+    }
+
+    // Would be the same code for callOriginalMethod as long as 'klass' is actually the instance
+    static callOriginalFunction(klass, name, ...args) {
+        klass[this.ORIG_PRREFIX + name].call(klass, ...args)
+    }
   
 }
+FurnacePatching.ORIG_PRREFIX = "__furnace_original_"
