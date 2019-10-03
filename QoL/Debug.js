@@ -17,8 +17,6 @@ class FurnaceDebug {
         CONFIG.FurnaceEnableDebug = game.settings.get("furnace", "enableDebug");
     }
 }
-Hooks._furnace_original_callAll = Hooks.callAll;
-Hooks._furnace_original_call = Hooks.call;
 FurnacePatching.replaceFunction(Hooks, "callAll", function (hook, ...args) {
     if (CONFIG.FurnaceEnableDebug)
         console.log("Calling All Hooks : " + hook + "(", args, ")")

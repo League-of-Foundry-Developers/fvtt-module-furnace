@@ -1,10 +1,12 @@
 {
   "name": "furnace",
   "title": "The Furnace",
-  "description": "<p>The Furnace is an essential part of every Foundry.</p><p>This module contains a set of features that improve the Quality of Life of the DM/Players. The current features are : </p><p><strong>Drawing Tools :</strong>You (and trusted players) can draw on your map for a more dynamic gaming experience.</p><p><strong>Split Journal :</strong> Select the split option from the content menu on a journal entry to split it into multiple entries.</p>",
+  "description": "<p>The Furnace is an essential part of every Foundry.</p><p>This module contains a set of features that improve the Quality of Life of the DM/Players. The current features are : </p><p><strong>Advanced Drawing Tools :</strong>Improved drawing tools with different pattern fill types, new HUD, and various options.</p><p><strong>Split Journal :</strong> Select the split option from the context menu on a journal entry to split it into multiple entries.</p><p><strong>Token Improvements : </strong>Move multiple tokens at once using the mouse and as GM, you can enable/disable token vision for yourself.</p><p><strong>Macros: </strong>An experimental Macro system based on Handlebar's templating system</p>",
   "version": "0.5",
   "author": "KaKaRoTo",
   "scripts": [
+    "libs/split-html.js",
+    "libs/h.min.js",
     "Patches/Patches.js",
     "DrawingTools/DrawingsLayer.js",
     "DrawingTools/RotationHandle.js",
@@ -12,9 +14,7 @@
     "DrawingTools/DrawingHUD.js",
     "DrawingTools/DrawingConfig.js",
     "DrawingTools/DrawingTools.js",
-    "Macros/h.min.js",
     "Macros/Macros.js",
-    "QoL/split-html.js",
     "QoL/SplitJournal.js",
     "QoL/Tokens.js",
     "QoL/Debug.js"
