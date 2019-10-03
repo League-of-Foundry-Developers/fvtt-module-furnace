@@ -265,7 +265,7 @@ class DrawingDefaultsConfig extends FurnaceDrawingConfig {
     }
     // Set the tool to the last configured type.
     let tool = "select";
-    let tools = Object.keys(ui.controls.controls[ui.controls.activeControl])
+    let tools = Object.keys(ui.controls.controls[ui.controls.activeControl].tools)
     for (tool of tools) {
       if (tool[0] == formData.type) {
         break;
