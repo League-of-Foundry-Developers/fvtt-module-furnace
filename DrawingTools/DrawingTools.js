@@ -8,12 +8,12 @@ const FURNACE_DRAWING_FILL_TYPE = {
 }
 
 CONFIG.furnaceDrawingFillTypes = {
-  0: "None",
-  1: "Solid Color",
-  2: "Tiled Pattern",
-  3: "Stretched Texture",
-  4: "Tiled Contour",
-  5: "Stretched Contour"
+  [FURNACE_DRAWING_FILL_TYPE.NONE]: "None",
+  [FURNACE_DRAWING_FILL_TYPE.SOLID]: "Solid Color",
+  [FURNACE_DRAWING_FILL_TYPE.PATTERN]: "Tiled Pattern",
+  [FURNACE_DRAWING_FILL_TYPE.STRETCH]: "Stretched Texture",
+  [FURNACE_DRAWING_FILL_TYPE.CONTOUR]: "Tiled Contour",
+  [FURNACE_DRAWING_FILL_TYPE.FRAME]: "Stretched Contour"
 }
 
 CONFIG.furnaceDrawingTypes = {
@@ -37,28 +37,28 @@ CONFIG.WebSafeFonts = {
 class FurnaceDrawingTools {
 
   static init() {
-      // Register module configuration settings
-      game.settings.register("furnace", "enableDrawingTools", {
-        name: "Advanced Drawing Tools",
-        hint: "Replaces the core drawing tools with the Furnace's drawing tools, which provides more advanced features, such as tiled/stretched textures and live preview of config changes (Requires reload).",
-        scope: "world",
-        config: true,
-        default: true,
-        type: Boolean,
-        onChange: value => window.location.reload()
+    // Register module configuration settings
+    game.settings.register("furnace", "enableDrawingTools", {
+      name: "Advanced Drawing Tools",
+      hint: "Replaces the core drawing tools with the Furnace's drawing tools, which provides more advanced features, such as tiled/stretched textures and live preview of config changes (Requires reload).",
+      scope: "world",
+      config: true,
+      default: true,
+      type: Boolean,
+      onChange: value => window.location.reload()
     })
     game.settings.register("furnace", "freehandSampleRate", {
       name: "Freehand Sample Rate",
       hint: "The sample rate in millisecond for the smoothing of Freehand drawings. Lower value means more accurate drawings but less smooth and containing more points",
       scope: "core",
       config: true,
-      choices: {25: "25 ms", 50: "50 ms", 75: "75 ms", 100: "100 ms"},
+      choices: { 25: "25 ms", 50: "50 ms", 75: "75 ms", 100: "100 ms" },
       default: 50,
       type: Number,
       onChange: value => {
         Drawing.FREEHAND_SAMPLE_RATE = value
       }
-  })
+    })
     if (game.settings.get("furnace", "enableDrawingTools")) {
       Drawing = FurnaceDrawing;
       DrawingsLayer = FurnaceDrawingsLayer;
@@ -74,7 +74,7 @@ class FurnaceDrawingTools {
         await FurnaceDrawingTools.migrateDrawingsToCore(scene, drawings)
     }
   }
-  
+
   static renderSceneControls(obj, html, data) {
     if (!game.settings.get("furnace", "enableDrawingTools")) return;
     if (obj.controls.drawings.furnace != true) {
@@ -171,7 +171,7 @@ class FurnaceDrawingTools {
         data.fillType = data.fill;
       else
         data.fillType = DRAWING_FILL_TYPES.NONE;
-        
+
       if (data.fontSize == "")
         data.fontSize = 48;
       delete data.owner
@@ -180,8 +180,8 @@ class FurnaceDrawingTools {
       delete data.textureWidth
       delete data.textureHeight
       delete data.textureAlpha
-      mergeObject(data, default_data, { overwrite: false,  })
-      
+      mergeObject(data, default_data, { overwrite: false, })
+
       if (drawing.type == "text") {
         data.type = "r"
         data.text = data.content
@@ -197,7 +197,7 @@ class FurnaceDrawingTools {
           // Data is already using the shifted x/y so we use _adjustPoints only to adjust 
           // the actual points, not the x/y/width/height
           let { points } = Drawing._adjustPoints(0, 0, data.points)
-          mergeObject(data, {points})
+          mergeObject(data, { points })
           /*
           if ((drawing.type == "polygon" || drawing.type == "freehand") && (data.width * data.height != 0)) {
             let scaleX = drawing.width / data.width
@@ -217,70 +217,10 @@ class FurnaceDrawingTools {
     let flags = duplicate(scene.data.flags.furnace || {})
     delete flags.drawings
     let final_drawings = duplicate(scene.data.drawings).concat(new_drawings)
-    console.log("Migrating scene : ", scene, " with new data ", { "flags.furnace": flags, "drawings": final_drawings})
-    return scene.update({ "flags.furnace": flags, "drawings": final_drawings})
-  }
-  
-  static DrawingDefaultData(type = "all") {
-    return {
-      // Special 'all' type which contains default values common to all types
-      all: {
-        id: 1,
-        x: 0,
-        y: 0,
-        z: 0,
-        width: 0,
-        height: 0,
-        author: null,
-        hidden: false,
-        locked: false,
-        flags: {
-          furnace: {
-            textureWidth: 0,
-            textureHeight: 0,
-            textureAlpha: 1
-          }
-        },
-        rotation: 0,
-        fillType: FURNACE_DRAWING_FILL_TYPE.NONE,
-        fillColor: "#ffffff",
-        fillAlpha: 1.0,
-        strokeColor: "#000000",
-        strokeAlpha: 1.0,
-        texture: null,
-        fontFamily: "Arial",
-        fontSize: 25,
-        text: "",
-        textAlpha: 1,
-        textColor: "#FFFFFF",
-        bezierFactor: 0
-      },
-      [DRAWING_TYPES.RECTANGLE]: {
-        strokeWidth: 5,
-      },
-      [DRAWING_TYPES.ELLIPSE]: {
-        strokeWidth: 5,
-      },
-      [DRAWING_TYPES.TEXT]: {
-        // FIXME: Text should be Rectangle or add native text support in core
-        fillType: FURNACE_DRAWING_FILL_TYPE.SOLID,
-        strokeWidth: 2,
-        content: "",
-        fontFamily: "Arial",
-        fontSize: 25,
-        wordWrap: false
-      },
-      [DRAWING_TYPES.POLYGON]: {
-        strokeWidth: 3,
-        points: [],
-        bezierFactor: 0
-      },
-      [DRAWING_TYPES.FREEHAND]: {
-        strokeWidth: 3,
-        points: [],
-        bezierFactor: 0.5,
-      }
-    }[type]
+    
+    if (CONFIG.FurnaceEnableDebug)
+      console.log("Migrating scene : ", scene, " with new data ", { "flags.furnace": flags, "drawings": final_drawings })
+    return scene.update({ "flags.furnace": flags, "drawings": final_drawings })
   }
 }
 

@@ -2,7 +2,9 @@ class FurnaceMacros {
     constructor() {
         let helpers = {
             now: () => new Date(),
-            roll: (formula) => new Roll(formula).roll().total
+            roll: (formula) => new Roll(formula).roll().total,
+            multiply: (value1, value2) => Number(value1) * Number(value2),
+            divide: (value1, value2) => Number(value1) / Number(value2)
         }
         H.registerHelpers(Handlebars)
         Handlebars.registerHelper(helpers)

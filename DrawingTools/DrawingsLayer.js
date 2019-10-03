@@ -84,6 +84,68 @@ class FurnaceDrawingsLayer extends PlaceablesLayer {
 
   /* -------------------------------------------- */
 
+  
+  static DrawingDefaultData(type = "all") {
+    return {
+      // Special 'all' type which contains default values common to all types
+      all: {
+        id: 1,
+        x: 0,
+        y: 0,
+        z: 0,
+        width: 0,
+        height: 0,
+        author: null,
+        hidden: false,
+        locked: false,
+        flags: {
+          furnace: {
+            textureWidth: 0,
+            textureHeight: 0,
+            textureAlpha: 1
+          }
+        },
+        rotation: 0,
+        fillType: FURNACE_DRAWING_FILL_TYPE.NONE,
+        fillColor: "#ffffff",
+        fillAlpha: 1.0,
+        strokeColor: "#000000",
+        strokeAlpha: 1.0,
+        texture: null,
+        fontFamily: "Signika",
+        fontSize: 48,
+        text: "",
+        textAlpha: 1,
+        textColor: "#FFFFFF",
+        bezierFactor: 0
+      },
+      [DRAWING_TYPES.RECTANGLE]: {
+        strokeWidth: 8,
+      },
+      [DRAWING_TYPES.ELLIPSE]: {
+        strokeWidth: 8,
+      },
+      [DRAWING_TYPES.TEXT]: {
+        // FIXME: Text should be Rectangle or add native text support in core
+        fillType: FURNACE_DRAWING_FILL_TYPE.SOLID,
+        strokeWidth: 2,
+        content: "",
+        fontFamily: "Signika",
+        fontSize: 48,
+        wordWrap: false
+      },
+      [DRAWING_TYPES.POLYGON]: {
+        strokeWidth: 8,
+        points: [],
+        bezierFactor: 0
+      },
+      [DRAWING_TYPES.FREEHAND]: {
+        strokeWidth: 8,
+        points: [],
+        bezierFactor: 0.5,
+      }
+    }[type]
+  }
   getStartingData(type) {
     type = type[0]
     if (this._startingData[type] === undefined)
@@ -93,13 +155,13 @@ class FurnaceDrawingsLayer extends PlaceablesLayer {
   }
   getDefaultData(type) {
     type = type[0]
-    let defaultData = mergeObject(FurnaceDrawingTools.DrawingDefaultData("all"),
-                                  FurnaceDrawingTools.DrawingDefaultData(type),
+    let defaultData = mergeObject(this.constructor.DrawingDefaultData("all"),
+                                  this.constructor.DrawingDefaultData(type),
                                   { inplace: false });
     defaultData.type = type
     // Set default colors as the user color
     if (type == DRAWING_TYPES.TEXT) {
-      defaultData.fillColor = game.user.color;
+      defaultData.textColor = game.user.color;
     }
     else {
       defaultData.strokeColor = game.user.color;

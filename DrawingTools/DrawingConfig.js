@@ -173,6 +173,11 @@ class FurnaceDrawingConfig extends DrawingConfig {
     }
   }
 
+  _onRangeChange(event) {
+	  event.preventDefault();
+	  let span = $(event.target).siblings(".range-value");
+	  span.text((event.target.value * 100) + "%");
+  }
   /* -------------------------------------------- */
 
   /**

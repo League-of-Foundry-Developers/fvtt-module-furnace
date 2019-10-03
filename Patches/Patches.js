@@ -26,6 +26,20 @@ class FurnacePatching {
     static callOriginalFunction(klass, name, ...args) {
         klass[this.ORIG_PRREFIX + name].call(klass, ...args)
     }
-  
+
+    static init() {
+        FurnacePatching.replaceFunction(PlaceablesLayer, "_deletePlaceableObject",
+            function ({ parentId, deleted }) {
+                delete this.instance._controlled[deleted]
+                return FurnacePatching.callOriginalFunction(this, "_deletePlaceableObject", ...arguments)
+            });
+        FurnacePatching.replaceMethod(PlaceablesLayer, "draw",
+            function () {
+                this._controlled = {}
+                return FurnacePatching.callOriginalFunction(this, "draw", ...arguments)
+            });
+    }
 }
 FurnacePatching.ORIG_PRREFIX = "__furnace_original_"
+
+Hooks.on('init', FurnacePatching.init)

@@ -1,5 +1,3 @@
-
-
 class FurnaceDrawing extends Drawing {
 
   /* Override the constructor's name so we get createDrawing instead of createFurnaceDrawing */
@@ -23,10 +21,6 @@ class FurnaceDrawing extends Drawing {
     return this._sheet;
   }
 
-  /* Create/update/delete actual Drawing objects so the trigger name is 
-   * correctly set to createDrawing/updateDrawing/deleteDrawing instead of
-   * createFurnaceDrawing/updateFurnaceDrawing/deleteFurnaceDrawing
-   */
   static async create(sceneId, data, options = {}) {
     // Sanitize data
     if (data.points && data.points.length > 0) {
@@ -354,9 +348,7 @@ class FurnaceDrawing extends Drawing {
 
     // Reset hit area. img doesn't set a hit area automatically if we don't use 'fill',
     // so we need to manually define it. Also take into account negative width/height.
-    let hit_x = this.data.width > 0 ? 0 : this.data.width;
-    let hit_y = this.data.height > 0 ? 0 : this.data.height;
-    this.img.hitArea = this.img.getLocalBounds()
+    this.hitArea = this.getLocalBounds()
 
   }
 
@@ -686,6 +678,10 @@ class FurnaceDrawing extends Drawing {
     this.control();
   }
 
+  _onDragCancel(event) {
+    super._onDragCancel(event);
+    this.draw()
+  }
   /**
    * Event-handling logic for a right-mouse click event on the Drawing container
    * @param {PIXI.interaction.InteractionEvent} event
