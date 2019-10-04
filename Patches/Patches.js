@@ -21,10 +21,24 @@ class FurnacePatching {
     static replaceMethod(klass, name, func) {
         return this.replaceFunction(klass.prototype, name, func)
     }
+    static replaceStaticGetter(klass, name, func) {
+        let getterProperty = Object.getOwnPropertyDescriptor(klass, name);
+        if (getterProperty == undefined)
+            return false;
+        Object.defineProperty(klass, FurnacePatching.ORIG_PRREFIX + name, getterProperty);
+        Object.defineProperty(klass, name, { get: func });
+        return true;
+    }
+    static replaceGetter(klass, name, func) {
+        return this.replaceStaticGetter(klass.prototype, name, func)
+    };
 
     // Would be the same code for callOriginalMethod as long as 'klass' is actually the instance
     static callOriginalFunction(klass, name, ...args) {
-        klass[this.ORIG_PRREFIX + name].call(klass, ...args)
+        return klass[this.ORIG_PRREFIX + name].call(klass, ...args)
+    }
+    static callOriginalGetter(klass, name) {
+        return klass[this.ORIG_PRREFIX + name]
     }
 
     static init() {
@@ -38,6 +52,10 @@ class FurnacePatching {
                 this._controlled = {}
                 return FurnacePatching.callOriginalFunction(this, "draw", ...arguments)
             });
+        FurnacePatching.replaceMethod(Token, "_onUpdateTokenActor", function (updateData) {
+            if (this.actor != null)
+                return FurnacePatching.callOriginalFunction(this, "_onUpdateTokenActor", updateData);
+        });
     }
 }
 FurnacePatching.ORIG_PRREFIX = "__furnace_original_"

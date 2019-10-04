@@ -11,17 +11,12 @@ class FurnaceCombatQoL {
         let input = $(`<input class="initiative" style="width: 90%" value="${combatant.initiative}"/>`)
         initiative.off("dblclick")
         initiative.empty().append(input)
-        input.focus()
-        input.select()
+        input.focus().select()
         input.on('change', ev => game.combat.updateCombatant({ id: cid, initiative: input.val() }))
         input.on('focusout', ev => game.combats.render())
 
 
-    }/*
-        <div class="token-initiative">
-                <span class="initiative">15.13</span>
-            </div>
-    }*/
+    }
 }
 
 Hooks.on('renderCombatTracker', FurnaceCombatQoL.renderCombatTracker)

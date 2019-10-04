@@ -7,7 +7,9 @@ class FurnaceTokenQoL {
             default: false,
             type: Boolean,
             onChange: value => {
-                canvas.sight.updateSight({updateFog: true})
+                canvas.sight.updateLights();
+                canvas.sight.updateSight({ updateFog: true });
+                canvas.sight.restrictVisibility();
             }
         });
     }
@@ -22,10 +24,6 @@ class FurnaceTokenQoL {
         }
     }
     static ready() {
-        FurnacePatching.replaceMethod(Token, "_onUpdateTokenActor", function (updateData) {
-            if (this.actor != null)
-                return FurnacePatching.callOriginalFunction(this, "_onUpdateTokenActor", updateData);
-        });
         FurnacePatching.replaceMethod(Token, "_onMouseUp", async function (event) {
             let { handleState, clones, origin, destination, originalEvent } = event.data;
             const controlled = canvas.tokens.controlled;
@@ -106,14 +104,25 @@ class FurnaceTokenQoL {
         });
 
         FurnacePatching.replaceMethod(SightLayer, "updateSight", function (options) {
-            const vision = ui.controls.controls.token.tools.vision,
-                isToggled = vision && vision.active;
-            if (game.user.isGM && isToggled) {
+            if (game.user.isGM && game.settings.get("furnace", "tokenIgnoreVision")) {
                 this.map.visible = false;
                 this.fog.visible = false;
                 return;
             }
             return FurnacePatching.callOriginalFunction(this, "updateSight", options);
+        });
+        FurnacePatching.replaceMethod(SightLayer, "updateLights", function (options) {
+            if (game.user.isGM && game.settings.get("furnace", "tokenIgnoreVision")) {
+                this.map.visible = false;
+                this.fog.visible = false;
+                return;
+            }
+            return FurnacePatching.callOriginalFunction(this, "updateLights", options);
+        });
+        FurnacePatching.replaceGetter(Token, "isVisible", function () {
+            if (game.user.isGM && game.settings.get("furnace", "tokenIgnoreVision"))
+                return true;
+            return  FurnacePatching.callOriginalGetter(this, "isVisible");
         });
 
     }
