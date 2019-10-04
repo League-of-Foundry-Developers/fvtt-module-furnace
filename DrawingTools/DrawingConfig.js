@@ -201,12 +201,12 @@ class FurnaceDrawingConfig extends DrawingConfig {
  * @params options.preview {Boolean}  Configure a preview version of a drawing which is not yet saved
  */
 class DrawingDefaultsConfig extends FurnaceDrawingConfig {
-  constructor(object, options) {
+  constructor(object, type, options) {
     super(object, options);
 
     // this.object here is actually the Drawingslayer
     this._defaults = {}
-    this.type = DRAWING_TYPES.RECTANGLE
+    this.type = type || DRAWING_TYPES.RECTANGLE
     for (let type of Object.values(DRAWING_TYPES)) {
       this._defaults[type] = this.object.getStartingData(type);
     }

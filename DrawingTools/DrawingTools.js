@@ -99,23 +99,28 @@ class FurnaceDrawingTools {
           },
           rectangle: {
             name: "Draw Rectangle",
-            icon: "fas fa-square"
+            icon: "fas fa-square",
+            onClick: () => canvas.drawings._last_tool = DRAWING_TYPES.RECTANGLE
           },
           ellipse: {
             name: "Draw Ellipse",
-            icon: "fas fa-circle"
+            icon: "fas fa-circle",
+            onClick: () => canvas.drawings._last_tool = DRAWING_TYPES.ELLIPSE
           },
           polygon: {
             name: "Draw Polygons",
-            icon: "fas fa-draw-polygon"
+            icon: "fas fa-draw-polygon",
+            onClick: () => canvas.drawings._last_tool = DRAWING_TYPES.POLYGON
           },
           freehand: {
             name: "Draw Freehand",
-            icon: "fas fa-signature"
+            icon: "fas fa-signature",
+            onClick: () => canvas.drawings._last_tool = DRAWING_TYPES.FREEHAND
           },
           text: {
             name: "Draw Text",
-            icon: "fas fa-font"
+            icon: "fas fa-font",
+            onClick: () => canvas.drawings._last_tool = DRAWING_TYPES.TEXT
           },
           clear: {
             name: "Clear all Drawings",

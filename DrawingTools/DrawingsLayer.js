@@ -14,6 +14,7 @@ class FurnaceDrawingsLayer extends PlaceablesLayer {
   constructor() {
     super()
 
+    this._last_tool = DRAWING_TYPES.RECTANGLE
     this._startingData = game.settings.get("furnace", FurnaceDrawingsLayer.DEFAULT_CONFIG_SETTING);
   }
 
@@ -175,7 +176,7 @@ class FurnaceDrawingsLayer extends PlaceablesLayer {
    */
   configureStartingData() {
     // We don't use a singleton because defaults could change between calls.
-    new DrawingDefaultsConfig(this).render(true);
+    new DrawingDefaultsConfig(this, this._last_tool).render(true);
   }
 
   getPosition(event, point) {
