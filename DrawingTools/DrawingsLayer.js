@@ -164,9 +164,9 @@ class FurnaceDrawingsLayer extends PlaceablesLayer {
   updateStartingData(drawing) {
     let data = duplicate(drawing.data)
     mergeObject(data, { id: 1, x: 0, y: 0, z: 0, width: 0, height: 0, author: null, rotation: 0 }, { overwrite: true })
-    if (data.points) delete data.points
-    if (data.text) delete data.text
-    mergeObject(this.getStartingData(data.type), data, { overwrite: true })
+    data.points = []
+    data.text = ""
+    this._startingData[data.type] = data
     game.settings.set("furnace", DrawingsLayer.DEFAULT_CONFIG_SETTING, this._startingData)
   }
 
