@@ -321,29 +321,57 @@ class FurnaceDrawing extends Drawing {
     this.position.set(this.data.x + this.pivot.x, this.data.y + this.pivot.y);
     this.alpha = this.data.hidden ? 0.5 : 1.0;
 
-    // Draw scale handle
-    this.scaleHandle.position.set(this.data.width, this.data.height);
-    this.scaleHandle.clear().lineStyle(2.0, 0x000000).beginFill(0xFF9829, 1.0).drawCircle(0, 0, 6.0);
-
-    // Draw Rotation handle
-    this.rotateHandle.position.set(this.data.width / 2, 0);
-    this.rotateHandle.scale.set(Math.sign(this.data.width), Math.sign(this.data.height));
-    this.rotateHandle.draw()
-
-    // Draw border frame
-    this.frame.clear().lineStyle(2.0, 0x000000).drawRect(0, 0, this.data.width, this.data.height);
-
     // Toggle visibility
     this.visible = !this.data.hidden || game.user.isGM;
-    // Don't show the frame when we're creating a new drawing, unless it's text.
-    this.frame.visible = this._controlled && (this.id || this.type == DRAWING_TYPES.TEXT);
-    this.scaleHandle.visible = this.rotateHandle.visible = this.frame.visible && !this.data.locked;
+
+    // Draw frame
+    this._refreshFrame()
 
     // Reset hit area. img doesn't set a hit area automatically if we don't use 'fill',
     // so we need to manually define it. Also take into account negative width/height.
     this.hitArea = this.getLocalBounds()
 
   }
+
+  
+  /**
+   * Refresh the boundary frame which outlines the Drawing shape
+   * @private
+   */
+  _refreshFrame() {
+    let { x, y, width, height } = this.img.getLocalBounds();
+    /* Scale the width/height because of text drawings */
+    width *= this.img.scale.x
+    height *= this.img.scale.y
+
+    let pad = 10;
+    this.frame.clear()
+      .lineStyle(6.0, 0x000000).drawRect(x - pad, y - pad, width + (2*pad), height + (2*pad))
+      .lineStyle(2.0, 0xFF9829).drawRect(x - pad, y - pad, width + (2*pad), height + (2*pad))
+      .beginFill(0x000000, 1.0)
+      .lineStyle(2.0, 0x00000)
+      .drawCircle(x - pad, y - pad, 6)
+      .drawCircle(x + width + pad, y - pad, 6)
+      .drawCircle(x - pad, y + height + pad, 6)
+      .drawCircle(x + width + pad, y + height + pad, 6);
+
+    // Draw scale handle
+    this.scaleHandle.position.set(x + width + pad, y + height + pad);
+    this.scaleHandle.clear()
+    .beginFill(0x000000, 1.0).lineStyle(4.0, 0x000000).drawCircle(0, 0, 10)
+    .lineStyle(3.0, 0xFF9829).drawCircle(0, 0, 8);
+ //     .lineStyle(2.0, 0x000000).beginFill(0xFF9829, 1.0).drawCircle(0, 0, 6.0);
+
+    // Draw Rotation handle
+    this.rotateHandle.position.set(x + width / 2 + pad / 2, y - pad);
+    this.rotateHandle.scale.set(Math.sign(this.data.width), Math.sign(this.data.height));
+    this.rotateHandle.draw()
+
+    // Don't show the frame when we're creating a new drawing, unless it's text.
+    this.frame.visible = this._controlled && (this.id || this.type == DRAWING_TYPES.TEXT);
+    this.scaleHandle.visible = this.rotateHandle.visible = this.frame.visible && !this.data.locked;
+  }
+
 
   renderRectangle(graphics) {
     let half_stroke = this.data.strokeWidth * this.alignment;
@@ -485,7 +513,7 @@ class FurnaceDrawing extends Drawing {
     });
     sprite.alpha = this.data.textAlpha;
     sprite.text = this.data.text;
-    this._handleUnshapedBounds(sprite)
+    this._scaleText(sprite)
   }
   renderSubText(sprite) {
     sprite.style = new PIXI.TextStyle({
@@ -509,7 +537,7 @@ class FurnaceDrawing extends Drawing {
     sprite.position.set(this.data.width / 2 - bounds.width / 2, this.data.height / 2 - bounds.height / 2)
   }
 
-  _handleUnshapedBounds(graphics) {
+  _scaleText(graphics) {
     let bounds = graphics.getLocalBounds()
     let scale_x = 1;
     let scale_y = 1;
