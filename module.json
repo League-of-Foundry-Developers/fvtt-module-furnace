@@ -19,8 +19,8 @@
   "styles": [],
   "packs": [],
   "url": "https://github.com/kakaroto/fvtt-module-furnace",
-  "manifest": "https://raw.githubusercontent.com/kakaroto/fvtt-module-furnace/master/module.json",
-  "download": "https://github.com/kakaroto/fvtt-module-furnace/raw/master/furnace.zip",
+  "manifest": "https://raw.githubusercontent.com/kakaroto/fvtt-module-furnace/stable/module.json",
+  "download": "https://github.com/kakaroto/fvtt-module-furnace/archive/stable.zip",
   "socket": true,
   "minimumCoreVersion": "0.3.5"
 }
