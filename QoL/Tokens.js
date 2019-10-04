@@ -11,6 +11,16 @@ class FurnaceTokenQoL {
             }
         });
     }
+    static canvasInit() {
+        ui.controls.controls.token.tools["vision"] = {
+            name: "Ignore Token Vision",
+            icon: "far fa-eye-slash",
+            toggle: true,
+            active: game.settings.get("furnace", "tokenIgnoreVision"),
+            visible: game.user.isGM,
+            onClick: (value) => game.settings.set("furnace", "tokenIgnoreVision", value)
+        }
+    }
     static ready() {
         FurnacePatching.replaceMethod(Token, "_onUpdateTokenActor", function (updateData) {
             if (this.actor != null)
@@ -107,22 +117,8 @@ class FurnaceTokenQoL {
         });
 
     }
-  
-    static renderSceneControls(obj, html, data) {
-        if (obj.controls.token.tools.vision === undefined) {
-            obj.controls.token.tools["vision"] = {
-                name: "Ignore Token Vision",
-                icon: "far fa-eye-slash",
-                toggle: true,
-                active: game.settings.get("furnace", "tokenIgnoreVision"),
-                visible: game.user.isGM,
-                onClick:  (value) => game.settings.set("furnace", "tokenIgnoreVision", value)
-            }
-            obj.render();
-        }
-    }
 }
 
 Hooks.on('init', FurnaceTokenQoL.init)
+Hooks.on('canvasInit', FurnaceTokenQoL.canvasInit)
 Hooks.on('ready', FurnaceTokenQoL.ready)
-Hooks.on('renderSceneControls', FurnaceTokenQoL.renderSceneControls);
