@@ -62,7 +62,7 @@ class FurnaceDrawingsLayer extends PlaceablesLayer {
             if (game.user.isGM) {
               canvas.scene.update({ "drawings": [] })
             } else {
-              let to_delete = canvas.scene.data.drawings.filter(d => d.author == game.user.id)
+              let to_delete = canvas.drawings.placeables.filter(p => p.data.author == game.user.id)
               for (let d of to_delete) {
                 await d.delete(canvas.scene.id)
               }
