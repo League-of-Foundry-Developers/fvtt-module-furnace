@@ -15,9 +15,10 @@
     "DrawingTools/DrawingConfig.js",
     "DrawingTools/DrawingTools.js",
     "Macros/Macros.js",
+    "QoL/Debug.js",
     "QoL/SplitJournal.js",
     "QoL/Tokens.js",
-    "QoL/Debug.js"
+    "QoL/Combat.js"
   ],
   "styles": [],
   "packs": [],
