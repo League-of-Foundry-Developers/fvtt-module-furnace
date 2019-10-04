@@ -191,8 +191,10 @@ class FurnaceDrawingsLayer extends PlaceablesLayer {
     let type = game.activeTool;
     let origin = this.getPosition(event, event.data.origin)
     let data = mergeObject(this.getStartingData(type), origin, { inplace: false })
-    if (type == "freehand" || type == "polygon")
+    if (type == "freehand" || type == "polygon") {
       data.points.push([data.x, data.y])
+      data.x = data.y = 0;
+    }
 
     return data;
   }

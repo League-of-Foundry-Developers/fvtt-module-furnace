@@ -203,17 +203,14 @@ class FurnaceDrawingTools {
         if (data.points.length > 0) {
           // Data is already using the shifted x/y so we use _adjustPoints only to adjust 
           // the actual points, not the x/y/width/height
-          let { points } = Drawing._adjustPoints(0, 0, data.points)
+          let { points, width, height } = Drawing._adjustPoints(0, 0, data.points)
           mergeObject(data, { points })
-          /*
-          if ((drawing.type == "polygon" || drawing.type == "freehand") && (data.width * data.height != 0)) {
-            let scaleX = drawing.width / data.width
-            let scaleY = drawing.height / data.height
-            if (scaleX != 1 || scaleY != 1) {
-              // TODO: Don't change point data. Just change width/height and scale dynamically.
-              data.points = data.points.map(p => [Math.round(p[0] * scaleX), Math.round(p[1] * scaleY)]);
-            }
-          }*/
+          if ((drawing.type == "polygon" || drawing.type == "freehand") && (width * height != 0)) {
+            let scaleX = drawing.width / width
+            let scaleY = drawing.height / height
+            if (scaleX != 1 || scaleY != 1)
+              data.points = data.points.map(p => [p[0] * scaleX, p[1] * scaleY]);
+          }
         }
       }
 

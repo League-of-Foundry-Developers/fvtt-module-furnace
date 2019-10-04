@@ -22,13 +22,6 @@ class FurnaceDrawing extends Drawing {
   }
 
   static async create(sceneId, data, options = {}) {
-    // Sanitize data
-    if (data.points && data.points.length > 0) {
-      data.points = data.points.map(c => [Math.round(c[0]), Math.round(c[1])])
-      // The _adjustPoints will set the x/y properly
-      data.x = 0
-      data.y = 0
-    }
     for (let key of ["x", "y", "width", "height"]) {
       if (data[key]) data[key] = Math.round(data[key]);
     }
@@ -397,24 +390,24 @@ class FurnaceDrawing extends Drawing {
     }
   }
 
-  _adjust(origin, point) {
+  _toPoint(point) {
     return {
-      x: point[0] - origin[0],
-      y: point[1] - origin[1]
+      x: point[0],
+      y: point[1]
     }
   }
 
   renderFreehand(graphics) {
     let points = this.data.points;
-    let origin = points[0];
+    let origin = this._toPoint(points[0]);
     let bezierFactor = this.data.bezierFactor || 0;
 
-    graphics.moveTo(0, 0)
+    graphics.moveTo(origin.x, origin.y)
     if (points.length > 2) {
-      let point = this._adjust(origin, points[1]);
-      let previous = this._adjust(origin, origin); // {x:0, y:0};
-      let next = this._adjust(origin, points[2]);
-      let last = this._adjust(origin, points[points.length - 1]);
+      let point = this._toPoint(points[1]);
+      let previous = origin; // {x:0, y:0};
+      let next = this._toPoint(points[2]);
+      let last = this._toPoint(points[points.length - 1]);
       let closedLoop = (last.x == previous.x && last.y == previous.y)
       let cp0;
 
@@ -422,7 +415,7 @@ class FurnaceDrawing extends Drawing {
       if (bezierFactor > 0) {
         // Verify if we're closing a loop here and calculate the previous bezier control point
         if (closedLoop) {
-          last = this._adjust(origin, points[points.length - 2]);
+          last = this._toPoint(points[points.length - 2]);
           let { next_cp0 } = this._bezierControlPoints(bezierFactor, last, previous, point);
           cp0 = next_cp0;
         }
@@ -442,9 +435,9 @@ class FurnaceDrawing extends Drawing {
       // Draw subsequent lines
       for (let i = 2; i < points.length; i++) {
         if (i == points.length - 1)
-          next = this._adjust(origin, points[1]);
+          next = this._toPoint(points[1]);
         else
-          next = this._adjust(origin, points[i + 1]);
+          next = this._toPoint(points[i + 1]);
         if (bezierFactor > 0) {
           let { cp1, next_cp0 } = this._bezierControlPoints(bezierFactor, previous, point, next);
           // If the last line, draw it as quadratic if it's not a closed loop.
@@ -460,7 +453,7 @@ class FurnaceDrawing extends Drawing {
         point = next;
       }
     } else if (points.length == 2) { // if point.length < 2, don't do anything
-      let point = this._adjust(origin, points[1]);
+      let point = this._toPoint(points[1]);
       graphics.lineTo(point.x, point.y)
     }
 
@@ -469,14 +462,13 @@ class FurnaceDrawing extends Drawing {
     // strokeWidth take care of actually drawing our circle.
     // We also need to move to the angle 0 of the arc otherwise we'd cause a small line
     // from(0, 0) to(0.1, 0) which can have huge effects visually if the stroke width is large enough.
-    graphics.moveTo(0.1, 0)
-    graphics.arc(0, 0, 0.1, 0, Math.PI * 2)
+    graphics.moveTo(origin.x + 0.1, origin.y)
+    graphics.arc(origin.x, origin.y, 0.1, 0, Math.PI * 2)
     if (points.length > 1) {
-      let point = this._adjust(origin, points[points.length - 1]);
+      let point = this._toPoint(points[points.length - 1]);
       graphics.moveTo(point.x + 0.1, point.y)
       this.img.arc(point.x, point.y, 0.1, 0, Math.PI * 2)
     }
-    this._handlePolygonBounds(graphics)
   }
 
   renderPolygon(graphics) {
@@ -517,19 +509,6 @@ class FurnaceDrawing extends Drawing {
     sprite.position.set(this.data.width / 2 - bounds.width / 2, this.data.height / 2 - bounds.height / 2)
   }
 
-  _handlePolygonBounds(graphics) {
-    this._handleUnshapedBounds(graphics)
-    let bounds = graphics.getLocalBounds()
-    if (this.id === undefined) {
-      /* If the polygon is currently being drawn and we move to negative values
-       * from our starting point, then shift our x/y position appropriately to have
-       * the correct hit area and background pattern.
-       */
-      this.data.x = this.data.points[0][0] + bounds.x;
-      this.data.y = this.data.points[0][1] + bounds.y;
-    }
-    graphics.position.set(-bounds.x * graphics.scale.x, -bounds.y * graphics.scale.y)
-  }
   _handleUnshapedBounds(graphics) {
     let bounds = graphics.getLocalBounds()
     let scale_x = 1;
@@ -662,9 +641,17 @@ class FurnaceDrawing extends Drawing {
     this.scaleHandle.scale.set(1.0, 1.0);
   }
   _rescaleDimensions(original, dx, dy) {
-    const {width, height} = original;
+    let {points, width, height} = original;
     this.data.width = width + dx;
     this.data.height = height + dy;
+    if (this.isPolygon) {
+      // Avoid a divide by zero
+      if (width == 0) width = 1;
+      if (height == 0) height = 1;
+      let scaleX = 1 +(dx / width),
+        scaleY = 1 + (dy / height);
+      this.data.points = points.map(p => [p[0] * scaleX, p[1] * scaleY]);
+    }
   }
 
   /**
