@@ -7,6 +7,10 @@
  * @params options.preview {Boolean}  Configure a preview version of a drawing which is not yet saved
  */
 class FurnaceDrawingConfig extends DrawingConfig {
+  constructor() {
+    super(...arguments)
+    this._tab = "settings";
+  }
   // Override the constructor's name
   static get name() {
     return "DrawingConfig"
@@ -16,7 +20,7 @@ class FurnaceDrawingConfig extends DrawingConfig {
     options.classes = ["sheet", "drawing-sheet"];
     options.title = "Drawing Configuration";
     options.template = "public/modules/furnace/templates/drawing-config.html";
-    delete options.height;
+    options.height = 'auto';
     return options;
   }
 
@@ -27,11 +31,6 @@ class FurnaceDrawingConfig extends DrawingConfig {
    * @return {Object}
    */
   getData() {
-    let availableFonts = {}
-    for (let font of FONTS._loaded)
-      availableFonts[font] = font;
-    for (let font in CONFIG.WebSafeFonts)
-      availableFonts[CONFIG.WebSafeFonts[font]] = font;
     let data = duplicate(this.object.data)
     data.fillType = this.object.fillType
     data.textureWidth = this.object.textureWidth
@@ -43,11 +42,19 @@ class FurnaceDrawingConfig extends DrawingConfig {
       options: this.options,
       drawingTypes: CONFIG.furnaceDrawingTypes,
       fillTypes: CONFIG.furnaceDrawingFillTypes,
-      availableFonts: availableFonts,
+      availableFonts: this.getAvailableFonts(),
       submitText: this.preview ? "Create" : "Update"
     }
   }
 
+  getAvailableFonts() {
+    let availableFonts = {}
+    for (let font of FONTS._loaded)
+      availableFonts[font] = font;
+    for (let font in CONFIG.WebSafeFonts)
+      availableFonts[CONFIG.WebSafeFonts[font]] = font;
+    return availableFonts;
+  }
   /* Make it interactive a little */
   activateListeners(html) {
     super.activateListeners(html);
@@ -89,14 +96,8 @@ class FurnaceDrawingConfig extends DrawingConfig {
     html.find("input[name=bezierFactor]").closest(".form-group")[showBezierOptions ? "show" : "hide"]()
     // FIXME: module-to-core sanity check server side, contour fill isn't valid for text.
     html.find(`option[value=${FURNACE_DRAWING_FILL_TYPE.CONTOUR}],option[value=${FURNACE_DRAWING_FILL_TYPE.FRAME}]`).attr("disabled", showTextOptions)
-    this.resizeFormWindow(html)
   }
 
-  resizeFormWindow(html) {
-    let div_height = html.filter(".empty-space").outerHeight(true);
-    let app_height = html.closest(".app").height();
-    html.closest(".app").height(app_height - div_height);
-  }
 
   reset(ev, html) {
     ev.preventDefault();
@@ -224,6 +225,7 @@ class DrawingDefaultsConfig extends FurnaceDrawingConfig {
       options: this.options,
       drawingTypes: CONFIG.furnaceDrawingTypes,
       fillTypes: CONFIG.furnaceDrawingFillTypes,
+      availableFonts: this.getAvailableFonts(),
       submitText: "Set New Drawing Defaults"
     }
   }
