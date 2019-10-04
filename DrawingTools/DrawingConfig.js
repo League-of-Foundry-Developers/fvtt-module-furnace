@@ -121,7 +121,7 @@ class FurnaceDrawingConfig extends DrawingConfig {
     }
     if (!Object.values(DRAWING_FILL_TYPES).includes(data.fillType)) {
       data["flags.furnace"]["fillType"] = data.fillType;
-      data.fillType = DRAWING_FILL_TYPES.NONE;
+      data.fillType = DRAWING_FILL_TYPES.PATTERN;
     }
     delete data.textureWidth
     delete data.textureHeight

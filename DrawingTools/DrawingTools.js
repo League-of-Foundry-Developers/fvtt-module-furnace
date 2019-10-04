@@ -177,7 +177,7 @@ class FurnaceDrawingTools {
       if (Object.values(DRAWING_FILL_TYPES).includes(data.fill))
         data.fillType = data.fill;
       else
-        data.fillType = DRAWING_FILL_TYPES.NONE;
+        data.fillType = DRAWING_FILL_TYPES.PATTERN;
 
       if (data.fontSize == "")
         data.fontSize = 48;
@@ -189,17 +189,15 @@ class FurnaceDrawingTools {
       delete data.textureAlpha
       mergeObject(data, default_data, { overwrite: false, })
 
+      data.type = data.type[0]
       if (drawing.type == "text") {
-        data.type = "r"
         data.text = data.content
         data.textColor = data.fillColor
         data.textAlpha = data.strokeAlpha
-        data.strokeWidth = 0
         data.fillType = FURNACE_DRAWING_FILL_TYPE.NONE
         data.flags.furnace.fillType = FURNACE_DRAWING_FILL_TYPE.NONE
         delete data.content
       } else {
-        data.type = data.type[0]
         if (data.points.length > 0) {
           // Data is already using the shifted x/y so we use _adjustPoints only to adjust 
           // the actual points, not the x/y/width/height
