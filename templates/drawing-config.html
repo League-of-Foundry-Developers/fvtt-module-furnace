@@ -46,7 +46,7 @@
     <div class="form-group">
       <label>Bezier smoothing factor:</label>
       <input type="range" name="bezierFactor" value="{{object.bezierFactor}}" min="0" max="1" step="0.05" data-dtype="Number"/>
-      <span class="range-value">{{multiply object.bezierFactor 100}}%</span>
+      <span class="range-value">{{floor (multiply object.bezierFactor 100)}}%</span>
     </div>
 
     <div class="text-section">
@@ -79,7 +79,7 @@
       <div class="form-group">
         <label>Text Opacity:</label>
         <input type="range" name="textAlpha" value="{{object.textAlpha}}" min="0" max="1" step="0.05" data-dtype="Number"/>
-        <span class="range-value">{{multiply object.textAlpha 100}}%</span>
+        <span class="range-value">{{floor (multiply object.textAlpha 100)}}%</span>
       </div>
   
     </div>
@@ -98,7 +98,7 @@
       <div class="form-group">
         <label>Stroke Opacity:</label>
         <input type="range" name="strokeAlpha" value="{{object.strokeAlpha}}" min="0" max="1" step="0.05" data-dtype="Number"/>
-        <span class="range-value">{{multiply object.strokeAlpha 100}}%</span>
+        <span class="range-value">{{floor (multiply object.strokeAlpha 100)}}%</span>
       </div>
     </div>
 
@@ -122,7 +122,7 @@
       <div class="form-group">
 	      <label>Fill Opacity:</label>
         <input type="range" name="fillAlpha" value="{{object.fillAlpha}}" min="0" max="1" step="0.05" data-dtype="Number"/>
-        <span class="range-value">{{multiply object.fillAlpha 100}}%</span>
+        <span class="range-value">{{floor (multiply object.fillAlpha 100)}}%</span>
       </div>
     </div>
 
@@ -140,7 +140,7 @@
       <div class="form-group">
         <label>Texture Opacity:</label>
         <input type="range" name="textureAlpha" value="{{object.textureAlpha}}" min="0" max="1" step="0.05" data-dtype="Number"/>
-        <span class="range-value">{{multiply object.textureAlpha 100}}%</span>
+        <span class="range-value">{{floor (multiply object.textureAlpha 100)}}%</span>
       </div>
 
 
