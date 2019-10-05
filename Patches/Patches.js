@@ -6,12 +6,19 @@ class FurnacePatching {
         let lines = funcStr.split("\n")
         if (lines[line_number].trim() == line.trim()) {
             lines[line_number] = lines[line_number].replace(line, new_line);
-            classStr = klass.toString()
-            fixedClass = classStr.replace(funcStr, lines.join("\n"))
-            return Function('"use strict";return (' + fixedClass + ')')();
+            let fixed = lines.join("\n")
+            if (klass !== undefined) {
+                let classStr = klass.toString()
+                fixed = classStr.replace(funcStr, fixed)
+            }
+            return Function('"use strict";return (' + fixed + ')')();
         } else {
             console.log("Cannot patch function. It has wrong content at line ", line_number, " : ", lines[line_number].trim(), " != ", line.trim(), "\n", funcStr)
         }
+    }
+
+    static patchFunction(func, line_number, line, new_line) {
+        return FurnacePatching.patchClass(undefined, func, line_number, line, new_line)
     }
 
     static replaceFunction(klass, name, func) {

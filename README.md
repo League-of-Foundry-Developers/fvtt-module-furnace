@@ -3,11 +3,14 @@
 The Furnace is an essential part of every Foundry.
 
 This Foundry VTT module brings Quality of Life Improvements to the VTT.  
-It started by adding Drawing Tools, and then an experiemntal Macros system and now it also adds a 'Split Journal' feature. More QoL improvements are planned.
+It started by adding Drawing Tools functionality to FVTT and it now has many small QoL Improvement features, such as a 'Split Journal' feature, toggle vision for GM, move multiple tokens at the same time, and double click to edit initiative in the combat tracker. More QoL improvements are planned.
 
 # Installation
 
-Extract the furnce.zip file to the public/modules directory. As DM go to the `Manage Modules` options menu in your World ('?' icon on the side bar) then enable the `The Furnace` module.
+Extract the furnace.zip file to the public/modules directory. As DM go to the `Manage Modules` options menu in your World ('?' icon on the side bar) then enable the `The Furnace` module.
+
+With FVTT 0.3.7, you can now install this module automatically by specifying the following public module URL : `https://raw.githubusercontent.com/kakaroto/fvtt-module-furnace/stable/module.json`
+
 
 # Support
 
