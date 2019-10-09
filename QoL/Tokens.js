@@ -37,6 +37,7 @@ class FurnaceTokenQoL {
 
             // Determine updated token data for controlled tokens and update the Scene with all tokens
             let collision = false;
+            let updateData = []
             for (let c of controlled) {
                 let target = {
                     x: (c.x + offsetX),
@@ -52,9 +53,11 @@ class FurnaceTokenQoL {
                 collision |= collide;
                 if (!collide) {
                     // Update token movement
-                    await c.update(canvas.scene._id, target)
+                    updateData.push({id: c.id, x: target.x, y: target.y})
                 }
             }
+            if (updateData.length > 0)
+                await canvas.tokens.updateMany(updateData, {updateKeys: ["x", "y"]})
             if (collision)
                 ui.notifications.warn("One or more tokens have hit a wall!");
 

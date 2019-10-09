@@ -49,16 +49,6 @@ class FurnacePatching {
     }
 
     static init() {
-        FurnacePatching.replaceFunction(PlaceablesLayer, "_deletePlaceableObject",
-            function ({ parentId, deleted }) {
-                delete this.instance._controlled[deleted]
-                return FurnacePatching.callOriginalFunction(this, "_deletePlaceableObject", ...arguments)
-            });
-        FurnacePatching.replaceMethod(PlaceablesLayer, "draw",
-            function () {
-                this._controlled = {}
-                return FurnacePatching.callOriginalFunction(this, "draw", ...arguments)
-            });
         FurnacePatching.replaceMethod(Token, "_onUpdateTokenActor", function (updateData) {
             if (this.actor != null)
                 return FurnacePatching.callOriginalFunction(this, "_onUpdateTokenActor", updateData);

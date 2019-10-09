@@ -42,10 +42,12 @@ class FurnaceDrawingsLayer extends PlaceablesLayer {
     const cls = this.constructor.placeableClass;
     let title = "Clear All Drawings"
     let content = `<p>Clear all Drawings from this Scene?</p>`
+    let placeables = this.placeables;
     if (!game.user.isGM) {
       if (game.user.isTrusted) {
         title = "Clear Your Drawings"
         content = `<p>Clear your Drawings from this Scene?</p>`
+        placeables = this.placeables.filter(p => p.data.author == game.user.id)
       } else {
         throw new Error(`You do not have permission to delete Drawings from the Scene.`);
       }
@@ -58,16 +60,7 @@ class FurnaceDrawingsLayer extends PlaceablesLayer {
         yes: {
           icon: '<i class="fas fa-trash"></i>',
           label: "Yes",
-          callback: async function() {
-            if (game.user.isGM) {
-              canvas.scene.update({ "drawings": [] })
-            } else {
-              let to_delete = canvas.drawings.placeables.filter(p => p.data.author == game.user.id)
-              for (let d of to_delete) {
-                await d.delete(canvas.scene.id)
-              }
-            }
-          }
+          callback: () => this.deleteMany(placeables.map(o => o.id))
         },
         no: {
           icon: '<i class="fas fa-times"></i>',
@@ -400,20 +393,9 @@ class FurnaceDrawingsLayer extends PlaceablesLayer {
    */
   async _onDeleteKey(event) {
     if (!game.user.isTrusted) throw new Error("You may not delete drawings!");
-    
-    // If the user is a GM, we can do a batch deletion by modifying the scene directly
-    if ( game.user.isGM ) {
-      const toDelete = new Set(Object.keys(this._controlled).map(Number));
-      const objects = canvas.scene.data[this.constructor.dataArray].filter(o => !toDelete.has(o.id));
-      canvas.scene.update({[this.constructor.dataArray]: objects});
-    }
-
-    // Otherwise we need to use the Drawing.delete API
-    else {
-      for ( let obj of Object.values(this._controlled) ) {
-        await obj.delete(obj.scene._id);
-      }
-    }
+    let ids = this.controlled.map(obj => obj.id);
+    if ( !ids.length ) return;
+    return this.deleteMany(ids);
   }
 }
 
