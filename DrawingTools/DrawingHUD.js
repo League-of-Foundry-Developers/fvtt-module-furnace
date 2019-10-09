@@ -17,6 +17,13 @@ class FurnaceDrawingHUD extends DrawingHUD {
       template: "public/modules/furnace/templates/drawing-hud.html"
     });
   }
+  
+  getData() {
+    const data = super.getData();
+    return mergeObject(data, {
+      isText: this.object.type == DRAWING_TYPES.TEXT,
+    });
+  }
 
   /* -------------------------------------------- */
 

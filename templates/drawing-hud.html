@@ -4,11 +4,18 @@
         <div class="control-icon stroke">
             <label for="strokeColor"><i class="far fa-square" style="color: {{strokeColor}};"></i></label>
             <input id="strokeColor" type="color" name="strokeColor" value="{{strokeColor}}" data-dtype="String" hidden/>
+        </div>
+        {{#if isText}}
+        <div class="control-icon text">
+            <label for="textColor"><i class="fas fa-square" style="color: {{textColor}};"></i></label>
+            <input id="textColor" type="color" name="textColor" value="{{textColor}}" data-dtype="String" hidden/>
         </div> 
+        {{else}}
         <div class="control-icon fill">
             <label for="fillColor"><i class="fas fa-square" style="color: {{fillColor}};"></i></label>
             <input id="fillColor" type="color" name="fillColor" value="{{fillColor}}" data-dtype="String" hidden/>
         </div> 
+        {{/if}}
         <div class="control-icon config">
             <i class="fas fa-cog"></i>
         </div> 
