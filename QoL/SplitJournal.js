@@ -29,20 +29,21 @@ class FurnaceSplitJournal extends FormApplication {
     }
 
     static get defaultOptions() {
-      const options = super.defaultOptions;
-      options.id = "split-journal";
-      options.title = "Split Journal";
-      options.classes = ["sheet"];
-      options.template = "public/modules/furnace/templates/split-journal.html";
-      options.width = 400;
-      return options;
+        const options = super.defaultOptions;
+        options.id = "split-journal";
+        options.title = "Split Journal";
+        options.classes = ["sheet"];
+        options.template = "public/modules/furnace/templates/split-journal.html";
+        options.width = 400;
+        options.height = "auto";
+        return options;
     }
-  
+
     /* -------------------------------------------- */
-  
-  
+
+
     /* -------------------------------------------- */
-  
+
     async getData() {
         let error = false
         let errorMessage = ""
@@ -66,24 +67,21 @@ class FurnaceSplitJournal extends FormApplication {
             splitters: this.splitters,
             useSplitter: this.useSplitter,
             newEntries: newEntries,
+            hasImage: this.object.data.img != "",
             error: error,
             errorMessage: new Handlebars.SafeString(errorMessage),
             submitText: error ? "OK" : "Split Journal"
         }
     }
-    
+
     activateListeners(html) {
         super.activateListeners(html);
-        console.log("Activating listeners on : ", this)
-        html.find("select[name=splitter]").change((ev) => {
+        html.find("select[name=splitter]").change(async (ev) => {
             this.useSplitter = html.find("select[name=splitter]").val()
-            // Force a re-calculation of height
-            this.position.height = null;
-            this.element[0].style.height = null;
-            this.render(true)
+            await this.render(true)
         })
     }
-    
+
     async _updateObject(event, formData) {
         if (!this.content || !this.useSplitter) return;
 
@@ -97,7 +95,7 @@ class FurnaceSplitJournal extends FormApplication {
                 parent = game.folders.get(parent.data.parent)
             }
             console.log("Splitting Journal entry : ", this.object.name, "with depth : ", folderDepth);
-    
+
             if (folderDepth >= 3)
                 parent = folder.data.parent;
             else
@@ -110,6 +108,7 @@ class FurnaceSplitJournal extends FormApplication {
             folder = await Folder.create(folderData)
         }
         let parts = splitHtml(this.content, formData.splitter)
+        let header = ""
         for (let idx = 0; idx < parts.length; idx++) {
 
             let name = this.object.name
@@ -117,22 +116,28 @@ class FurnaceSplitJournal extends FormApplication {
 
             if (idx == 0) {
                 name = "Header"
-                if (content.trim() == "")
+                header = content.trim();
+                if (header == "" || formData.separateHeader)
                     continue;
             } else {
                 name = $(parts[idx]).text()
                 content += parts[++idx]
+                if (formData.separateHeader)
+                    content = header + content;
             }
+            let img = ""
+            if (formData.includeImage)
+                img = this.object.data.img
             let journalData = {
                 "name": name,
                 "permission": this.object.data.permission,
-                "flags": {"entityorder": {"order": idx * 100000}},
+                "flags": { "entityorder": { "order": idx * 100000 } },
                 "folder": folder.id,
                 "entryTime": this.object.data.entryTime,
-                "img": this.object.data.img,
+                "img": img,
                 "content": content
             }
-            await JournalEntry.create(journalData, {displaySheet: false})
+            await JournalEntry.create(journalData, { displaySheet: false })
         }
     }
 

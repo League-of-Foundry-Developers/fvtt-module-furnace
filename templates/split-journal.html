@@ -8,6 +8,16 @@
             <label>Split in new Folder</label>
             <input type="checkbox" name="newFolder" data-dtype="Boolean" checked/>
         </div>
+        {{#if hasImage}}
+        <div class="form-group">
+            <label>Include Journal's image in each new entry</label>
+            <input type="checkbox" name="includeImage" data-dtype="Boolean" checked/>
+        </div>
+        {{/if}}
+        <div class="form-group">
+            <label>Include page header in each new journal entry</label>
+            <input type="checkbox" name="separateHeader" data-dtype="Boolean"/>
+        </div>
         <div class="form-group">
             <label>Split on</label>
             <select name="splitter" data-dtype="String">
