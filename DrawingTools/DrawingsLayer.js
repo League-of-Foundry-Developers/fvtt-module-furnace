@@ -83,6 +83,11 @@ class FurnaceDrawingsLayer extends PlaceablesLayer {
     if (this.objects) this.objects.visible = true;
   }
 
+  releaseAll() {
+    super.releaseAll()
+    canvas.hud.drawing.clear();
+  }
+
   /* -------------------------------------------- */
 
   
@@ -284,6 +289,7 @@ class FurnaceDrawingsLayer extends PlaceablesLayer {
   /* -------------------------------------------- */
 
   _onMouseDown(event) {
+    canvas.hud.drawing.clear();
     if (event.data.createState >= 1) {
       event.stopPropagation();
 
