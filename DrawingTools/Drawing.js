@@ -37,13 +37,6 @@ class FurnaceDrawing extends Drawing {
   }
 
   /* -------------------------------------------- */
-
-  getFlag(scope, name, def) {
-    if (this.data.flags[scope] !== undefined &&
-      this.data.flags[scope][name] !== undefined)
-      return this.data.flags[scope][name];
-    return def;
-  }
   /**
    * A Boolean flag for whether the current game User has permission to control this token
    * @type {Boolean}
@@ -311,8 +304,13 @@ class FurnaceDrawing extends Drawing {
       }
       // In case of polygons being out of bounds/scaled, the `this.img.cone()`
       // does not copy the position/scale so we need to do it manually.
+      this.bg.tile.mask.pivot = this.img.pivot;
       this.bg.tile.mask.position = this.img.position;
       this.bg.tile.mask.scale = this.img.scale;
+      this.bg.pivot.set(this.data.width / 2, this.data.height / 2);
+      this.bg.position.set(this.data.width / 2, this.data.height / 2);
+      this.bg.scale.y = (this.getFlag("furnace", "mirrorVert") ? -1 : 1)
+      this.bg.scale.x = (this.getFlag("furnace", "mirrorHoriz") ? -1 : 1)
     }
 
     // Set Tile position, rotation and alpha
@@ -320,6 +318,10 @@ class FurnaceDrawing extends Drawing {
     this.rotation = toRadians(this.data.rotation);
     this.position.set(this.data.x + this.pivot.x, this.data.y + this.pivot.y);
     this.alpha = this.data.hidden ? 0.5 : 1.0;
+    this.img.pivot.set(this.data.width / 2, this.data.height / 2);
+    this.img.position.set(this.data.width / 2, this.data.height / 2);
+    this.img.scale.y = Math.abs(this.img.scale.y) * (this.getFlag("furnace", "mirrorVert") ? -1 : 1)
+    this.img.scale.x = Math.abs(this.img.scale.x) * (this.getFlag("furnace", "mirrorHoriz") ? -1 : 1)
 
     // Toggle visibility
     this.visible = !this.data.hidden || game.user.isGM;
@@ -341,8 +343,8 @@ class FurnaceDrawing extends Drawing {
   _refreshFrame() {
     let { x, y, width, height } = this.img.getLocalBounds();
     /* Scale the width/height because of text drawings */
-    width *= this.img.scale.x
-    height *= this.img.scale.y
+    width *= Math.abs(this.img.scale.x)
+    height *= Math.abs(this.img.scale.y)
 
     let pad = 10;
     this.frame.clear()
@@ -427,6 +429,7 @@ class FurnaceDrawing extends Drawing {
 
   renderFreehand(graphics) {
     let points = this.data.points;
+    if (points === undefined || points.length == 0) return;
     let origin = this._toPoint(points[0]);
     let bezierFactor = this.data.bezierFactor || 0;
 

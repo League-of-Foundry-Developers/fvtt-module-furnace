@@ -22,6 +22,8 @@ class FurnaceDrawingHUD extends DrawingHUD {
     const data = super.getData();
     return mergeObject(data, {
       isText: this.object.type == DRAWING_TYPES.TEXT,
+      mirrorVertClass: this.object.getFlag("furnace", "mirrorVert") ? "active" : "",
+      mirrorHorizClass: this.object.getFlag("furnace", "mirrorHoriz") ? "active" : "",
     });
   }
 
@@ -52,6 +54,8 @@ class FurnaceDrawingHUD extends DrawingHUD {
   activateListeners(html) {
     super.activateListeners(html);
     html.find(".config").click(this._onDrawingConfig.bind(this));
+    html.find(".mirror-vert").click(this._onMirror.bind(this, true));
+    html.find(".mirror-horiz").click(this._onMirror.bind(this, false));
     // Color change inputs
     html.find('input[type="color"]').change(this._onColorPickerChange.bind(this));
   }
@@ -77,10 +81,13 @@ class FurnaceDrawingHUD extends DrawingHUD {
   _onToggleLocked(event) {
     this._onToggleField(event, "locked")
   }
+  _onMirror(vertical, event) {
+    this._onToggleField(event, "flags.furnace.mirror" + (vertical ? "Vert" : "Horiz"))
+  }
 
   _onToggleField(event, field) {
     event.preventDefault();
-    let isEnabled = this.object.data[field];
+    let isEnabled = getProperty(this.object.data, field);
     $(event.currentTarget).toggleClass("active");
     const drawings = this.object._controlled ? canvas.drawings.controlled : [this.object];
     canvas.drawings.updateMany(drawings.map(d => {
