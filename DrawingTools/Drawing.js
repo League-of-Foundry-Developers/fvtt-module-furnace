@@ -35,6 +35,13 @@ class FurnaceDrawing extends Drawing {
     }
     return super.create(sceneId, data, options);
   }
+  getFlag(scope, key, def ) {
+    let flag = super.getFlag(scope, key)
+    if (flag === undefined)
+      return def;
+    return flag;
+  }
+
 
   /* -------------------------------------------- */
   /**
