@@ -120,6 +120,18 @@ class FurnaceDrawing extends Drawing {
     this.texture = null;
     this.bg = null;
 
+
+    if (this.type == DRAWING_TYPES.TEXT) {
+      this.img = this.addChild(new PIXI.Text());
+      this.text = null;
+    } else {
+      this.img = this.addChild(new PIXI.Graphics());
+      this.text = this.addChild(new PIXI.Text());
+    }
+    this.frame = this.addChild(new PIXI.Graphics());
+    this.scaleHandle = this.addChild(new PIXI.Graphics());
+    this.rotateHandle = this.addChild(new RotationHandle(this));
+
     // Try to load the texture if one is set
     if (this.usesTexture) {
       try {
@@ -146,18 +158,6 @@ class FurnaceDrawing extends Drawing {
         this.bg = null;
       }
     }
-
-    if (this.type == DRAWING_TYPES.TEXT) {
-      this.img = this.addChild(new PIXI.Text());
-      this.text = null;
-    } else {
-      this.img = this.addChild(new PIXI.Graphics());
-      this.text = this.addChild(new PIXI.Text());
-    }
-    this.frame = this.addChild(new PIXI.Graphics());
-    this.scaleHandle = this.addChild(new PIXI.Graphics());
-    this.rotateHandle = this.addChild(new RotationHandle(this));
-
     // Render the Tile appearance
     this.refresh();
 
@@ -244,6 +244,11 @@ class FurnaceDrawing extends Drawing {
 
   /* -------------------------------------------- */
   refresh() {
+    // Imagine a case (race condition?) where a refresh is called before draw was called, or 
+    // draw crashed early and didn't finish initialization the object's graphics.
+    if (!this.img)
+      return this.draw();
+
     // PIXI.Text doesn't have a `.clear()`
     if (this.img instanceof PIXI.Graphics) {
       this.img.clear().lineStyle(this.data.strokeWidth, this.strokeColor, this.strokeAlpha, this.alignment)
