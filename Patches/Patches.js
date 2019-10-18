@@ -20,6 +20,9 @@ class FurnacePatching {
     static patchFunction(func, line_number, line, new_line) {
         return FurnacePatching.patchClass(undefined, func, line_number, line, new_line)
     }
+    static patchMethod(klass, func, line_number, line, new_line) {
+        return FurnacePatching.patchClass(klass, klass.prototype[func], line_number, line, new_line)
+    }
 
     static replaceFunction(klass, name, func) {
         klass[this.ORIG_PRREFIX + name] = klass[name]
@@ -53,6 +56,9 @@ class FurnacePatching {
             if (this.actor != null)
                 return FurnacePatching.callOriginalFunction(this, "_onUpdateTokenActor", updateData);
         });
+        ChatLog = FurnacePatching.patchMethod(ChatLog, "postAll", 4,
+            "await this.postOne(message, false);",
+            "try {await this.postOne(message, false); } catch (err) {}")
     }
 }
 FurnacePatching.ORIG_PRREFIX = "__furnace_original_"
