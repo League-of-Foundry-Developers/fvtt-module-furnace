@@ -74,48 +74,50 @@ class FurnaceDrawingTools {
     }
     Drawing.FREEHAND_SAMPLE_RATE = game.settings.get("furnace", "freehandSampleRate");
   }
-  static canvasInit() {
+  static getSceneControlButtons(buttons) {
     if (!game.settings.get("furnace", "enableDrawingTools")) return;
 
+    let drawingsButton = buttons.find(b => b.name == "drawings")
     // Replace the drawings scene controls with our own
-    ui.controls.controls["drawings"] = {
-      furnace: true,
-      name: "Drawing Tools",
-      layer: "DrawingsLayer",
-      icon: "fas fa-pencil-alt",
-      visible: game.user.isTrusted,
-      tools: {
-        select: {
-          name: "Select Drawings",
+    if (drawingsButton) {
+      drawingsButton.tools = [{
+          name: "select",
+          title: "Select Drawings",
           icon: "fas fa-expand"
         },
-        rectangle: {
-          name: "Draw Rectangle",
+        {
+          name: "rectangle",
+          title: "Draw Rectangle",
           icon: "fas fa-square",
           onClick: () => canvas.drawings._last_tool = DRAWING_TYPES.RECTANGLE
         },
-        ellipse: {
-          name: "Draw Ellipse",
+        {
+          name: "ellipse",
+          title: "Draw Ellipse",
           icon: "fas fa-circle",
           onClick: () => canvas.drawings._last_tool = DRAWING_TYPES.ELLIPSE
         },
-        polygon: {
-          name: "Draw Polygons",
+        {
+          name: "polygon",
+          title: "Draw Polygons",
           icon: "fas fa-draw-polygon",
           onClick: () => canvas.drawings._last_tool = DRAWING_TYPES.POLYGON
         },
-        freehand: {
-          name: "Draw Freehand",
+        {
+          name: "freehand",
+          title: "Draw Freehand",
           icon: "fas fa-signature",
           onClick: () => canvas.drawings._last_tool = DRAWING_TYPES.FREEHAND
         },
-        text: {
-          name: "Draw Text",
+        {
+          name: "text",
+          title: "Draw Text",
           icon: "fas fa-font",
           onClick: () => canvas.drawings._last_tool = DRAWING_TYPES.TEXT
         },
-        clear: {
-          name: "Clear all Drawings",
+        {
+          name: "clear",
+          title: "Clear all Drawings",
           icon: "fas fa-trash",
           onClick: () => {
             canvas.drawings.deleteAll();
@@ -123,8 +125,9 @@ class FurnaceDrawingTools {
             ui.controls.render();
           }
         },
-        configure: {
-          name: "Set Drawing Defaults",
+        {
+          name: "configure",
+          title: "Set Drawing Defaults",
           icon: "fas fa-cog",
           onClick: () => {
             canvas.drawings.configureStartingData();
@@ -132,8 +135,7 @@ class FurnaceDrawingTools {
             ui.controls.render();
           }
         }
-      },
-      activeTool: "select"
+      ]
     }
   }
   static async ready() {
@@ -229,5 +231,5 @@ class FurnaceDrawingTools {
 }
 
 Hooks.on('init', FurnaceDrawingTools.init)
-Hooks.on('canvasInit', FurnaceDrawingTools.canvasInit)
+Hooks.on('getSceneControlButtons', FurnaceDrawingTools.getSceneControlButtons)
 Hooks.on('ready', FurnaceDrawingTools.ready)

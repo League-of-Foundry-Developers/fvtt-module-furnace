@@ -18,13 +18,21 @@ class FurnaceDebug {
     }
 }
 FurnacePatching.replaceFunction(Hooks, "callAll", function (hook, ...args) {
-    if (CONFIG.FurnaceEnableDebug)
-        console.log("Calling All Hooks : " + hook + "(", args, ")")
+    if (CONFIG.FurnaceEnableDebug) {
+        args_comma = []
+        args.forEach(a => { args_comma.push(a); args_comma.push(",") })
+        args_comma.pop();
+        console.log("DEBUG | Calling All Hooks : " + hook + "(", ...args_comma, ")")
+    }
     FurnacePatching.callOriginalFunction(this, "callAll", hook, ...args)
 });
 FurnacePatching.replaceFunction(Hooks, "call", function (hook, ...args) {
-    if (CONFIG.FurnaceEnableDebug)
-        console.log("Calling Hook : " + hook + "(", args, ")")
+    if (CONFIG.FurnaceEnableDebug) {
+        args_comma = []
+        args.forEach(a => { args_comma.push(a); args_comma.push(",") })
+        args_comma.pop();
+        console.log("DEBUG | Calling Hook : " + hook + "(", ...args_comma, ")")
+    }
     FurnacePatching.callOriginalFunction(this, "call", hook, ...args)
 });
 

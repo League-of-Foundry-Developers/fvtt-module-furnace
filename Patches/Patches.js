@@ -56,9 +56,6 @@ class FurnacePatching {
             if (this.actor != null)
                 return FurnacePatching.callOriginalFunction(this, "_onUpdateTokenActor", updateData);
         });
-        ChatLog = FurnacePatching.patchMethod(ChatLog, "postAll", 4,
-            "await this.postOne(message, false);",
-            "try {await this.postOne(message, false); } catch (err) {}")
     }
 }
 FurnacePatching.ORIG_PRREFIX = "__furnace_original_"

@@ -13,14 +13,19 @@ class FurnaceTokenQoL {
             }
         });
     }
-    static canvasInit() {
-        ui.controls.controls.token.tools["vision"] = {
-            name: "Ignore Token Vision",
-            icon: "far fa-eye-slash",
-            toggle: true,
-            active: game.settings.get("furnace", "tokenIgnoreVision"),
-            visible: game.user.isGM,
-            onClick: (value) => game.settings.set("furnace", "tokenIgnoreVision", value)
+    static getSceneControlButtons(buttons) {
+        let tokenButton = buttons.find(b => b.name == "token")
+
+        if (tokenButton) {
+            tokenButton.tools.push({
+                name: "vision",
+                title: "Ignore Token Vision",
+                icon: "far fa-eye-slash",
+                toggle: true,
+                active: game.settings.get("furnace", "tokenIgnoreVision"),
+                visible: game.user.isGM,
+                onClick: (value) => game.settings.set("furnace", "tokenIgnoreVision", value)
+            });
         }
     }
     static ready() {
@@ -132,5 +137,5 @@ class FurnaceTokenQoL {
 }
 
 Hooks.on('init', FurnaceTokenQoL.init)
-Hooks.on('canvasInit', FurnaceTokenQoL.canvasInit)
+Hooks.on('getSceneControlButtons', FurnaceTokenQoL.getSceneControlButtons)
 Hooks.on('ready', FurnaceTokenQoL.ready)
