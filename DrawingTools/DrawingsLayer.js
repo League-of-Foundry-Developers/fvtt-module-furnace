@@ -18,6 +18,15 @@ class FurnaceDrawingsLayer extends PlaceablesLayer {
     this._startingData = game.settings.get("furnace", FurnaceDrawingsLayer.DEFAULT_CONFIG_SETTING);
   }
 
+  static get layerOptions() {
+    return {
+      canDragCreate: true,
+      controllableObjects: true,
+      rotatableObjects: true,
+      snapToGrid: true
+    }
+  }
+
   /**
    * Define the source data array underlying the placeable objects contained in this layer
    * @type {Array}
@@ -32,6 +41,16 @@ class FurnaceDrawingsLayer extends PlaceablesLayer {
    */
   static get placeableClass() {
     return FurnaceDrawing;
+  }
+  get gridPrecision() {
+    return 2;
+  }
+
+  /**
+   * Drawing objects on this layer utilize the DrawingHUD
+   */
+  get hud() {
+    return canvas.hud.drawing;
   }
 
   /* -------------------------------------------- */
