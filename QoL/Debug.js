@@ -16,7 +16,13 @@ class FurnaceDebug {
         });
         CONFIG.FurnaceEnableDebug = game.settings.get("furnace", "enableDebug");
     }
+    static log(...args) {
+        if (CONFIG.FurnaceEnableDebug)
+            console.log("Furnace : ", ...args);
+    }
 }
+
+// Replace functions here so we can debug the call to 'init'
 FurnacePatching.replaceFunction(Hooks, "callAll", function (hook, ...args) {
     if (CONFIG.FurnaceEnableDebug) {
         args_comma = []
