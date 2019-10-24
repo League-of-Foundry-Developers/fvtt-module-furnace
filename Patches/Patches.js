@@ -10,6 +10,10 @@ class FurnacePatching {
             if (klass !== undefined) {
                 let classStr = klass.toString()
                 fixed = classStr.replace(funcStr, fixed)
+            } else {
+                fixed = "function " + fixed
+                if (fixed.startsWith("function async"))
+                    fixed = fixed.replace("function async", "async function");
             }
             return Function('"use strict";return (' + fixed + ')')();
         } else {
@@ -56,6 +60,11 @@ class FurnacePatching {
             if (this.actor != null)
                 return FurnacePatching.callOriginalFunction(this, "_onUpdateTokenActor", updateData);
         });
+        let _call = FurnacePatching.patchFunction(Hooks._call, 5,
+            "console.error(`Error triggered in hooked function ${fn.name}\\n${err}`);",
+            "console.error(`Error triggered in hooked function ${fn.name}\\n`); console.warn(err);");
+        if (_call)
+            Hooks._call = _call;
     }
 }
 FurnacePatching.ORIG_PRREFIX = "__furnace_original_"
