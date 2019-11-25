@@ -71,7 +71,10 @@ class FurnaceDrawing extends Drawing {
     return this.data.strokeAlpha > 0 ? this.data.strokeAlpha : 0.0001;
   }
   get fillType() {
-    return this.getFlag("furnace", "fillType", this.data.fillType)
+    let fillType = this.getFlag("furnace", "fillType", null)
+    if (fillType === null)
+      fillType = this.data.fillType
+    return fillType;
   }
   get textureWidth() {
     return this.getFlag("furnace", "textureWidth", 0);
@@ -121,12 +124,10 @@ class FurnaceDrawing extends Drawing {
     this.bg = null;
 
 
-    if (this.type == DRAWING_TYPES.TEXT) {
+    if (this.type == CONST.DRAWING_TYPES.TEXT) {
       this.img = this.addChild(new PIXI.Text());
-      this.text = null;
     } else {
       this.img = this.addChild(new PIXI.Graphics());
-      this.text = this.addChild(new PIXI.Text());
     }
     this.frame = this.addChild(new PIXI.Graphics());
     this.scaleHandle = this.addChild(new PIXI.Graphics());
@@ -158,6 +159,7 @@ class FurnaceDrawing extends Drawing {
         this.bg = null;
       }
     }
+    this.text = this.addChild(new PIXI.Text());
     // Render the Tile appearance
     this.refresh();
 
@@ -204,7 +206,7 @@ class FurnaceDrawing extends Drawing {
   }
 
   updateDragPosition(position) {
-    if (this.type == DRAWING_TYPES.FREEHAND) {
+    if (this.type == CONST.DRAWING_TYPES.FREEHAND) {
       let now = Date.now();
       let lastMove = this._lastMoveTime || 0
       if (this.data.points.length > 1 && now - lastMove < Drawing.FREEHAND_SAMPLE_RATE)
@@ -213,7 +215,7 @@ class FurnaceDrawing extends Drawing {
         this._lastMoveTime = now;
 
       this.addPolygonPoint(position)
-    } else if (this.type == DRAWING_TYPES.POLYGON) {
+    } else if (this.type == CONST.DRAWING_TYPES.POLYGON) {
       if (this.data.points.length > 1)
         this.data.points.pop()
       this.data.points.push([parseInt(position.x), parseInt(position.y)])
@@ -259,23 +261,23 @@ class FurnaceDrawing extends Drawing {
     }
     // Render the actual shape/drawing
     switch (this.type) {
-      case DRAWING_TYPES.RECTANGLE:
+      case CONST.DRAWING_TYPES.RECTANGLE:
         this.renderRectangle(this.img)
         this.renderSubText(this.text)
         break;
-      case DRAWING_TYPES.ELLIPSE:
+      case CONST.DRAWING_TYPES.ELLIPSE:
         this.renderEllipse(this.img)
         this.renderSubText(this.text)
         break;
-      case DRAWING_TYPES.POLYGON:
+      case CONST.DRAWING_TYPES.POLYGON:
         this.renderPolygon(this.img)
         this.renderSubText(this.text)
         break;
-      case DRAWING_TYPES.FREEHAND:
+      case CONST.DRAWING_TYPES.FREEHAND:
         this.renderFreehand(this.img)
         this.renderSubText(this.text)
         break;
-      case DRAWING_TYPES.TEXT:
+      case CONST.DRAWING_TYPES.TEXT:
         this.renderText(this.img)
         break;
     }
@@ -304,7 +306,7 @@ class FurnaceDrawing extends Drawing {
       }
       // Can't clone a PIXI.Text, if mask onto a text, we re-render it.
       if (this.bg.tile.mask) this.bg.removeChild(this.bg.tile.mask).destroy({ children: true })
-      if (this.type == DRAWING_TYPES.TEXT) {
+      if (this.type == CONST.DRAWING_TYPES.TEXT) {
         this.bg.tile.mask = this.bg.addChild(new PIXI.Text());
         this.renderText(this.bg.tile.mask)
         // Mask is only applied on the red channel for some reason.
@@ -382,7 +384,7 @@ class FurnaceDrawing extends Drawing {
     this.rotateHandle.draw()
 
     // Don't show the frame when we're creating a new drawing, unless it's text.
-    this.frame.visible = this._controlled && (this.id || this.type == DRAWING_TYPES.TEXT);
+    this.frame.visible = this._controlled && (this.id || this.type == CONST.DRAWING_TYPES.TEXT);
     this.scaleHandle.visible = this.rotateHandle.visible = this.frame.visible && !this.data.locked;
   }
 

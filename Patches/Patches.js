@@ -56,15 +56,7 @@ class FurnacePatching {
     }
 
     static init() {
-        FurnacePatching.replaceMethod(Token, "_onUpdateTokenActor", function (updateData) {
-            if (this.actor != null)
-                return FurnacePatching.callOriginalFunction(this, "_onUpdateTokenActor", updateData);
-        });
-        let _call = FurnacePatching.patchFunction(Hooks._call, 5,
-            "console.error(`Error triggered in hooked function ${fn.name}\\n${err}`);",
-            "console.error(`Error triggered in hooked function ${fn.name}\\n`); console.warn(err);");
-        if (_call)
-            Hooks._call = _call;
+        // No patching to be done for 0.4.x yet!
     }
 }
 FurnacePatching.ORIG_PRREFIX = "__furnace_original_"

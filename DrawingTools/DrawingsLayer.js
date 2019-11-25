@@ -14,7 +14,7 @@ class FurnaceDrawingsLayer extends PlaceablesLayer {
   constructor() {
     super()
 
-    this._last_tool = DRAWING_TYPES.RECTANGLE
+    this._last_tool = CONST.DRAWING_TYPES.RECTANGLE
     this._startingData = game.settings.get("furnace", FurnaceDrawingsLayer.DEFAULT_CONFIG_SETTING);
   }
 
@@ -146,18 +146,18 @@ class FurnaceDrawingsLayer extends PlaceablesLayer {
         bezierFactor: 0,
         points: [],
       },
-      [DRAWING_TYPES.RECTANGLE]: {
+      [CONST.DRAWING_TYPES.RECTANGLE]: {
       },
-      [DRAWING_TYPES.ELLIPSE]: {
+      [CONST.DRAWING_TYPES.ELLIPSE]: {
       },
-      [DRAWING_TYPES.TEXT]: {
+      [CONST.DRAWING_TYPES.TEXT]: {
         fillType: FURNACE_DRAWING_FILL_TYPE.SOLID,
         strokeWidth: 2,
       },
-      [DRAWING_TYPES.POLYGON]: {
+      [CONST.DRAWING_TYPES.POLYGON]: {
         bezierFactor: 0
       },
-      [DRAWING_TYPES.FREEHAND]: {
+      [CONST.DRAWING_TYPES.FREEHAND]: {
         bezierFactor: 0.5,
       }
     }[type]
@@ -261,7 +261,7 @@ class FurnaceDrawingsLayer extends PlaceablesLayer {
     drawing._controlled = true;
     event.data.object = this.preview.addChild(drawing);
     // You can place a text by simply clicking, no need to drag it first.
-    if (drawing.type == DRAWING_TYPES.TEXT)
+    if (drawing.type == CONST.DRAWING_TYPES.TEXT)
       event.data.createState = 2;
     event.data.createTime = Date.now();
   }
@@ -272,7 +272,7 @@ class FurnaceDrawingsLayer extends PlaceablesLayer {
     let object = event.data.object;
     this._onDragCancel(event);
     // Text objects create their sheets for users to enter the text, otherwise create the drawing
-    if (object.type == DRAWING_TYPES.TEXT) {
+    if (object.type == CONST.DRAWING_TYPES.TEXT) {
       // Render the preview sheet
       object.sheet.preview = this.preview;
       object.sheet.render(true);
@@ -288,7 +288,7 @@ class FurnaceDrawingsLayer extends PlaceablesLayer {
 
   _onRightClick(event) {
     let { createState, object } = event.data;
-    if (createState >= 1 && object && object.type == DRAWING_TYPES.POLYGON) {
+    if (createState >= 1 && object && object.type == CONST.DRAWING_TYPES.POLYGON) {
       // Remove the current mouse position
       let position = object.data.points.pop()
       // If it was the last point, cancel the thing.
@@ -314,7 +314,7 @@ class FurnaceDrawingsLayer extends PlaceablesLayer {
 
       // Add point to polygon and reset the state
       let drawing = event.data.object;
-      if (drawing && drawing.type == DRAWING_TYPES.POLYGON) {
+      if (drawing && drawing.type == CONST.DRAWING_TYPES.POLYGON) {
         let destination = this.getPosition(event, event.data.destination);
         drawing.addPolygonPoint(destination);
         drawing.refresh();
@@ -350,7 +350,7 @@ class FurnaceDrawingsLayer extends PlaceablesLayer {
   _onMouseUp(event) {
     let { createState, object, createTime } = event.data;
 
-    if (object && object.type == DRAWING_TYPES.POLYGON) {
+    if (object && object.type == CONST.DRAWING_TYPES.POLYGON) {
       // Check for moving mouse during a polygon waypoint click
       if (createState == 2) {
         let now = Date.now();
@@ -378,7 +378,7 @@ class FurnaceDrawingsLayer extends PlaceablesLayer {
     if (createState === 1) {
       event.stopPropagation();
       // Don't cancel a click for polygons
-      if (!object || object.type != DRAWING_TYPES.POLYGON)
+      if (!object || object.type != CONST.DRAWING_TYPES.POLYGON)
         this._onDragCancel(event);
       // Handle successful creation and chaining
     } else if (createState === 2) {

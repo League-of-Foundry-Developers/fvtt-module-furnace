@@ -17,11 +17,11 @@ CONFIG.furnaceDrawingFillTypes = {
 }
 
 CONFIG.furnaceDrawingTypes = {
-  [DRAWING_TYPES.RECTANGLE]: "Rectangle",
-  [DRAWING_TYPES.ELLIPSE]: "Ellipse",
-  [DRAWING_TYPES.TEXT]: "Text",
-  [DRAWING_TYPES.POLYGON]: "Polygon",
-  [DRAWING_TYPES.FREEHAND]: "Freehand"
+  [CONST.DRAWING_TYPES.RECTANGLE]: "Rectangle",
+  [CONST.DRAWING_TYPES.ELLIPSE]: "Ellipse",
+  [CONST.DRAWING_TYPES.TEXT]: "Text",
+  [CONST.DRAWING_TYPES.POLYGON]: "Polygon",
+  [CONST.DRAWING_TYPES.FREEHAND]: "Freehand"
 }
 
 
@@ -89,31 +89,31 @@ class FurnaceDrawingTools {
           name: "rectangle",
           title: "Draw Rectangle",
           icon: "fas fa-square",
-          onClick: () => canvas.drawings._last_tool = DRAWING_TYPES.RECTANGLE
+          onClick: () => canvas.drawings._last_tool = CONST.DRAWING_TYPES.RECTANGLE
         },
         {
           name: "ellipse",
           title: "Draw Ellipse",
           icon: "fas fa-circle",
-          onClick: () => canvas.drawings._last_tool = DRAWING_TYPES.ELLIPSE
+          onClick: () => canvas.drawings._last_tool = CONST.DRAWING_TYPES.ELLIPSE
         },
         {
           name: "polygon",
           title: "Draw Polygons",
           icon: "fas fa-draw-polygon",
-          onClick: () => canvas.drawings._last_tool = DRAWING_TYPES.POLYGON
+          onClick: () => canvas.drawings._last_tool = CONST.DRAWING_TYPES.POLYGON
         },
         {
           name: "freehand",
           title: "Draw Freehand",
           icon: "fas fa-signature",
-          onClick: () => canvas.drawings._last_tool = DRAWING_TYPES.FREEHAND
+          onClick: () => canvas.drawings._last_tool = CONST.DRAWING_TYPES.FREEHAND
         },
         {
           name: "text",
           title: "Draw Text",
           icon: "fas fa-font",
-          onClick: () => canvas.drawings._last_tool = DRAWING_TYPES.TEXT
+          onClick: () => canvas.drawings._last_tool = CONST.DRAWING_TYPES.TEXT
         },
         {
           name: "clear",
@@ -178,10 +178,10 @@ class FurnaceDrawingTools {
         }
       }
       data.author = data.owner
-      if (Object.values(DRAWING_FILL_TYPES).includes(data.fill))
+      if (Object.values(CONST.DRAWING_FILL_TYPES).includes(data.fill))
         data.fillType = data.fill;
       else
-        data.fillType = DRAWING_FILL_TYPES.PATTERN;
+        data.fillType = CONST.DRAWING_FILL_TYPES.PATTERN;
 
       if (data.fontSize == "")
         data.fontSize = 48;
@@ -224,8 +224,7 @@ class FurnaceDrawingTools {
     delete flags.drawings
     let final_drawings = duplicate(scene.data.drawings).concat(new_drawings)
 
-    if (CONFIG.FurnaceEnableDebug)
-      console.log("Migrating scene : ", scene, " with new data ", { "flags.furnace": flags, "drawings": final_drawings })
+    FurnaceDebug.log("Migrating scene : ", scene, " with new data ", { "flags.furnace": flags, "drawings": final_drawings })
     return scene.update({ "flags.furnace": flags, "drawings": final_drawings })
   }
 }

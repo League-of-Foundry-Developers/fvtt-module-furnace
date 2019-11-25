@@ -33,7 +33,7 @@ class FurnaceSplitJournal extends FormApplication {
         options.id = "split-journal";
         options.title = "Split Journal";
         options.classes = ["sheet"];
-        options.template = "public/modules/furnace/templates/split-journal.html";
+        options.template = "modules/furnace/templates/split-journal.html";
         options.width = 400;
         options.height = "auto";
         return options;

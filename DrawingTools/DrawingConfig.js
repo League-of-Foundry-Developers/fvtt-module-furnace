@@ -19,7 +19,7 @@ class FurnaceDrawingConfig extends DrawingConfig {
     const options = super.defaultOptions;
     options.classes = ["sheet", "drawing-sheet"];
     options.title = "Drawing Configuration";
-    options.template = "public/modules/furnace/templates/drawing-config.html";
+    options.template = "modules/furnace/templates/drawing-config.html";
     options.height = 'auto';
     return options;
   }
@@ -77,8 +77,8 @@ class FurnaceDrawingConfig extends DrawingConfig {
       fillType == FURNACE_DRAWING_FILL_TYPE.CONTOUR ||
       fillType == FURNACE_DRAWING_FILL_TYPE.FRAME)
     let enableTextureSizeOptions = (fillType == FURNACE_DRAWING_FILL_TYPE.PATTERN)
-    let showBezierOptions = (drawingType == DRAWING_TYPES.POLYGON || drawingType == DRAWING_TYPES.FREEHAND);
-    let showTextOptions = drawingType == DRAWING_TYPES.TEXT;
+    let showBezierOptions = (drawingType == CONST.DRAWING_TYPES.POLYGON || drawingType == CONST.DRAWING_TYPES.FREEHAND);
+    let showTextOptions = drawingType == CONST.DRAWING_TYPES.TEXT;
 
     // Enable/Disable various options by setting their opacity and pointer-events.
     let enable = { "pointer-events": "unset", "opacity": 1.0 };
@@ -118,11 +118,12 @@ class FurnaceDrawingConfig extends DrawingConfig {
     data["flags.furnace"] = {
       textureWidth: data.textureWidth,
       textureHeight: data.textureHeight,
-      textureAlpha: data.textureAlpha
+      textureAlpha: data.textureAlpha,
+      fillType: null
     }
-    if (!Object.values(DRAWING_FILL_TYPES).includes(data.fillType)) {
+    if (!Object.values(CONST.DRAWING_FILL_TYPES).includes(data.fillType)) {
       data["flags.furnace"]["fillType"] = data.fillType;
-      data.fillType = DRAWING_FILL_TYPES.PATTERN;
+      data.fillType = CONST.DRAWING_FILL_TYPES.PATTERN;
     }
     delete data.textureWidth
     delete data.textureHeight
@@ -206,8 +207,8 @@ class DrawingDefaultsConfig extends FurnaceDrawingConfig {
 
     // this.object here is actually the Drawingslayer
     this._defaults = {}
-    this.type = type || DRAWING_TYPES.RECTANGLE
-    for (let type of Object.values(DRAWING_TYPES)) {
+    this.type = type || CONST.DRAWING_TYPES.RECTANGLE
+    for (let type of Object.values(CONST.DRAWING_TYPES)) {
       this._defaults[type] = this.object.getStartingData(type);
     }
   }
