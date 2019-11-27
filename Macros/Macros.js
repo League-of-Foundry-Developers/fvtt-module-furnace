@@ -9,7 +9,7 @@ class FurnaceMacros {
         H.registerHelpers(Handlebars)
         Handlebars.registerHelper(helpers)
 
-        Hooks.on('init', this.init.bind(this));
+        //Hooks.on('init', this.init.bind(this));
     }
 
     init() {

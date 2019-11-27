@@ -170,4 +170,44 @@ class FurnaceSplitJournal extends FormApplication {
     }
 }
 
+class FurnaceSortEntities {
+	static getEntityFolderContext(html, options) {
+		options.push({
+			name: "Sort Alphabetically (Ascending)",
+			icon: '<i class="fas fa-sort-alpha-down"></i>',
+			condition: game.user.isGM,
+			callback: header => FurnaceSortEntities.sortEntities(header, true)
+		})
+		options.push({
+			name: "Sort Alphabetically (Descending)",
+			icon: '<i class="fas fa-sort-alpha-down-alt"></i>',
+			condition: game.user.isGM,
+			callback: header => FurnaceSortEntities.sortEntities(header, false)
+		})
+	}
+
+
+	// Re-order the entire list based on their position.
+	static async sortEntities(header, ascending) {
+		let folderId = header.parent().attr("data-folder-id");
+		let folder = game.folders.get(folderId);
+		let entities = folder.content;
+
+		// Reset order values according to the new order within this folder
+		// This won't affect the order with the other folders and the whole collection
+		// order will be reset on the next render
+		entities.sort((a, b) => a.data.name.localeCompare(b.data.name) * (ascending ? 1 : -1))
+		for (let i = 0; i < entities.length; i++) {
+			let order = i * CONST.SORT_INTEGER_DENSITY;
+			await entities[i].update({ sort: order });
+		}
+	}
+}
+
+// Add sort alphabetically option
+Hooks.on('getJournalDirectoryFolderContext', FurnaceSortEntities.getEntityFolderContext);
+Hooks.on('getSceneDirectoryFolderContext', FurnaceSortEntities.getEntityFolderContext);
+Hooks.on('getActorDirectoryFolderContext', FurnaceSortEntities.getEntityFolderContext);
+Hooks.on('getItemDirectoryFolderContext', FurnaceSortEntities.getEntityFolderContext);
+// Add Split Journal to the entries
 Hooks.on('getJournalDirectoryEntryContext', FurnaceSplitJournal.getEntryContext);
