@@ -139,10 +139,13 @@ class FurnaceDrawingTools {
     }
   }
   static async ready() {
-    for (let scene of game.scenes.entities) {
-      let drawings = scene.getFlag("furnace", "drawings")
-      if (drawings !== undefined)
-        await FurnaceDrawingTools.migrateDrawingsToCore(scene, drawings)
+    // Only migrate drawings if we're a GM
+    if (game.user.isGM) {
+      for (let scene of game.scenes.entities) {
+        let drawings = scene.getFlag("furnace", "drawings")
+        if (drawings !== undefined)
+          await FurnaceDrawingTools.migrateDrawingsToCore(scene, drawings)
+      }
     }
   }
 
@@ -220,12 +223,11 @@ class FurnaceDrawingTools {
       data.id = max_id
       new_drawings.push(data)
     }
-    let flags = duplicate(scene.data.flags.furnace || {})
-    delete flags.drawings
-    let final_drawings = duplicate(scene.data.drawings).concat(new_drawings)
+    
+    let final_drawings = scene.data.drawings.concat(new_drawings)
 
-    FurnaceDebug.log("Migrating scene : ", scene, " with new data ", { "flags.furnace": flags, "drawings": final_drawings })
-    return scene.update({ "flags.furnace": flags, "drawings": final_drawings })
+    FurnaceDebug.log("Migrating scene : ", scene, " with new drawings: ", final_drawings)
+    return scene.update({ "flags.furnace.-=drawings": null, "drawings": final_drawings })
   }
 }
 
