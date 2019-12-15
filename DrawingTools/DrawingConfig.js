@@ -159,9 +159,9 @@ class FurnaceDrawingConfig extends DrawingConfig {
    * @private
    */
   _updateObject(event, formData) {
-    if (!this.object.owner) throw "You do not have the ability to configure a Drawing object.";
     formData = this.fixData(formData)
     if (this.object.id) {
+      if (!this.object.owner) throw "You do not have the ability to configure a Drawing object.";
       formData["id"] = this.object.id;
       this.object.update(canvas.scene._id, formData)
         .then(() => this.object.layer.updateStartingData(this.object))
