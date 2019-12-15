@@ -166,7 +166,8 @@ class FurnaceDrawingsLayer extends PlaceablesLayer {
     type = type[0]
     if (this._startingData[type] === undefined)
       this._startingData[type] = this.getDefaultData(type);
-    delete this._startingData[type].id
+    delete this._startingData[type].id;
+    this._startingData[type].type = type;
     return this._startingData[type]
   }
   getDefaultData(type) {
