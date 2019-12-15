@@ -115,6 +115,7 @@ class FurnaceTokenQoL {
             if (game.user.isGM && game.settings.get("furnace", "tokenIgnoreVision")) {
                 this.map.visible = false;
                 this.fog.visible = false;
+                this.restrictVisibility();
                 return;
             }
             return FurnacePatching.callOriginalFunction(this, "updateSight", options);
@@ -132,7 +133,11 @@ class FurnaceTokenQoL {
                 return true;
             return  FurnacePatching.callOriginalGetter(this, "isVisible");
         });
-
+        FurnacePatching.replaceGetter(DoorControl, "isVisible", function () {
+            if (game.user.isGM && game.settings.get("furnace", "tokenIgnoreVision"))
+                return true;
+            return  FurnacePatching.callOriginalGetter(this, "isVisible");
+        });
     }
 }
 
