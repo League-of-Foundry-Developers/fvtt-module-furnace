@@ -324,10 +324,7 @@ class FurnaceDrawing extends Drawing {
       this.bg.tile.mask.pivot = this.img.pivot;
       this.bg.tile.mask.position = this.img.position;
       this.bg.tile.mask.scale = this.img.scale;
-      this.bg.pivot.set(this.data.width / 2, this.data.height / 2);
-      this.bg.position.set(this.data.width / 2, this.data.height / 2);
-      this.bg.scale.y = (this.getFlag("furnace", "mirrorVert") ? -1 : 1)
-      this.bg.scale.x = (this.getFlag("furnace", "mirrorHoriz") ? -1 : 1)
+      this._applyMirroring(this.bg);
     }
 
     // Set Tile position, rotation and alpha
@@ -335,10 +332,7 @@ class FurnaceDrawing extends Drawing {
     this.rotation = toRadians(this.data.rotation);
     this.position.set(this.data.x + this.pivot.x, this.data.y + this.pivot.y);
     this.alpha = this.data.hidden ? 0.5 : 1.0;
-    this.img.pivot.set(this.data.width / 2, this.data.height / 2);
-    this.img.position.set(this.data.width / 2, this.data.height / 2);
-    this.img.scale.y = Math.abs(this.img.scale.y) * (this.getFlag("furnace", "mirrorVert") ? -1 : 1)
-    this.img.scale.x = Math.abs(this.img.scale.x) * (this.getFlag("furnace", "mirrorHoriz") ? -1 : 1)
+    this._applyMirroring(this.img);
 
     // Toggle visibility
     this.visible = !this.data.hidden || game.user.isGM;
@@ -353,6 +347,19 @@ class FurnaceDrawing extends Drawing {
   }
 
   
+  _applyMirroring(graphics) {
+    let width = this.data.width;
+    let height = this.data.height;
+    if (graphics instanceof PIXI.Text) {
+      const bounds = graphics.getLocalBounds();
+      width = bounds.width * Math.sign(width);
+      height = bounds.height * Math.sign(height);
+    }
+    graphics.pivot.set(width / 2, height / 2);
+    graphics.position.set(this.data.width / 2, this.data.height / 2);
+    graphics.scale.y = Math.abs(graphics.scale.y) * (this.getFlag("furnace", "mirrorVert") ? -1 : 1)
+    graphics.scale.x = Math.abs(graphics.scale.x) * (this.getFlag("furnace", "mirrorHoriz") ? -1 : 1)
+  }
   /**
    * Refresh the boundary frame which outlines the Drawing shape
    * @private
