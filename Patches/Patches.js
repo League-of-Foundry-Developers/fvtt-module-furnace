@@ -11,7 +11,8 @@ class FurnacePatching {
                 let classStr = klass.toString()
                 fixed = classStr.replace(funcStr, fixed)
             } else {
-                fixed = "function " + fixed
+                if (!fixed.startsWith("function"))
+                    fixed = "function " + fixed
                 if (fixed.startsWith("function async"))
                     fixed = fixed.replace("function async", "async function");
             }
@@ -56,7 +57,30 @@ class FurnacePatching {
     }
 
     static init() {
-        // No patching to be done for 0.4.x yet!
+        // Fix issue with moving/deleting multiple tokens when user is not viewing the scene where the update happens
+        // https://gitlab.com/foundrynet/foundryvtt/issues/1800
+        let deleteMany = FurnacePatching.patchFunction(PlaceablesLayer._deleteManyPlaceableObjects, 17,
+            "object: layer.get(id)",
+            "object: scene.isView ? layer.get(id) : null");
+        if (deleteMany)
+            PlaceablesLayer._deleteManyPlaceableObjects = deleteMany;
+        let updateMany = FurnacePatching.patchFunction(PlaceablesLayer._updateManyPlaceableObjects, 17,
+            "object: layer.get(id)",
+            "object: scene.isView ? layer.get(id) : null");
+        if (updateMany)
+            updateMany = FurnacePatching.patchFunction(updateMany, 25,
+                "mergeObject(update.source, update.data);",
+                `mergeObject(update.source, update.data);
+                 if ( !update.object ) continue;`);
+        if (updateMany)
+            PlaceablesLayer._updateManyPlaceableObjects = updateMany;
+        
+        // Fixes https://gitlab.com/foundrynet/foundryvtt/issues/1801
+        let webrtcClass = FurnacePatching.patchMethod(WebRTC, 'connect', 8,
+            "password: game.user.data.password",
+            `password: game.user.data.password || ""`);
+        if (webrtcClass)
+            WebRTC = webrtcClass;
     }
 }
 FurnacePatching.ORIG_PRREFIX = "__furnace_original_"
