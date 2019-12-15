@@ -62,6 +62,7 @@ class FurnaceDrawingConfig extends DrawingConfig {
     html.find("button[name=reset]").click((ev) => this.reset(ev, html))
     html.find("input,textarea,select").change((ev) => this.refresh(html))
     this.updateFields(html)
+    html.find("textarea").focus()
   }
 
   updateFields(html) {
