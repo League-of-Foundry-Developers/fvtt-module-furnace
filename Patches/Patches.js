@@ -2,6 +2,9 @@
 class FurnacePatching {
 
     static patchClass(klass, func, line_number, line, new_line) {
+        // Check in case the class/function had been deprecated/removed
+        if (func === undefined)
+            return;
         let funcStr = func.toString()
         let lines = funcStr.split("\n")
         if (lines[line_number].trim() == line.trim()) {
@@ -74,7 +77,7 @@ class FurnacePatching {
                  if ( !update.object ) continue;`);
         if (updateMany)
             PlaceablesLayer._updateManyPlaceableObjects = updateMany;
-        
+
         // Fixes https://gitlab.com/foundrynet/foundryvtt/issues/1801
         let webrtcClass = FurnacePatching.patchMethod(WebRTC, 'connect', 8,
             "password: game.user.data.password",

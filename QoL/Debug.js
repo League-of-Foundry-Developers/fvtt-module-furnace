@@ -6,7 +6,7 @@ class FurnaceDebug {
         game.settings.register("furnace", "enableDebug", {
             name: "Enable Debugging",
             hint: "Useful for module developers",
-            scope: "core",
+            scope: "client",
             config: true,
             default: false,
             type: Boolean,

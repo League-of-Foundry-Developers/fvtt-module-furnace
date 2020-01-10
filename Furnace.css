@@ -1,0 +1,28 @@
+/* Playlists QoL */
+#playlists li.sound .sound-name.furnace-qol {
+  max-width: unset;
+  margin-right: 3px;
+}
+
+#playlists li.sound .sound-controls.furnace-qol {
+  flex: 0 1 auto;
+  flex-wrap: nowrap;
+  min-width: 36px;
+}
+#playlists .playlist-sounds {
+  max-width: 100%;
+}
+.sound-control-hidden {
+  display: none;
+}
+
+.sidebar-tab .directory-list .now-playing {
+  border-top: 1px solid #f20;
+  border-bottom: 1px solid #f20;
+  border-radius: 25px;
+}
+#playlists li.playlist.now-playing-item {
+  border-top: 0px;
+  border-bottom: 0px;
+  padding: unset;
+}

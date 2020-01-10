@@ -1,0 +1,54 @@
+<li class="directory-item playlist now-playing flexrow">
+    <header class="playlist-header flexrow">
+        <h4>{{localize "PLAYLIST.NowPlaying"}}</h4>
+    </header>
+
+    <ol class="playlist-sounds">
+	    {{#each entities as |playlist pid|}}
+        {{#each playlist.sounds as |sound i|}}
+          {{#if sound.playing}}
+            <li class="now-playing-item entity playlist" data-entity-id="{{playlist._id}}">
+              <ol class="playlist-sounds">
+                <li class="sound flexrow" data-sound-id="{{sound._id}}">
+                    <h4 class="sound-name">{{sound.name}}</h4>
+                    <div class="sound-controls flexrow">
+
+                        {{#if @root.isGM}}
+                        <a class="sound-control" data-action="sound-edit" title="{{localize 'PLAYLIST.SoundEdit'}}">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        {{/if}}
+
+                        <input class="sound-volume" type="range" title="{{localize 'PLAYLIST.SoundVolume'}}"
+                              value="{{sound.lvolume}}" min="0" max="1" step="0.05"/>
+
+                        {{#if @root.isGM}}
+                        <a class="sound-control" data-action="sound-delete" title="{{localize 'PLAYLIST.SoundDelete'}}">
+                            <i class="fas fa-trash"></i>
+                        </a>
+                        {{/if}}
+
+                        <a class="sound-control {{#unless sound.repeat}}inactive{{/unless}} {{sound.controlCSS}}"
+                          data-action="sound-repeat" title="{{localize 'PLAYLIST.SoundLoop'}}">
+                            <i class="fas fa-sync"></i>
+                        </a>
+
+                        {{#if sound.playing}}
+                        <a class="sound-control {{sound.controlCSS}}" data-action="sound-stop" title="{{localize 'PLAYLIST.SoundStop'}}">
+                            <i class="fas fa-square"></i>
+                        </a>
+                        {{else}}
+
+                        <a class="sound-control {{sound.controlCSS}}" data-action="sound-play" title="{{localize 'PLAYLIST.SoundPlay'}}">
+                            <i class="fas fa-play"></i>
+                        </a>
+                        {{/if}}
+                    </div>
+                </li>
+              </ol>
+            </li>
+          {{/if}}
+        {{/each}}
+	    {{/each}}
+    </ol>
+</li>
