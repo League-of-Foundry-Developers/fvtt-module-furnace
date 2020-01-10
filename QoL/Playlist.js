@@ -15,8 +15,11 @@ class FurnacePlaylistQoL {
   static async renderDirectory(obj, html, data) {
     if (game.settings.get("furnace", "playlistQoL") === false)
       return;
+    html.find(".sound-control[data-action=sound-stop]").parents(".sound").css({"background-color": "rgba(255, 100, 0, 0.1)"})
     const isPlaying = data.entities.map(playlist => playlist.sounds.find(sound => sound.playing)).some(sound => !!sound);
     if (isPlaying) {
+      // On 0.4.4, the sound id is in sound._id instead of sound.id
+      data.use_id = isNewerVersion(game.data.version, "0.4.3")
       const nowPlaying = await renderTemplate("modules/furnace/templates/playlist-now-playing.html", data)
       html.find(".directory-item.playlist").eq(0).after(nowPlaying)
     }
@@ -28,6 +31,8 @@ class FurnacePlaylistQoL {
                   .sound-control[data-action=sound-delete],
                   .sound-volume`).addClass("furnace-hide-control sound-control-hidden")
       sound.hover(e => $(e.currentTarget).find(".furnace-hide-control").toggleClass("sound-control-hidden"))
+      
+      sound.find('.sound-volume').change(event => obj._onSoundVolume(event));
     }
   }
 }
