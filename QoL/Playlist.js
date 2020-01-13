@@ -15,7 +15,7 @@ class FurnacePlaylistQoL {
   static async renderDirectory(obj, html, data) {
     if (game.settings.get("furnace", "playlistQoL") === false)
       return;
-    html.find(".sound-control[data-action=sound-stop]").parents(".sound").css({"background-color": "rgba(255, 100, 0, 0.1)"})
+    html.find(".sound-control[data-action=sound-stop]").parents(".sound").addClass("sound-is-playing")
     const isPlaying = data.entities.map(playlist => playlist.sounds.find(sound => sound.playing)).some(sound => !!sound);
     if (isPlaying) {
       // On 0.4.4, the sound id is in sound._id instead of sound.id
