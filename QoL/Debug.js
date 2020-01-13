@@ -30,7 +30,7 @@ FurnacePatching.replaceFunction(Hooks, "callAll", function (hook, ...args) {
         args_comma.pop();
         console.log("DEBUG | Calling All Hooks : " + hook + "(", ...args_comma, ")")
     }
-    FurnacePatching.callOriginalFunction(this, "callAll", hook, ...args)
+    return FurnacePatching.callOriginalFunction(this, "callAll", hook, ...args)
 });
 FurnacePatching.replaceFunction(Hooks, "call", function (hook, ...args) {
     if (CONFIG.debug.furnace) {
@@ -39,7 +39,7 @@ FurnacePatching.replaceFunction(Hooks, "call", function (hook, ...args) {
         args_comma.pop();
         console.log("DEBUG | Calling Hook : " + hook + "(", ...args_comma, ")")
     }
-    FurnacePatching.callOriginalFunction(this, "call", hook, ...args)
+    return FurnacePatching.callOriginalFunction(this, "call", hook, ...args)
 });
 
 Hooks.on('init', FurnaceDebug.init)
