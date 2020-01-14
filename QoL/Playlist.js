@@ -13,7 +13,7 @@ class FurnacePlaylistQoL {
     game.settings.register("furnace", "volumeDbExponent", {
       name: "Volume slider linear to logarithmic exponential approximation",
       hint: "A volume slider is linear but the audio level perception in humans is logarithmic. It can be approximated with an exponential equation.\n" +
-        "FVTT a value of 2 (equation X^2) by default, X^3 or X^4 makes it easier to fine tune lower volume levels.\n" +
+        "FVTT uses a value of 2 (equation X^2) by default, X^3 or X^4 makes it easier to fine tune lower volume levels.\n" +
         "Set the value higher if your music is always too loud and you can't lower the volume to a sensible value without it dropping too low.",
       scope: "world",
       config: true,
