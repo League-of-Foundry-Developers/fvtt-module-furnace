@@ -86,24 +86,20 @@ class FurnaceSplitJournal extends FormApplication {
         if (!this.content || !this.useSplitter) return;
 
         let folder = game.folders.get(this.object.data.folder);
-        console.log("Form data : ", formData);
+        //console.log("Form data : ", formData);
         if (formData.newFolder) {
             let parent = folder;
             let folderDepth = 0;
-            while (parent !== undefined) {
+            while (parent) {
                 folderDepth++;
                 parent = game.folders.get(parent.data.parent)
             }
             console.log("Splitting Journal entry : ", this.object.name, "with depth : ", folderDepth);
 
-            if (folderDepth >= 3)
-                parent = folder.data.parent;
-            else
-                parent = folder;
             let folderData = {
                 name: this.object.name,
                 type: "JournalEntry",
-                parent: parent.id
+                parent: (folderDepth >= 3) ? folder.data.parent : folder.id
             }
             folder = await Folder.create(folderData)
         }
