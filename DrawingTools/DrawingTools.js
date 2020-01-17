@@ -121,7 +121,7 @@ class FurnaceDrawingTools {
           icon: "fas fa-trash",
           onClick: () => {
             canvas.drawings.deleteAll();
-            ui.controls.controls[ui.controls.activeControl].activeTool = "select";
+            ui.controls.control.activeTool = "select";
             ui.controls.render();
           }
         },
@@ -131,7 +131,7 @@ class FurnaceDrawingTools {
           icon: "fas fa-cog",
           onClick: () => {
             canvas.drawings.configureStartingData();
-            ui.controls.controls[ui.controls.activeControl].activeTool = "select";
+            ui.controls.control.activeTool = "select";
             ui.controls.render();
           }
         }
