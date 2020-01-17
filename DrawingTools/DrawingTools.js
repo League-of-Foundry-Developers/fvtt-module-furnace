@@ -165,9 +165,6 @@ class FurnaceDrawingTools {
       textColor: "#FFFFFF",
       z: 0
     }
-    let max_id = 0
-    if (scene.data.drawings.length > 0)
-      max_id = scene.data.drawings.reduce((a, v) => { return { id: Math.max(a.id, v.id) } }).id
     let new_drawings = []
 
     for (let drawing of drawings) {
@@ -219,8 +216,7 @@ class FurnaceDrawingTools {
         }
       }
 
-      max_id += 1
-      data.id = max_id
+      data._id = randomId(16)
       new_drawings.push(data)
     }
     

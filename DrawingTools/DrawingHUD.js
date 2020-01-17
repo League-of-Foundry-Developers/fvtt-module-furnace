@@ -65,7 +65,7 @@ class FurnaceDrawingHUD extends DrawingHUD {
     event.preventDefault();
     const drawings = this.object._controlled ? canvas.drawings.controlled : [this.object];
     await canvas.drawings.updateMany(drawings.map(d => {
-      let data = { id: d.id, [event.target.name]: event.target.value }
+      let data = { _id: d.id, [event.target.name]: event.target.value }
       // If user sets a fill color but fill is NONE then change it
       if (event.target.name == "fillColor" && d.fillType == FURNACE_DRAWING_FILL_TYPE.NONE)
         data.fillType = FURNACE_DRAWING_FILL_TYPE.SOLID;
@@ -91,7 +91,7 @@ class FurnaceDrawingHUD extends DrawingHUD {
     $(event.currentTarget).toggleClass("active");
     const drawings = this.object._controlled ? canvas.drawings.controlled : [this.object];
     canvas.drawings.updateMany(drawings.map(d => {
-      return { id: d.id, [field]: !isEnabled  }
+      return { _id: d.id, [field]: !isEnabled  }
     }), { updateKeys: [field] })
   }
 

@@ -114,7 +114,6 @@ class FurnaceDrawingsLayer extends PlaceablesLayer {
     return {
       // Special 'all' type which contains default values common to all types
       all: {
-        id: 1,
         x: 0,
         y: 0,
         z: 0,
@@ -166,7 +165,7 @@ class FurnaceDrawingsLayer extends PlaceablesLayer {
     type = type[0]
     if (this._startingData[type] === undefined)
       this._startingData[type] = this.getDefaultData(type);
-    delete this._startingData[type].id;
+    delete this._startingData[type]._id;
     this._startingData[type].type = type;
     return this._startingData[type]
   }
@@ -181,7 +180,7 @@ class FurnaceDrawingsLayer extends PlaceablesLayer {
 
   updateStartingData(drawing) {
     let data = duplicate(drawing.data)
-    mergeObject(data, { id: 1, x: 0, y: 0, z: 0, width: 0, height: 0, author: null, rotation: 0 }, { overwrite: true })
+    mergeObject(data, { x: 0, y: 0, z: 0, width: 0, height: 0, author: null, rotation: 0 }, { overwrite: true })
     data.points = []
     data.text = ""
     this._startingData[data.type] = data

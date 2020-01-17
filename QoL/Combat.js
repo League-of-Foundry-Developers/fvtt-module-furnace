@@ -12,7 +12,7 @@ class FurnaceCombatQoL {
         initiative.off("dblclick")
         initiative.empty().append(input)
         input.focus().select()
-        input.on('change', ev => game.combat.updateCombatant({ id: cid, initiative: input.val() }))
+        input.on('change', ev => game.combat.updateCombatant({ _id: cid, initiative: input.val() }))
         input.on('focusout', ev => game.combats.render())
 
 

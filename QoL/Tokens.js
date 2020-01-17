@@ -58,7 +58,7 @@ class FurnaceTokenQoL {
                 collision |= collide;
                 if (!collide) {
                     // Update token movement
-                    updateData.push({id: c.id, x: target.x, y: target.y})
+                    updateData.push({_id: c.id, x: target.x, y: target.y})
                 }
             }
             if (updateData.length > 0)
