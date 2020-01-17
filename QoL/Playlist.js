@@ -54,6 +54,25 @@ class FurnacePlaylistQoL {
       sound.find('.sound-volume').change(event => obj._onSoundVolume(event));
     }
   }
+
+  /**
+   * Helper function to find and toggle play state of a sound in a playlist.
+   * You can specify the full playlist/sound name or just the start of the name.
+   * Only the first playlist/sound that is found will be played in case it matches multiple ones.
+   * 
+   * @param {String} playlistName   Playlist name
+   * @param {String} soundName      Sound name
+   * @param {Boolean} startsWith    (Optional) whether to match the whole name or just the beginning
+   */
+  static PlaySound(playlistName, soundName, startsWith=false) {
+    const playlist = game.playlists.entities.find(p => startsWith ? p.name.startsWith(playlistName) : p.name === playlistName);
+    if (!playlist)
+      return;
+    const sound = playlist.sounds.find(s => startsWith ? s.name.startsWith(soundName) : s.name === soundName);
+    
+    if (sound)
+      playlist.updateEmbeddedEntity("PlaylistSound", {_id: sound._id, playing: !sound.playing})
+  }
 }
 
 Hooks.on('init', FurnacePlaylistQoL.init)
