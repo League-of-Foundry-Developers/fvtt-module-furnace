@@ -105,6 +105,7 @@ class FurnaceSplitJournal extends FormApplication {
         }
         let parts = splitHtml(this.content, formData.splitter)
         let header = ""
+        let journalEntries = []
         for (let idx = 0; idx < parts.length; idx++) {
 
             let name = this.object.name
@@ -124,7 +125,7 @@ class FurnaceSplitJournal extends FormApplication {
             let img = ""
             if (formData.includeImage)
                 img = this.object.data.img
-            let journalData = {
+            journalEntries.push({
                 "name": name,
                 "permission": this.object.data.permission,
                 "flags": { "entityorder": { "order": idx * 100000 } },
@@ -132,9 +133,10 @@ class FurnaceSplitJournal extends FormApplication {
                 "entryTime": this.object.data.entryTime,
                 "img": img,
                 "content": content
-            }
-            await JournalEntry.create(journalData, { displaySheet: false })
+            })
         }
+        if (journalEntries.length > 0)
+            return JournalEntry.createMany(journalEntries, { displaySheet: false })
     }
 
     /* Recursively add nodes until we find the index element we want */
@@ -191,12 +193,12 @@ class FurnaceSortEntities {
 
 		// Reset order values according to the new order within this folder
 		// This won't affect the order with the other folders and the whole collection
-		// order will be reset on the next render
-		entities.sort((a, b) => a.data.name.localeCompare(b.data.name) * (ascending ? 1 : -1))
-		for (let i = 0; i < entities.length; i++) {
-			let order = i * CONST.SORT_INTEGER_DENSITY;
-			await entities[i].update({ sort: order });
-		}
+        // order will be reset on the next render
+        if (entities.length > 0) {
+            entities.sort((a, b) => a.data.name.localeCompare(b.data.name) * (ascending ? 1 : -1))
+            const updateData = entities.map((e, i) => {return {_id: e.id, sort: i * CONST.SORT_INTEGER_DENSITY}})
+            entities[0].constructor.updateMany(updateData)
+        }
 	}
 }
 
