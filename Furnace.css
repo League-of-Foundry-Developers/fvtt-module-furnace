@@ -35,3 +35,10 @@
   text-decoration: line-through;
 }
 
+/* Tokens QoL */
+form.furnace-drop-actors .form-group input {
+  flex: 0 1;
+}
+form.furnace-drop-actors .form-group i {
+  flex: 1 1;
+}

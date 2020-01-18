@@ -1,0 +1,34 @@
+<form class="furnace-drop-actors" autocomplete="off" onsubmit="event.preventDefault();">
+      <p class="notes">You have dropped <strong>{{actors.length}}</strong> actors from the folder '<em>{{folder.name}}</em>' onto the scene.</p>
+      <p>How would you like to arrange their tokens ?</p>
+      <div class="form-group">
+          <input type="radio" name="arrangement" id="furnace-arrangement-same" value="same"/>
+          <label for="furnace-arrangement-same">All {{actors.length}} tokens on top of each other.</label>
+          <i class="far fa-dot-circle"/>
+      </div>
+      <div class="form-group">
+          <input type="radio" name="arrangement" id="furnace-arrangement-random" value="random" checked/>
+          <label for="furnace-arrangement-random">Randomly spread out (packed close) around the dropped point.</label>
+          <i class="fas fa-braille"/>
+      </div>
+      <div class="form-group">
+          <input type="radio" name="arrangement" id="furnace-arrangement-tb" value="tb"/>
+          <label for="furnace-arrangement-tb">Line up (marching order based on folder order) from Top to Bottom.</label>
+          <i class="fas fa-angle-double-down"/>
+      </div>
+      <div class="form-group">
+          <input type="radio" name="arrangement" id="furnace-arrangement-bt" value="bt"/>
+          <label for="furnace-arrangement-bt">Line up from Bottom to Top.</label>
+          <i class="fas fa-angle-double-up"/>
+      </div>
+      <div class="form-group">
+          <input type="radio" name="arrangement" id="furnace-arrangement-lr" value="lr"/>
+          <label for="furnace-arrangement-lr">Line up from Left to Right.</label>
+          <i class="fas fa-angle-double-right"/>
+      </div>
+      <div class="form-group">
+          <input type="radio" name="arrangement" id="furnace-arrangement-rl" value="rl"/>
+          <label for="furnace-arrangement-rl">Line up from Right to Left.</label>
+          <i class="fas fa-angle-double-left"/>
+      </div>
+</form>
