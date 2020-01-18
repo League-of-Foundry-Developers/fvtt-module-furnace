@@ -28,3 +28,10 @@
 .sound-control-hidden {
   display: none;
 }
+
+/* Combat QoL */
+#combat li.combatant.turn-done {
+  color: #888;
+  text-decoration: line-through;
+}
+

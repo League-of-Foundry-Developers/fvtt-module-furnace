@@ -2,6 +2,11 @@ class FurnaceCombatQoL {
     static renderCombatTracker(tracker, html, data) {
         if (!game.user.isGM) return;
         html.find(".token-initiative").off("dblclick").on("dblclick", FurnaceCombatQoL._onInitiativeDblClick)
+        for (let combatant of html.find("#combat-tracker li.combatant")) {
+            if (combatant.classList.contains("active"))
+                break;
+            combatant.classList.add("turn-done");
+        }
     }
     static _onInitiativeDblClick(event) {
         let html = $(event.target).closest(".combatant")
