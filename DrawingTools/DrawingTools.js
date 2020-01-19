@@ -216,7 +216,7 @@ class FurnaceDrawingTools {
         }
       }
 
-      data._id = randomId(16)
+      data._id = randomID(16)
       new_drawings.push(data)
     }
     
