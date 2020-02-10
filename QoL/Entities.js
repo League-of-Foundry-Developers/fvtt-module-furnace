@@ -99,7 +99,7 @@ class FurnaceSplitJournal extends FormApplication {
             let folderData = {
                 name: this.object.name,
                 type: "JournalEntry",
-                parent: (folderDepth >= 3) ? folder.data.parent : folder.id
+                parent: folder ? ((folderDepth >= 3) ? folder.data.parent : folder.id) : null
             }
             folder = await Folder.create(folderData)
         }
@@ -129,7 +129,7 @@ class FurnaceSplitJournal extends FormApplication {
                 "name": name,
                 "permission": this.object.data.permission,
                 "flags": { "entityorder": { "order": idx * 100000 } },
-                "folder": folder.id,
+                "folder": folder ? folder.id : null,
                 "entryTime": this.object.data.entryTime,
                 "img": img,
                 "content": content
