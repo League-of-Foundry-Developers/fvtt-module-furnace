@@ -2,7 +2,7 @@
   "name": "furnace",
   "title": "The Furnace",
   "description": "<p>The Furnace is an essential part of every Foundry.</p><p>This module contains a set of features that improve the Quality of Life of the DM/Players. The current features are : </p><p><strong>Advanced Drawing Tools :</strong>Improved drawing tools with different pattern fill types, new HUD, and various options.</p><p><strong>Split Journal :</strong> Select the split option from the context menu on a journal entry to split it into multiple entries.</p><p><strong>Scene: Move multiple tokens, tiles or drawings at once with your mouse.</strong></p><p><strong>Tokens : </strong>As GM, you can enable/disable token vision for yourself. You can also drop an actor folder into a scene to deploy multiple tokens at once.</p><p><strong>Combat : </strong>Double click the initiative value in the combat tracker to quickly modify it.</p><p><strong>Playlists : </strong>Adds a 'Now Playing' section, and auto-hides sound controls until hovered. Helps in fine tuning of low level volumes.",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "author": "KaKaRoTo",
   "scripts": [
     "libs/split-html.js",
