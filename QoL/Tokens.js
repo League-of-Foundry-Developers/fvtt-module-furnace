@@ -7,9 +7,7 @@ class FurnaceTokenQoL {
             default: false,
             type: Boolean,
             onChange: value => {
-                canvas.sight.updateLights();
-                canvas.sight.updateSight({ updateFog: true });
-                canvas.sight.restrictVisibility();
+                canvas.sight.initializeTokens();
             }
         });
     }
@@ -77,32 +75,11 @@ class FurnaceTokenQoL {
         });
 
         // Hide Sight on Token select
-        FurnacePatching.replaceMethod(SightLayer, "updateSight", function (options) {
+        FurnacePatching.replaceMethod(SightLayer, "updateToken", function (token, options={}) {
             if (game.user.isGM && game.settings.get("furnace", "tokenIgnoreVision")) {
-                this.map.visible = false;
-                this.fog.visible = false;
-                this.restrictVisibility();
-                return;
+                options = mergeObject(options, {deleted: true});
             }
-            return FurnacePatching.callOriginalFunction(this, "updateSight", options);
-        });
-        FurnacePatching.replaceMethod(SightLayer, "updateLights", function (options) {
-            if (game.user.isGM && game.settings.get("furnace", "tokenIgnoreVision")) {
-                this.map.visible = false;
-                this.fog.visible = false;
-                return;
-            }
-            return FurnacePatching.callOriginalFunction(this, "updateLights", options);
-        });
-        FurnacePatching.replaceGetter(Token, "isVisible", function () {
-            if (game.user.isGM && game.settings.get("furnace", "tokenIgnoreVision"))
-                return true;
-            return FurnacePatching.callOriginalGetter(this, "isVisible");
-        });
-        FurnacePatching.replaceGetter(DoorControl, "isVisible", function () {
-            if (game.user.isGM && game.settings.get("furnace", "tokenIgnoreVision"))
-                return true;
-            return  FurnacePatching.callOriginalGetter(this, "isVisible");
+            return FurnacePatching.callOriginalFunction(this, "updateToken", token, options);
         });
 
         // Drop Actor folder onto canvas
