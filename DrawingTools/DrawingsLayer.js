@@ -21,6 +21,7 @@ class FurnaceDrawingsLayer extends PlaceablesLayer {
   static get layerOptions() {
     return {
       canDragCreate: true,
+      canDelete: true,
       controllableObjects: true,
       rotatableObjects: true,
       snapToGrid: true
@@ -282,7 +283,7 @@ class FurnaceDrawingsLayer extends PlaceablesLayer {
       object.refresh();
     } else if (!object.isPolygon || object.data.points.length > 1) {
       // Only create the object if it's not a polygon/freehand or if it has at least 2 points
-      this.constructor.placeableClass.create(canvas.scene._id, object.data);
+      this.constructor.placeableClass.create(object.data);
     }
   }
 

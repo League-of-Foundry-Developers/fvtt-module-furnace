@@ -21,19 +21,19 @@ class FurnaceDrawing extends Drawing {
     return this._sheet;
   }
 
-  static async create(sceneId, data, options = {}) {
+  static async create(data, options = {}) {
     for (let key of ["x", "y", "width", "height"]) {
       if (data[key]) data[key] = Math.round(data[key]);
     }
     if (!data.author)
       data.author = game.user.id
     if (data.z == 0) {
-      let scene = game.scenes.get(sceneId)
+      let scene = canvas.scene;
       let drawings = scene ? scene.data.drawings || [] : []
       if (drawings.length > 0)
         data.z = drawings.reduce((a, v) => { return { z: Math.max(a.z, v.z) } }).z + 1
     }
-    return super.create(sceneId, data, options);
+    return super.create(data, options);
   }
   getFlag(scope, key, def) {
     let flag = undefined;
@@ -132,6 +132,7 @@ class FurnaceDrawing extends Drawing {
     } else {
       this.img = this.addChild(new PIXI.Graphics());
     }
+    this.text = this.addChild(new PIXI.Text());
     this.frame = this.addChild(new PIXI.Graphics());
     this.scaleHandle = this.addChild(new PIXI.Graphics());
     this.rotateHandle = this.addChild(new RotationHandle(this));
@@ -162,7 +163,6 @@ class FurnaceDrawing extends Drawing {
         this.bg = null;
       }
     }
-    this.text = this.addChild(new PIXI.Text());
     // Render the Tile appearance
     this.refresh();
 

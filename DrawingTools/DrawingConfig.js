@@ -172,7 +172,7 @@ class FurnaceDrawingConfig extends DrawingConfig {
       mergeObject(this.object.data, formData);
       // Refreshing will cause sizes to be recalculated first
       this.object.refresh();
-      this.object.constructor.create(canvas.scene._id, this.object.data);
+      this.object.constructor.create(this.object.data);
     }
   }
 
