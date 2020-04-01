@@ -17,7 +17,7 @@ More QoL improvements are planned.
 
 # Installation
 
-You can now install this module automatically by specifying the following public module URL : `https://raw.githubusercontent.com/kakaroto/fvtt-module-furnace/stable/module.json`
+You can now install this module automatically by specifying the following public module URL : `https://raw.githubusercontent.com/kakaroto/fvtt-module-furnace/master/module.json`
 
 As GM go to the `Manage Modules` options menu in your World Settings tab then enable the `The Furnace` module.
 

@@ -18,12 +18,12 @@ class FurnaceMacros {
 
     init() {
         // Register module configuration settings
-        game.settings.register("furnace", "enableMacros", {
+        game.settings.register("furnace", "advancedMacros", {
             name: "Advanced Macros",
-            hint: "Enable the parsing of the text chat to support /macro as a Handlebars template acting as a macro system (experimental feature).",
+            hint: "Enable the ability to use async script macros, call macros with arguments, use Handlebars templating for chat macros and more. Check out the module website for more information.",
             scope: "world",
             config: true,
-            default: false,
+            default: true,
             type: Boolean,
         });
         game.macros = this;
@@ -62,7 +62,7 @@ class FurnaceMacros {
         }
     }
     async executeMacro(...args) {
-        if (!game.settings.get("furnace", "enableMacros"))
+        if (!game.settings.get("furnace", "advancedMacros"))
             return FurnacePatching.callOriginalFunction(this, "execute");
 
         // Chat macros
@@ -91,7 +91,7 @@ class FurnaceMacros {
     }
 
     preCreateChatMessage(messages, data, options) {
-        if (!game.settings.get("furnace", "enableMacros")) return;
+        if (!game.settings.get("furnace", "advancedMacros")) return;
         if (data.content === undefined || data.content.length == 0) return;
 
         let content = data.content || "";
