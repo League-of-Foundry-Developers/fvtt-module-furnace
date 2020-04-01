@@ -27,53 +27,6 @@ class FurnaceTokenQoL {
         }
     }
     static setup() {
-        // Multi token move
-        FurnacePatching.replaceMethod(Token, "_onMouseUp", async function (event) {
-            const controlled = this.layer.controlled;
-            if (controlled.length <= 1)
-                return FurnacePatching.callOriginalFunction(this, "_onMouseUp", event);
-
-            let { handleState, origin, destination, originalEvent, clones } = event.data;
-            if ( handleState === 0 ) return;
-            // Get Token movement data
-            let offsetX = destination.x - origin.x,
-                offsetY = destination.y - origin.y;
-
-
-            // Determine updated token data for controlled tokens and update the Scene with all tokens
-            let collision = false;
-            let updateData = []
-            for (let c of controlled) {
-                let target = {
-                    x: (c.x + offsetX),
-                    y: (c.y + offsetY)
-                };
-
-                // Snap to grid unless shift is pressed
-                if (!originalEvent.shiftKey) target = canvas.grid.getSnappedPosition(target.x, target.y, 1);
-
-                // Check collision center-to-center
-                let targetCenter = this.getCenter(target.x, target.y);
-                let collide = this.checkCollision(targetCenter, { drag: true });
-                collision = collision || collide;
-                if (!collide) {
-                    // Update token movement
-                    updateData.push({_id: c.id, x: target.x, y: target.y})
-                }
-            }
-            if (updateData.length > 0)
-                await canvas.tokens.updateMany(updateData, {updateKeys: ["x", "y"]})
-            if (collision)
-                ui.notifications.warn("One or more tokens have hit a wall!");
-
-            for (let clone of clones) {
-                let c = controlled.find(t => t.id == clone.original_id)
-                c.data.locked = false;
-                c.alpha = 1.0;
-            }
-            this._onDragCancel(event);
-        });
-
         // Hide Sight on Token select
         FurnacePatching.replaceMethod(SightLayer, "updateToken", function (token, options={}) {
             if (game.user.isGM && game.settings.get("furnace", "tokenIgnoreVision")) {
