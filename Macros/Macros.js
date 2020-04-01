@@ -106,7 +106,11 @@ class FurnaceMacros {
         content = content.replace(/\n/gm, "<br>");
         content = content.split("<br>").map(line => {
             if (line.startsWith("/")) {
-                if (!tokenizer) tokenizer = new TokenizeThis();
+                // Ensure tokenizer, but don't consider dash as a token delimiter
+                if (!tokenizer)
+                    tokenizer = new TokenizeThis({
+                        shouldTokenize: ['(', ')', ',', '*', '/', '%', '+', '=', '!=', '!', '<', '>', '<=', '>=', '^']
+                    });
                 let command = null;
                 let args = [];
                 tokenizer.tokenize(line.substr(1), (token) => {
