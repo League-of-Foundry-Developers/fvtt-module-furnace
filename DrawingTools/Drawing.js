@@ -342,7 +342,7 @@ class FurnaceDrawing extends Drawing {
 
     // Reset hit area. img doesn't set a hit area automatically if we don't use 'fill',
     // so we need to manually define it. Also take into account negative width/height.
-    this.hitArea = this.getLocalBounds()
+    this.hitArea = this.frame.getLocalBounds()
   }
 
   
