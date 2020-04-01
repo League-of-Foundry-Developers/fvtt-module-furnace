@@ -343,7 +343,6 @@ class FurnaceDrawing extends Drawing {
     // Reset hit area. img doesn't set a hit area automatically if we don't use 'fill',
     // so we need to manually define it. Also take into account negative width/height.
     this.hitArea = this.getLocalBounds()
-
   }
 
   
@@ -366,30 +365,38 @@ class FurnaceDrawing extends Drawing {
    */
   _refreshFrame() {
     let { x, y, width, height } = this.img.getLocalBounds();
+    // Fix PIXI bug that returns 0,0 on rectangles with a negative value in either width or height
+    if (width === 0 && height === 0) {
+        width = this.data.width;
+        height = this.data.height;
+    }
     /* Scale the width/height because of text drawings */
     width *= Math.abs(this.img.scale.x)
     height *= Math.abs(this.img.scale.y)
 
-    let pad = 10;
+    const pad = 10;
+    let padX = pad, padY = pad;
+    if (width < 0) padX *= -2;
+    if (height < 0) padY *= -2;
     this.frame.clear()
-      .lineStyle(6.0, 0x000000).drawRect(x - pad, y - pad, width + (2*pad), height + (2*pad))
-      .lineStyle(2.0, 0xFF9829).drawRect(x - pad, y - pad, width + (2*pad), height + (2*pad))
+      .lineStyle(6.0, 0x000000).drawRect(x - padX, y - padY, width + (2*padX), height + (2*padY))
+      .lineStyle(2.0, 0xFF9829).drawRect(x - padX, y - padY, width + (2*padX), height + (2*padY))
       .beginFill(0x000000, 1.0)
       .lineStyle(2.0, 0x00000)
-      .drawCircle(x - pad, y - pad, 6)
-      .drawCircle(x + width + pad, y - pad, 6)
-      .drawCircle(x - pad, y + height + pad, 6)
-      .drawCircle(x + width + pad, y + height + pad, 6);
+      .drawCircle(x - padX, y - padY, 6)
+      .drawCircle(x + width + padX, y - padY, 6)
+      .drawCircle(x - padX, y + height + padY, 6)
+      .drawCircle(x + width + padX, y + height + padY, 6);
 
     // Draw scale handle
-    this.scaleHandle.position.set(x + width + pad, y + height + pad);
+    this.scaleHandle.position.set(x + width + padX, y + height + padY);
     this.scaleHandle.clear()
     .beginFill(0x000000, 1.0).lineStyle(4.0, 0x000000).drawCircle(0, 0, 10)
     .lineStyle(3.0, 0xFF9829).drawCircle(0, 0, 8);
  //     .lineStyle(2.0, 0x000000).beginFill(0xFF9829, 1.0).drawCircle(0, 0, 6.0);
 
     // Draw Rotation handle
-    this.rotateHandle.position.set(x + width / 2 + pad / 2, y - pad);
+    this.rotateHandle.position.set(x + width / 2 + padX / 2, y - padY);
     this.rotateHandle.scale.set(Math.sign(this.data.width), Math.sign(this.data.height));
     this.rotateHandle.draw()
 
