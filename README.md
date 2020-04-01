@@ -122,6 +122,8 @@ It's currently {{macro "current-time"}}
 
 You can then type `/run` in the chat to execute the 'run' macro which executes 'Return to corner' which will move the token to position (0, 0), then pan the canvas to position (1000, 1000) with a zoom of 50%, then output to the chat `Token moved to (0,0)\n\nIt's currently 21:45`
 
+*Note*: HTML content will not be parsed for /command macros, though you will still be able to use the `{{macro}}` helper in that case.
+
 # Support
 
 If you like this module and would like to help support its development, you can subscribe to my [Patreon](https://www.patreon.com/kakaroto) or if you prefer, you can also send me some rations via [Ko-Fi](https://ko-fi.com/kakaroto)

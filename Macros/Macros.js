@@ -103,6 +103,7 @@ class FurnaceMacros {
             const compiled = Handlebars.compile(content);
             content = compiled(context);
         }
+        if (content.trim().startsWith("<")) return true;
         content = content.replace(/\n/gm, "<br>");
         content = content.split("<br>").map(line => {
             if (line.startsWith("/")) {
