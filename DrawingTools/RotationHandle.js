@@ -104,6 +104,6 @@ class RotationHandle extends PIXI.Graphics {
         // Update the tile
         const data = { rotation: this.object.data.rotation };
         this.object.data = original;
-        this.object.update(canvas.scene._id, data);
+        this.object.update(data);
     }
 }
