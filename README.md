@@ -122,7 +122,8 @@ It's currently {{macro "current-time"}}
 
 You can then type `/run` in the chat to execute the 'run' macro which executes 'Return to corner' which will move the token to position (0, 0), then pan the canvas to position (1000, 1000) with a zoom of 50%, then output to the chat `Token moved to (0,0)\n\nIt's currently 21:45`
 
-*Note*: HTML content will not be parsed for /command macros, though you will still be able to use the `{{macro}}` helper in that case.
+**Note**: HTML content will not be parsed for /command macros, though you will still be able to use the `{{macro}}` helper in that case. 
+**Note 2**: You can only use one space to separate each argument. If you use more than one space, FVTT will replace the second with `&nbsp;` as it transforms the chat input into html, which would break your argument list.
 
 # Support
 

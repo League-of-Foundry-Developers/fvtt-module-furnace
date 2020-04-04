@@ -4,7 +4,7 @@ class FurnaceMacros {
             macro: (name, ...args) => {
                 const macro = game.macros.entities.find(macro => macro.name === name);
                 if (!macro) return "";
-                const result = macro.render(...args);
+                const result = macro.renderContent(...args);
                 if (typeof(result) !== "string")
                     return "";
                 return result;
@@ -30,7 +30,7 @@ class FurnaceMacros {
 
         Hooks.on('preCreateChatMessage', this.preCreateChatMessage.bind(this))
         FurnacePatching.replaceMethod(Macro, "execute", this.executeMacro)
-        Macro.prototype.render = this.renderMacro;
+        Macro.prototype.renderContent = this.renderMacro;
     }
 
     static getTemplateContext(args=null) {
@@ -68,7 +68,7 @@ class FurnaceMacros {
         // Chat macros
         if ( this.data.type === "chat" ) {
             try {
-                const content = this.render(...args);
+                const content = this.renderContent(...args);
                 ui.chat.processMessage(content).catch(err => {
                     ui.notifications.error("There was an error in your chat message syntax.");
                     console.error(err);
@@ -82,7 +82,7 @@ class FurnaceMacros {
         // Script macros
         else if ( this.data.type === "script" ) {
             try {
-                await this.render(...args);
+                await this.renderContent(...args);
             } catch (err) {
                 ui.notifications.error(`There was an error in your macro syntax. See the console (F12) for details`);
                 console.error(err);
@@ -121,7 +121,7 @@ class FurnaceMacros {
                 const macro = game.macros.entities.find(macro => macro.name === command);
                 if (macro) {
                     hasMacros = true;
-                    const result = macro.render(...args);
+                    const result = macro.renderContent(...args);
                     if (result instanceof Promise) {
                         hasAsyncMacros = true;
                         return result;
