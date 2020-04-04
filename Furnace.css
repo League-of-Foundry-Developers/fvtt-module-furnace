@@ -49,6 +49,32 @@ div.furnace-macro-command {
     border: 1px solid black;
 }
 
+div.furnace-macro-command.fullscreen {
+    position: fixed;
+    top: 0px;
+    left: 0px;
+    width: 80%;
+    height: 80%;
+    margin: 10%;
+    background: url(../../ui/parchment.jpg) repeat;
+}
+div.furnace-macro-command.fullscreen textarea,
+div.furnace-macro-command.fullscreen code  {
+    width: 100%;
+    height: 100%;
+}
+
+div.furnace-macro-expand {
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    padding: 5px;
+    margin: 3px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 5px;
+    z-index: 10;
+}
+
 div.furnace-macro-command textarea,
 div.furnace-macro-command code {
     position: relative;
@@ -58,7 +84,6 @@ div.furnace-macro-command code {
     margin: 0px;
     padding: 5px;
     line-height: 21px;
-    max-width: 100%;
     font-family: Consolas,Liberation Mono,Courier,monospace;
 }
 
@@ -67,6 +92,7 @@ div.furnace-macro-command textarea {
     text-shadow: 0px 0px 0px rgba(0, 0, 0, 0);
     text-fill-color: transparent;
     -webkit-text-fill-color: transparent;
+    resize: none;
 }
 div.furnace-macro-command pre {
     position: absolute;

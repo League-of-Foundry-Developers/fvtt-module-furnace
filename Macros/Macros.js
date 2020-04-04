@@ -174,6 +174,7 @@ class FurnaceMacros {
         const div = $(`
         <div class="furnace-macro-command form-group">
             <pre><code class="furnace-macro-syntax-highlight"></code></pre>
+            <div class="furnace-macro-expand"><i class="fas fa-expand-alt"></i></div>
         </div>
         `)
         const code = div.find("code");
@@ -183,6 +184,7 @@ class FurnaceMacros {
         textarea.on('input', refreshHighlight);
         textarea.on('scroll', (ev) => code.parent().scrollTop(textarea.scrollTop()));
         form.find("select[name=type]").on('change', refreshHighlight);
+        div.find(".furnace-macro-expand").on('click', (ev) => div.toggleClass("fullscreen"));
         refreshHighlight();
 
 
