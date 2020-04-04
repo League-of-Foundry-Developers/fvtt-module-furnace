@@ -158,7 +158,7 @@ class FurnaceDrawing extends Drawing {
           this.bg = this.addChild(new PIXI.Container());
           this.bg.tile = this.bg.addChild(sprite)
         }
-      } catch {
+      } catch (_){
         this.texture = null;
         this.bg = null;
       }
