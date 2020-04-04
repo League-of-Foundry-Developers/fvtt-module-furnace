@@ -7,7 +7,7 @@ It started by adding Drawing Tools functionality to FVTT and then an experimenta
 
 The current features are : 
 - **Advanced Drawing Tools :** Improved drawing tools with different pattern fill types, new HUD, and various options.
-- **Advanced Macros:** Use async script macros, handlebars templating, recursive macro calls and call macros with arguments or directly from chat.
+- **Advanced Macros:** Use async script macros, handlebars templating, recursive macro calls and call macros with arguments or directly from chat. Also adds syntax highlighting, fullscreen mode and a test run button to the macro editor.
 - **Split Journal :** Select the split option from the context menu on a journal entry to split it into multiple entries.
 - **Tokens :** As GM, you can enable/disable token vision for yourself. You can also drop an actor folder into a scene to deploy multiple tokens at once.
 - **Combat :** Double click the initiative value in the combat tracker to quickly modify it.
