@@ -158,8 +158,35 @@ class FurnaceMacros {
         data.content = content.join("<br>");
         return true;
     }
+
+    _highlightMacroCode(form, textarea, code) {
+        const content = textarea.val();
+        const type = form.find("select[name=type]").val();
+        code.removeClass("javascript handlebars hljs").addClass(type === "script" ? "javascript" : "handlebars");
+        code.text(content);
+        hljs.highlightBlock(code[0]);
+    }
     renderMacroConfig(obj, html, data) {
         const form = html.find("form");
+        // Add syntax highlighting
+
+        const textarea = form.find("textarea");
+        const div = $(`
+        <div class="furnace-macro-command form-group">
+            <pre><code class="furnace-macro-syntax-highlight"></code></pre>
+        </div>
+        `)
+        const code = div.find("code");
+        div.insertBefore(textarea);
+        div.prepend(textarea);
+        const refreshHighlight = this._highlightMacroCode.bind(this, form, textarea, code);
+        textarea.on('input', refreshHighlight);
+        textarea.on('scroll', (ev) => code.parent().scrollTop(textarea.scrollTop()));
+        form.find("select[name=type]").on('change', refreshHighlight);
+        refreshHighlight();
+
+
+        // Add 'run' button
         const save = form.find("button[type=submit]");
         form.append($(`
         <div class="form-group">

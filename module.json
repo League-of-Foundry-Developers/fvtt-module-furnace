@@ -8,6 +8,7 @@
     "libs/split-html.js",
     "libs/h.min.js",
     "libs/tokenizer.min.js",
+    "libs/hljs/highlight.pack.js",
     "Patches/Patches.js",
     "Macros/Macros.js",
     "DrawingTools/DrawingsLayer.js",
@@ -24,7 +25,8 @@
     "QoL/Playlist.js"
   ],
   "styles": [
-    "Furnace.css"
+    "Furnace.css",
+    "libs/hljs/styles/github-gist.css"
   ],
   "packs": [],
   "languages": [
