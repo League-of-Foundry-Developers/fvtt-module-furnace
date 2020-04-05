@@ -53,9 +53,9 @@ div.furnace-macro-command.fullscreen {
     position: fixed;
     top: 0px;
     left: 0px;
-    width: 80%;
-    height: 80%;
-    margin: 10%;
+    width: calc(100% - 10rem);
+    height: calc(100% - 10rem);
+    margin: 5rem;
     background: url(../../ui/parchment.jpg) repeat;
 }
 div.furnace-macro-command.fullscreen textarea,
@@ -105,4 +105,9 @@ div.furnace-macro-command pre {
     padding: 0px;
     z-index: 9;
     overflow: hidden;
+	white-space: pre-wrap;  
+	white-space: -moz-pre-wrap;
+	white-space: -pre-wrap;  
+	white-space: -o-pre-wrap;
+	word-wrap: break-word;
 }

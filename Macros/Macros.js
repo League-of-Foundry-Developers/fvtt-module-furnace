@@ -160,8 +160,11 @@ class FurnaceMacros {
     }
 
     _highlightMacroCode(form, textarea, code) {
-        const content = textarea.val();
         const type = form.find("select[name=type]").val();
+        let content = textarea.val();
+        // Add an empty space if the last character is a newline because otherwise it won't let scrollTop reach
+        // so we get a one line diff between the text area and <pre> when the last line is empty.
+        if (content.substr(-1) === "\n") content += " ";
         code.removeClass("javascript handlebars hljs").addClass(type === "script" ? "javascript" : "handlebars");
         code.text(content);
         hljs.highlightBlock(code[0]);
