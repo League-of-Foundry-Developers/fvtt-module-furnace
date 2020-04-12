@@ -27,12 +27,11 @@ class FurnaceTokenQoL {
         }
     }
     static setup() {
-        // Hide Sight on Token select
-        FurnacePatching.replaceMethod(SightLayer, "updateToken", function (token, options={}) {
-            if (game.user.isGM && game.settings.get("furnace", "tokenIgnoreVision")) {
-                options = mergeObject(options, {deleted: true});
-            }
-            return FurnacePatching.callOriginalFunction(this, "updateToken", token, options);
+        // Disable sight layer's token vision if GM and option enabled
+        FurnacePatching.replaceGetter(SightLayer, 'tokenVision', function () {
+            if (game.user.isGM && game.settings.get("furnace", "tokenIgnoreVision"))
+                return false;
+            return FurnacePatching.callOriginalGetter(this, "tokenVision");
         });
 
         // Drop Actor folder onto canvas
