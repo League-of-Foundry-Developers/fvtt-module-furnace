@@ -90,7 +90,7 @@ class FurnaceMacros {
         }
     }
 
-    preCreateChatMessage(messages, data, options) {
+    preCreateChatMessage(data, options, userId) {
         if (!game.settings.get("furnace", "advancedMacros")) return;
         if (data.content === undefined || data.content.length == 0) return;
 

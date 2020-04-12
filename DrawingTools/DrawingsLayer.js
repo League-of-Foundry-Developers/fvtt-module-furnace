@@ -80,7 +80,7 @@ class FurnaceDrawingsLayer extends PlaceablesLayer {
         yes: {
           icon: '<i class="fas fa-trash"></i>',
           label: "Yes",
-          callback: () => this.deleteMany(placeables.map(o => o.id))
+          callback: () => this.delete(placeables.map(o => o.id))
         },
         no: {
           icon: '<i class="fas fa-times"></i>',
@@ -421,7 +421,7 @@ class FurnaceDrawingsLayer extends PlaceablesLayer {
     if (!game.user.isTrusted) throw new Error("You may not delete drawings!");
     let ids = this.controlled.map(obj => obj.id);
     if ( !ids.length ) return;
-    return this.deleteMany(ids);
+    return this.delete(ids);
   }
 }
 

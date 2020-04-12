@@ -136,7 +136,7 @@ class FurnaceSplitJournal extends FormApplication {
             })
         }
         if (journalEntries.length > 0)
-            return JournalEntry.createMany(journalEntries, { displaySheet: false })
+            return JournalEntry.create(journalEntries, { displaySheet: false })
     }
 
     /* Recursively add nodes until we find the index element we want */
@@ -197,7 +197,7 @@ class FurnaceSortEntities {
         if (entities.length > 0) {
             entities.sort((a, b) => a.data.name.localeCompare(b.data.name) * (ascending ? 1 : -1))
             const updateData = entities.map((e, i) => {return {_id: e.id, sort: i * CONST.SORT_INTEGER_DENSITY}})
-            entities[0].constructor.updateMany(updateData)
+            entities[0].constructor.update(updateData)
         }
 	}
 }
