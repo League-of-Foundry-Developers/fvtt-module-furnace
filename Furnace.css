@@ -44,12 +44,13 @@ form.furnace-drop-actors .form-group i {
 }
 
 /* Macro syntax highlighting */
-div.furnace-macro-command {
+.macro-sheet .form-group.command .furnace-macro-command {
     position: relative;
     border: 1px solid black;
+    height: calc(100% - 2rem);
 }
 
-div.furnace-macro-command.fullscreen {
+.macro-sheet .form-group.command .furnace-macro-command.fullscreen {
     position: fixed;
     top: 0px;
     left: 0px;
@@ -58,13 +59,13 @@ div.furnace-macro-command.fullscreen {
     margin: 5rem;
     background: url(../../ui/parchment.jpg) repeat;
 }
-div.furnace-macro-command.fullscreen textarea,
-div.furnace-macro-command.fullscreen code  {
+.macro-sheet .form-group.command textarea,
+.macro-sheet .form-group.command code  {
     width: 100%;
     height: 100%;
 }
 
-div.furnace-macro-expand {
+.macro-sheet .form-group.command .furnace-macro-expand {
     position: absolute;
     top: 0px;
     right: 0px;
@@ -75,8 +76,8 @@ div.furnace-macro-expand {
     z-index: 10;
 }
 
-div.furnace-macro-command textarea,
-div.furnace-macro-command code {
+.macro-sheet .form-group.command .furnace-macro-command textarea,
+.macro-sheet .form-group.command .furnace-macro-command code {
     position: relative;
     background: transparent;
     font-size: 14px;
@@ -87,14 +88,14 @@ div.furnace-macro-command code {
     font-family: Consolas,Liberation Mono,Courier,monospace;
 }
 
-div.furnace-macro-command textarea {
+.macro-sheet .form-group.command .furnace-macro-command textarea {
     z-index: 10;
     text-shadow: 0px 0px 0px rgba(0, 0, 0, 0);
     text-fill-color: transparent;
     -webkit-text-fill-color: transparent;
     resize: none;
 }
-div.furnace-macro-command pre {
+.macro-sheet .form-group.command .furnace-macro-command pre {
     position: absolute;
     width: 100%;
     height: 100%;

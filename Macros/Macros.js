@@ -189,33 +189,6 @@ class FurnaceMacros {
         form.find("select[name=type]").on('change', refreshHighlight);
         div.find(".furnace-macro-expand").on('click', (ev) => div.toggleClass("fullscreen"));
         refreshHighlight();
-
-
-        // Add 'run' button
-        const save = form.find("button[type=submit]");
-        form.append($(`
-        <div class="form-group">
-            <button type="button" class="run-macro">
-                <i class="fas fa-running"></i> Run Macro
-            </button>
-        </div>`))
-        const run = form.find(".run-macro");
-        run.bind('click', async (ev) => {
-            const macro = obj.object;
-            const origData = macro.data;
-            const formData = obj._getFormData(form[0]);
-            macro.data = Array.from(formData).reduce((obj, [k, v]) => {
-                let dt = formData._dtypes[k];
-                if ( dt === "Number" ) obj[k] = v !== "" ? Number(v) : null;
-                else if ( dt === "Boolean" ) obj[k] = v === "true";
-                else if ( dt === "Radio" ) obj[k] = JSON.parse(v);
-                else obj[k] = v;
-                return obj;
-            }, {});
-            await macro.execute();
-            macro.data = origData;
-        });
-        save.insertBefore(run);
     }
 }
 
