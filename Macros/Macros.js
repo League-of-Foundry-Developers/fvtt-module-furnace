@@ -170,7 +170,9 @@ class FurnaceMacros {
         hljs.highlightBlock(code[0]);
     }
     renderMacroConfig(obj, html, data) {
-        const form = html.find("form");
+        let form = html.find("form");
+        // A re-render will cause the html object to be the internal element, which is the form itself.
+        if (form.length === 0) form = html;
         // Add syntax highlighting
 
         const textarea = form.find("textarea");
