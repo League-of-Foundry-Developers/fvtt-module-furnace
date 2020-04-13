@@ -59,8 +59,7 @@ form.furnace-drop-actors .form-group i {
     margin: 5rem;
     background: url(../../ui/parchment.jpg) repeat;
 }
-.macro-sheet .form-group.command textarea,
-.macro-sheet .form-group.command code  {
+.macro-sheet .form-group.command textarea {
     width: 100%;
     height: 100%;
 }
@@ -106,9 +105,12 @@ form.furnace-drop-actors .form-group i {
     padding: 0px;
     z-index: 9;
     overflow: hidden;
+}
+.macro-sheet .form-group.command .furnace-macro-command textarea,
+.macro-sheet .form-group.command .furnace-macro-command pre {
 	white-space: pre-wrap;  
 	white-space: -moz-pre-wrap;
-	white-space: -pre-wrap;  
+	white-space: -pre-wrap;
 	white-space: -o-pre-wrap;
 	word-wrap: break-word;
 }
