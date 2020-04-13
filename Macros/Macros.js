@@ -46,7 +46,7 @@ class FurnaceMacros {
         if ( this.data.type === "chat" ) {
             if (this.data.command.includes("{{")) {
                 const compiled = Handlebars.compile(this.data.command);
-                return compiled(context)
+                return compiled(context, {allowProtoMethodsByDefault: true, allowProtoPropertiesByDefault: true})
             } else {
                 return this.data.command;
             }
@@ -101,7 +101,7 @@ class FurnaceMacros {
         if (content.includes("{{")) {
             const context = FurnaceMacros.getTemplateContext();
             const compiled = Handlebars.compile(content);
-            content = compiled(context);
+            content = compiled(context, {allowProtoMethodsByDefault: true, allowProtoPropertiesByDefault: true});
         }
         if (content.trim().startsWith("<")) return true;
         content = content.replace(/\n/gm, "<br>");
