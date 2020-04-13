@@ -13,6 +13,8 @@ The current features are :
 - **Combat :** Double click the initiative value in the combat tracker to quickly modify it.
 - **Playlists :** Adds a 'Now Playing' section, and auto-hides sound controls until hovered. Helps in fine tuning of low level volumes
 
+Check out the Macros compendium for some useful macros that showcase the advanced macros system as well as provide additional features.
+
 More QoL improvements are planned.
 
 # Installation
