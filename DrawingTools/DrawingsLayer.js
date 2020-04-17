@@ -421,7 +421,7 @@ class FurnaceDrawingsLayer extends PlaceablesLayer {
     if (!game.user.isTrusted) throw new Error("You may not delete drawings!");
     let ids = this.controlled.map(obj => obj.id);
     if ( !ids.length ) return;
-    return this.delete(ids);
+    return canvas.scene.deleteEmbeddedEntity('Drawing', ids);
   }
 }
 
