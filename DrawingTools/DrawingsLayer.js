@@ -80,7 +80,7 @@ class FurnaceDrawingsLayer extends PlaceablesLayer {
         yes: {
           icon: '<i class="fas fa-trash"></i>',
           label: "Yes",
-          callback: () => this.delete(placeables.map(o => o.id))
+          callback: () => canvas.scene.deleteEmbeddedEntity('Drawing', placeables.map(o => o.id))
         },
         no: {
           icon: '<i class="fas fa-times"></i>',
