@@ -128,10 +128,10 @@ class FurnaceMacros {
                     }
                     if (typeof(result) !== "string")
                         return "";
-                    return result;
+                    return result.trim();
                 }
             }
-            return line;
+            return line.trim();
         });
         
         if (hasMacros) {
@@ -139,7 +139,7 @@ class FurnaceMacros {
             // Macros were found; We need to await and cancel this message if async
             if (hasAsyncMacros) {
                 Promise.all(content).then((lines) => {
-                    data.content = lines.join("<br>");
+                    data.content = lines.join("\n").trim().replace(/\n/gm, "<br>");
                     if (data.content !== undefined && data.content.length > 0)
                         ChatMessage.create(data, options)
                 }).catch (err => {
@@ -149,13 +149,13 @@ class FurnaceMacros {
                 return false;
             } else {
                 // If non-async, then still, recreate it so we can do recursive macro calls
-                data.content = content.join("<br>");
+                data.content = content.join("\n").trim().replace(/\n/gm, "<br>");
                 if (data.content !== undefined && data.content.length > 0)
                     ChatMessage.create(data, options)
                 return false;
             }
         }
-        data.content = content.join("<br>");
+        data.content = content.join("\n").trim().replace(/\n/gm, "<br>");
         return true;
     }
 
