@@ -24,7 +24,7 @@ class FurnaceDrawingsLayer extends PlaceablesLayer {
       canDelete: true,
       controllableObjects: true,
       rotatableObjects: true,
-      snapToGrid: true
+      snapToGrid: false
     }
   }
 
