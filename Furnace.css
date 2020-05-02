@@ -114,3 +114,22 @@ form.furnace-drop-actors .form-group i {
 	white-space: -o-pre-wrap;
 	word-wrap: break-word;
 }
+
+.furnace-macro-run-as-gm {
+    position: relative;
+}
+.furnace-macro-run-as-gm .tooltip {
+    display: block;
+    min-width: 148px;
+    padding: 2px 4px;
+    position: absolute;
+    top: -55px;
+    left: 25px;
+    background: rgba(0, 0, 0, 0.9);
+    border: 1px solid #191813;
+    border-radius: 3px;
+    color: #f0f0e0;
+    line-height: 22px;
+    text-align: center;
+    white-space: nowrap;
+    word-break: break-all;

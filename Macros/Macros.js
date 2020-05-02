@@ -5,20 +5,22 @@ class FurnaceMacros {
                 const macro = game.macros.entities.find(macro => macro.name === name);
                 if (!macro) return "";
                 const result = macro.renderContent(...args);
-                if (typeof(result) !== "string")
+                if (typeof (result) !== "string")
                     return "";
                 return result;
             }
         }
         Handlebars.registerHelper(helpers)
-        FurnaceMacros._moduleSocket = "module.furnace";
 
-        this._setupSocket();
+        this._GMElectionIds = [];
+        this._requestResolvers = {};
         Hooks.on('init', this.init.bind(this));
+        Hooks.once("ready", this.ready.bind(this));
         Hooks.on('renderMacroConfig', this.renderMacroConfig.bind(this))
     }
 
     init() {
+        game.furnaceMacros = this;
         // Register module configuration settings
         game.settings.register("furnace", "advancedMacros", {
             name: "Advanced Macros",
@@ -33,46 +35,155 @@ class FurnaceMacros {
         Hooks.on('preCreateChatMessage', this.preCreateChatMessage.bind(this))
         FurnacePatching.replaceMethod(Macro, "execute", this.executeMacro)
         Macro.prototype.renderContent = this.renderMacro;
+        Macro.prototype.callScriptFunction = this.callScriptMacroFunction;
+        Object.defineProperty(Macro.prototype, "canRunAsGM", { get: this.canRunAsGM });
+    }
+    ready() {
+        game.socket.on("module.furnace", this._onSocketMessage.bind(this));
+    }
+    async _onSocketMessage(message) {
+        // To run macros as GM, first we elect a GM executor.
+        // this is to prevent running the macro more than once
+        // if there are more than one logged in GM or a single GM
+        // is logged in more than once.
+        // The election is based on each GM sending a random ID, then the user
+        // choosing one (the first it receives) and asking that specific GM session
+        // to execute the macro
+        if (message.action === "ElectGMExecutor") {
+            if (!game.user.isGM) return;
+            const electionId = randomID();
+            this._GMElectionIds.push(electionId);
+            game.socket.emit("module.furnace", {
+                action: "GMElectionID",
+                requestId: message.requestId,
+                electionId
+            });
+            // Delete the election ID in case we were not chosen after 10s, to avoid a memleak
+            setTimeout(() => {
+                this._GMElectionIds = this._GMElectionIds.filter(id => id !== electionId);
+            }, 10000);
+        } else if (message.action === "GMElectionID") {
+            const resolve = this._requestResolvers[message.requestId];
+            if (resolve) {
+                delete this._requestResolvers[message.requestId];
+                resolve(message.electionId);
+            }
+        } else if (message.action === "GMExecuteMacro") {
+            if (!game.user.isGM) return;
+            if (!this._GMElectionIds.includes(message.electionId)) return;
+            this._GMElectionIds = this._GMElectionIds.filter(id => id !== message.electionId);
+
+            const macro = game.macros.get(message.macroId);
+            const user = game.users.get(message.userId);
+            const sendResponse = (error = null, result = null) => game.socket.emit("module.furnace", {
+                action: "GMMacroResult",
+                requestId: message.requestId,
+                error
+            });
+            if (!macro)
+                return sendResponse("Cannot find macro");
+            if (!user)
+                return sendResponse("Invalid user");
+            if (macro.data.type !== "script")
+                return sendResponse("Invalid macro type");
+            if (!Macros.canUseScripts(user))
+                return sendResponse(`You are not allowed to use JavaScript macros.`);
+            if (!macro.getFlag("furnace", "runAsGM") || !macro.canRunAsGM)
+                return sendResponse(`You are not authorized to run this macro as the GM.`);
+
+            const context = FurnaceMacros.getTemplateContext(message.args, message.context);
+            try {
+                const result = macro.callScriptFunction(context);
+                return sendResponse(null, result);
+            } catch (err) {
+                console.error(err);
+                return sendResponse(`There was an error in your macro syntax. See the console (F12) of the GM '${game.user.name}' for details`);
+            }
+        } else if (message.action === "GMMacroResult") {
+            const resolve = this._requestResolvers[message.requestId];
+            if (resolve) {
+                delete this._requestResolvers[message.requestId];
+                resolve({ result: message.result, error: message.error });
+            }
+        }
     }
 
-    static getTemplateContext(args=null) {
-        if (args && args[0] === "RemoteContext") {
-          const token = canvas.tokens.get(args[1].tokenId)
-          const actor = token.actor;
-          const sceneId = args[1].sceneId || canvas.scene.id; 
-        const speaker = { scene: sceneId, actor: actor.id, token: args[1].tokenId, alias: token.actor.name}
-          const event = args[1].event;
-          return { game: game, ui: ui, canvas: canvas, speaker, actor, token, character: actor, sceneId, event, args: args.slice(2)}
+    static getTemplateContext(args = null, remoteContext = null) {
+        const context = {
+            game: game,
+            ui: ui,
+            canvas: canvas,
+            scene: canvas.scene,
+            args,
+            speaker: {},
+            actor: null,
+            token: null,
+            character: null
+        };
+        if (remoteContext) {
+            // Set the context based on the remote context, and make sure data is valid and the remote
+            // has a token/actor selected.
+            context.speaker = remoteContext.speaker || {};
+            if (remoteContext.actorId)
+                context.actor = game.actors.get(remoteContext.actorId) || null;
+            if (remoteContext.sceneId)
+                context.scene = game.scenes.get(remoteContext.sceneId) || canvas.scene;
+            if (remoteContext.tokenId) {
+                if (canvas.scene.id === context.scene.id) {
+                    context.token = canvas.tokens.get(remoteContext.tokenId) || null;
+                } else {
+                    const tokenData = context.scene.getEmbeddedEntity("Token", remoteContext.tokenId);
+                    if (tokenData)
+                        context.token = new Token(tokenData, context.scene);
+                }
+            }
+            if (remoteContext.characterId)
+                context.character = game.actors.get(remoteContext.characterId) || null;
+        } else {
+            context.speaker = ChatMessage.getSpeaker();
+            context.actor = game.actors.get(context.speaker.actor);
+            context.token = canvas.tokens.get(context.speaker.token);
+            context.character = game.user.character;
         }
-      
-        const speaker = ChatMessage.getSpeaker();
-        const actor = game.actors.get(speaker.actor);
-        const token = canvas.tokens.get(speaker.token);
-        const character = game.user.character;
-        return { game: game, ui: ui, canvas: canvas, speaker, actor, token, character, event, sceneId: canvas.scene.id, args }
+        return context;
     }
-    
+
+    /**
+     * Defines whether a Macro can run as a GM.
+     * For security reasons, only macros authored by the GM, and not editable by users
+     * can be run as GM
+     */
+    canRunAsGM() {
+        const author = game.users.get(this.data.author);
+        const permissions = this.data.permission || {};
+        delete permissions[this.data.author];
+        return author && author.isGM && Object.values(permissions).every(p => p < CONST.ENTITY_PERMISSIONS.OWNER)
+    }
+
+    callScriptMacroFunction(context) {
+        const asyncFunction = this.data.command.includes("await") ? "async" : "";
+        return (new Function(`"use strict";
+            return (${asyncFunction} function ({speaker, actor, token, character, args, scene}={}) {
+                ${this.data.command}
+                });`))()(context);
+    }
+
     renderMacro(...args) {
         const context = FurnaceMacros.getTemplateContext(args);
-        if ( this.data.type === "chat" ) {
+        if (this.data.type === "chat") {
             if (this.data.command.includes("{{")) {
                 const compiled = Handlebars.compile(this.data.command);
-                return compiled(context, {allowProtoMethodsByDefault: true, allowProtoPropertiesByDefault: true})
+                return compiled(context, { allowProtoMethodsByDefault: true, allowProtoPropertiesByDefault: true })
             } else {
                 return this.data.command;
             }
         }
-        if ( this.data.type === "script" ) {
-            if ( !Macros.canUseScripts(game.user) )
+        if (this.data.type === "script") {
+            if (!Macros.canUseScripts(game.user))
                 return ui.notifications.warn(`You are not allowed to use JavaScript macros.`);
-            if (getProperty(this.data, "flags.furnace.gmexecute") && !game.user.isGM) {
-                return FurnaceMacros.requestRemoteExecute(this.name, ...args);
-            }
-            const asyncFunction = this.data.command.includes("await") ? "async" : "";
-            return (new Function(`"use strict";
-                return (${asyncFunction} function ({speaker, actor, token, character, args, event, sceneId}={}) {
-                    ${this.data.command}
-                    });`))()(context);
+            if (this.getFlag("furnace", "runAsGM") && this.canRunAsGM && !game.user.isGM)
+                return game.furnaceMacros.executeMacroAsGM(this, context);
+            return this.callScriptFunction(context);
         }
     }
     async executeMacro(...args) {
@@ -80,7 +191,7 @@ class FurnaceMacros {
             return FurnacePatching.callOriginalFunction(this, "execute");
 
         // Chat macros
-        if ( this.data.type === "chat" ) {
+        if (this.data.type === "chat") {
             try {
                 const content = this.renderContent(...args);
                 ui.chat.processMessage(content).catch(err => {
@@ -94,10 +205,7 @@ class FurnaceMacros {
         }
 
         // Script macros
-        else if ( this.data.type === "script" ) {
-            if (getProperty(this.data, "flags.furnace.gmexecute") && !game.user.isGM) {
-                return await FurnaceMacros.requestRemoteExecute(this.name, ...args);
-            }
+        else if (this.data.type === "script") {
             try {
                 await this.renderContent(...args);
             } catch (err) {
@@ -105,6 +213,56 @@ class FurnaceMacros {
                 console.error(err);
             }
         }
+    }
+
+    // request execution of macro as a GM
+    async executeMacroAsGM(macro, context) {
+        const activeGMs = game.users.entities.filter(u => u.isGM && u.active);
+        if (activeGMs.length === 0) {
+            ui.notifications.error(`There are no connected GMs to run the macro ${macro.name} in the GM context.`);
+            return "";
+        }
+        // Elect a GM to run the Macro
+        const electionResponse = await new Promise((resolve, reject) => {
+            const requestId = randomID();
+            this._requestResolvers[requestId] = resolve;
+            game.socket.emit("module.furnace", {
+                action: "ElectGMExecutor",
+                requestId
+            })
+            setTimeout(() => {
+                delete this._requestResolvers[requestId];
+                reject(new Error("Timed out waiting to elect a GM to execute the macro"));
+            }, 5000);
+        })
+        // Execute the macro in the first elected GM's
+        const executeResponse = await new Promise((resolve, reject) => {
+            const requestId = randomID();
+            this._requestResolvers[requestId] = resolve;
+            game.socket.emit("module.furnace", {
+                action: "GMExecuteMacro",
+                requestId,
+                electionId: electionResponse,
+                userId: game.user.id,
+                macroId: macro.id,
+                args: context.args,
+                context: {
+                    speaker: context.speaker,
+                    actorId: context.actor ? context.actor.id : null,
+                    sceneId: context.scene ? context.scene.id : null,
+                    tokenId: context.token ? context.token.id : null,
+                    characterId: context.character ? context.character.id : null
+                }
+            })
+            setTimeout(() => {
+                delete this._requestResolvers[requestId];
+                reject(new Error("Timed out waiting for the GM to execute the macro"));
+            }, 5000);
+        })
+        if (executeResponse.error)
+            throw new Error(executeResponse.error);
+        else
+            return executeResponse.result;
     }
 
     preCreateChatMessage(data, options, userId) {
@@ -118,7 +276,7 @@ class FurnaceMacros {
         if (content.includes("{{")) {
             const context = FurnaceMacros.getTemplateContext();
             const compiled = Handlebars.compile(content);
-            content = compiled(context, {allowProtoMethodsByDefault: true, allowProtoPropertiesByDefault: true});
+            content = compiled(context, { allowProtoMethodsByDefault: true, allowProtoPropertiesByDefault: true });
         }
         if (content.trim().startsWith("<")) return true;
         content = content.replace(/\n/gm, "<br>");
@@ -143,14 +301,14 @@ class FurnaceMacros {
                         hasAsyncMacros = true;
                         return result;
                     }
-                    if (typeof(result) !== "string")
+                    if (typeof (result) !== "string")
                         return "";
                     return result.trim();
                 }
             }
             return line.trim();
         });
-        
+
         if (hasMacros) {
             mergeObject(data, { "flags.furnace.macros.template": data.content })
             // Macros were found; We need to await and cancel this message if async
@@ -159,7 +317,7 @@ class FurnaceMacros {
                     data.content = lines.join("\n").trim().replace(/\n/gm, "<br>");
                     if (data.content !== undefined && data.content.length > 0)
                         ChatMessage.create(data, options)
-                }).catch (err => {
+                }).catch(err => {
                     ui.notifications.error(`There was an error in your macro syntax. See the console (F12) for details`);
                     console.error(err);
                 });
@@ -191,22 +349,34 @@ class FurnaceMacros {
         let form = html.find("form");
         // A re-render will cause the html object to be the internal element, which is the form itself.
         if (form.length === 0) form = html;
-        if (!hasProperty(data.entity, "flags.furnace.gmexecute")) {
-          setProperty(data.entity, "flags.furnace.gmexecute", false)
-      }
+        // Add runAsGM checkbox
+        if (game.user.isGM) {
+            const runAsGM = obj.object.getFlag("furnace", "runAsGM");
+            const canRunAsGM = obj.object.canRunAsGM;
+            const typeGroup = form.find("select[name=type]").parent(".form-group");
+            const gmDiv = $(`
+                <div class="furnace-macro-run-as-gm form-group"> 
+                    <label class="form-group">
+                        <span>Execute Macro As GM</span>
+                        <input type="checkbox" name="flags.furnace.runAsGM" data-dtype="Boolean" ${runAsGM ? "checked" : ""} ${!canRunAsGM ? "disabled" : ""}/>
+                    </label>
+                </div>
+            `)
+            gmDiv.insertAfter(typeGroup);
+            const tooltip = $(`
+            <span class="tooltip">
+                This will cause the macro to be executed by the GM user when players execute it<br/>
+                For security reasons, only applies to GM created macros with no other owners.
+            </span>`);
+            gmDiv.hover((event) => {
+                if (event.type === "mouseenter")
+                    gmDiv.append(tooltip);
+                else
+                    tooltip.remove();
+            });
+        }
         // Add syntax highlighting
         const textarea = form.find("textarea");
-        if (game.user.isGM) {
-          let gmexecute = data.entity.flags.furnace.gmexecute;
-          let select = form.find("select")
-          const gmDiv = $(`
-          <div class=" furnace-macro-flag form-group"> 
-          <Label>GM Execute Macro</Label>
-          <input type="checkbox" name="flags.furnace.gmexecute" value="1" data-dtype="${gmexecute}" ${gmexecute ? "checked" : ""}/>
-          </div>
-          `)
-          gmDiv.insertAfter(select[1]);
-        }
         const div = $(`
         <div class="furnace-macro-command form-group">
             <pre><code class="furnace-macro-syntax-highlight"></code></pre>
@@ -222,64 +392,6 @@ class FurnaceMacros {
         form.find("select[name=type]").on('change', refreshHighlight);
         div.find(".furnace-macro-expand").on('click', (ev) => div.toggleClass("fullscreen"));
         refreshHighlight();
-    }
-
-    static async _execute(message) {
-        let macro = game.macros.getName(message.macroName);
-        if (!macro || !getProperty(macro.data, "flags.furnace.gmexecute" || !game.users.get(macro.data.author).isGM)) {
-            ui.notification.error(`User ${message.userId} tried to invailidly GM execute macro ${message.macroName}`);
-            return "Invalid Request";
-        }
-
-        try {
-            return await macro.renderContent("RemoteContext", message, ...message.args);
-        } catch (err) {
-            ui.notifications.error(`There was an error in your macro syntax. See the console (F12) for details`);
-            console.error(err);
-            return "Macro syntax error";
-        }
-    }
-
-    // request remote execution of a macro
-    static async requestRemoteExecute(macroName, ...args) {
-        let targetGM = game.users.entities.find(u => u.isGM && u.active);
-        let macroMessage = {
-            action: "GMExecuteMacro", 
-            requestId: "remoteResult" + game.user.id + Date.now(), 
-            userId: game.user.id, 
-            targetGM: targetGM._id, 
-            macroName, 
-            sceneId: canvas.scene.id, // pass this so macros can know which scene the player is on.
-            tokenId: ChatMessage.getSpeaker().token, 
-            event: event || {event: {shiftKey: true}}, // this is to keep minor-qol happy
-            args
-        };
-        if (game.user.isGM) return await FurnaceMacros._execute(macroMessage); 
-        // setup to handle exectuion response
-        let requestResponse = await new Promise((resolve, reject) => {
-            Hooks.once(macroMessage.requestId, resolve);
-            game.socket.emit(FurnaceMacros._moduleSocket, macroMessage)
-            setTimeout(() => Hooks.callAll(macroMessage.requestId, "timeout"), 5000);
-        })
-       
-        if (requestResponse === "timeout") return "Request Timeout";
-        else return requestResponse.result;
-    }
-
-    _setupSocket() {
-        Hooks.once("ready", () => {
-            game.socket.on(FurnaceMacros._moduleSocket, async (message) => {
-                if (message.action === "GMExecuteMacro") {
-                    if (game.user.id !== message.targetGM) return;
-                    if (!game.user.isGM) return;
-                    message.result = await FurnaceMacros._execute(message);
-                    message.action = message.requestId;
-                    game.socket.emit(FurnaceMacros._moduleSocket, message)
-                } else {
-                    Hooks.callAll(message.action, message)
-                }
-            });
-        })
     }
 }
 
