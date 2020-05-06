@@ -41,6 +41,9 @@ class FurnaceMacros {
     ready() {
         game.socket.on("module.furnace", this._onSocketMessage.bind(this));
     }
+    uniqueID() {
+        return `${game.user.id}-${Date.now()}-${randomID()}`;
+    }
     async _onSocketMessage(message) {
         // To run macros as GM, first we elect a GM executor.
         // this is to prevent running the macro more than once
@@ -51,7 +54,7 @@ class FurnaceMacros {
         // to execute the macro
         if (message.action === "ElectGMExecutor") {
             if (!game.user.isGM) return;
-            const electionId = randomID();
+            const electionId = this.uniqueID();
             this._GMElectionIds.push(electionId);
             game.socket.emit("module.furnace", {
                 action: "GMElectionID",
@@ -227,7 +230,7 @@ class FurnaceMacros {
         }
         // Elect a GM to run the Macro
         const electionResponse = await new Promise((resolve, reject) => {
-            const requestId = randomID();
+            const requestId = this.uniqueID();
             this._requestResolvers[requestId] = resolve;
             game.socket.emit("module.furnace", {
                 action: "ElectGMExecutor",
@@ -240,7 +243,7 @@ class FurnaceMacros {
         })
         // Execute the macro in the first elected GM's
         const executeResponse = await new Promise((resolve, reject) => {
-            const requestId = randomID();
+            const requestId = this.uniqueID();
             this._requestResolvers[requestId] = resolve;
             game.socket.emit("module.furnace", {
                 action: "GMExecuteMacro",
