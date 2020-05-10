@@ -213,7 +213,7 @@ class FurnaceMacros {
         // Script macros
         else if (this.data.type === "script") {
             try {
-                await this.renderContent(...args);
+                return await this.renderContent(...args);
             } catch (err) {
                 ui.notifications.error(`There was an error in your macro syntax. See the console (F12) for details`);
                 console.error(err);
