@@ -4,13 +4,6 @@ class FurnaceDrawing extends Drawing {
   static get name() {
     return "Drawing"
   }
-  /**
-   * Provide a reference to the canvas layer which contains placeable objects of this type
-   * @type {PlaceablesLayer}
-   */
-  static get layer() {
-    return FurnaceDrawingsLayer;
-  }
 
   /**
    * Provide a singleton reference to the DrawingConfig sheet for this Drawing instance
@@ -47,13 +40,7 @@ class FurnaceDrawing extends Drawing {
 
 
   /* -------------------------------------------- */
-  /**
-   * A Boolean flag for whether the current game User has permission to control this token
-   * @type {Boolean}
-   */
-  get owner() {
-    return game.user.isGM || (game.user.isTrusted && this.data.author == game.user.id)
-  }
+
   get type() {
     return this.data.type;
   }
@@ -133,9 +120,10 @@ class FurnaceDrawing extends Drawing {
       this.img = this.addChild(new PIXI.Graphics());
     }
     this.text = this.addChild(new PIXI.Text());
-    this.frame = this.addChild(new PIXI.Graphics());
-    this.scaleHandle = this.addChild(new PIXI.Graphics());
-    this.rotateHandle = this.addChild(new RotationHandle(this));
+  
+    // Control Border
+    this._createFrame();
+    //this.rotateHandle = this.addChild(new RotationHandle(this));
 
     // Try to load the texture if one is set
     if (this.usesTexture) {
@@ -168,40 +156,12 @@ class FurnaceDrawing extends Drawing {
 
     // Enable interaction - only if the Drawing has an ID (not a preview)
     if (this.id) {
-      this.interactive = true;
-
-      // Tile control
-      new HandleManager(this, this.layer, {
-        mouseover: event => this._onMouseOver(event),
-        mouseout: event => this._onMouseOut(event),
-        mousemove: event => this._onMouseMove(event),
-        mousedown: event => this._onMouseDown(event),
-        mouseup: event => this._onMouseUp(event),
-        doubleleft: event => this._onDoubleLeft(event),
-        rightdown: event => this._onRightDown(event),
-        cancel: event => this._onDragCancel(event)
-      }, {
-        candrag: event => !this.data.locked,
-        canright: event => this._controlled,
-        canclick: event => this._controlled || (this.owner && game.activeTool == "select"),
-        canhover: event => this._controlled || (this.owner && game.activeTool == "select")
-      });
-
-      // Scale handler
-      new HandleManager(this.scaleHandle, this.layer, {
-        mouseover: event => this._onHandleMouseOver(event),
-        mouseout: event => this._onHandleMouseOut(event),
-        mousedown: event => this._onHandleMouseDown(event),
-        mousemove: event => this._onHandleMouseMove(event),
-        mouseup: event => this._onHandleMouseUp(event)
-      }, {
-        canclick: event => !this.data.locked
-      });
-
+      this.activateListeners();
       // Rotate handler
+      /*
       this.rotateHandle.addEventListeners(this.layer, {
         canclick: event => !this.data.locked
-      })
+      })*/
     }
 
     // Return the drawn Tile
@@ -378,31 +338,19 @@ class FurnaceDrawing extends Drawing {
     let padX = pad, padY = pad;
     if (width < 0) padX *= -2;
     if (height < 0) padY *= -2;
-    this.frame.clear()
-      .lineStyle(6.0, 0x000000).drawRect(x - padX, y - padY, width + (2*padX), height + (2*padY))
-      .lineStyle(2.0, 0xFF9829).drawRect(x - padX, y - padY, width + (2*padX), height + (2*padY))
-      .beginFill(0x000000, 1.0)
-      .lineStyle(2.0, 0x00000)
-      .drawCircle(x - padX, y - padY, 6)
-      .drawCircle(x + width + padX, y - padY, 6)
-      .drawCircle(x - padX, y + height + padY, 6)
-      .drawCircle(x + width + padX, y + height + padY, 6);
 
-    // Draw scale handle
-    this.scaleHandle.position.set(x + width + padX, y + height + padY);
-    this.scaleHandle.clear()
-    .beginFill(0x000000, 1.0).lineStyle(4.0, 0x000000).drawCircle(0, 0, 10)
-    .lineStyle(3.0, 0xFF9829).drawCircle(0, 0, 8);
- //     .lineStyle(2.0, 0x000000).beginFill(0xFF9829, 1.0).drawCircle(0, 0, 6.0);
+    super._refreshFrame({x, y, width, height});
 
+    /*
     // Draw Rotation handle
     this.rotateHandle.position.set(x + width / 2 + padX / 2, y - padY);
     this.rotateHandle.scale.set(Math.sign(this.data.width), Math.sign(this.data.height));
-    this.rotateHandle.draw()
+    this.rotateHandle.draw()*/
 
     // Don't show the frame when we're creating a new drawing, unless it's text.
     this.frame.visible = this._controlled && (this.id || this.type == CONST.DRAWING_TYPES.TEXT);
-    this.scaleHandle.visible = this.rotateHandle.visible = this.frame.visible && !this.data.locked;
+    this.frame.handle.visible = this.frame.visible && !this.data.locked;
+    //this.rotateHandle.visible = this.frame.handle.visible;
   }
 
 
@@ -695,25 +643,12 @@ class FurnaceDrawing extends Drawing {
     super._onMouseOut(event);
     this.frame.visible = this.layer._active && this._controlled;
   }
-  _onHandleMouseOver(event) {
-    this.scaleHandle.scale.set(1.5, 1.5);
-  }
-
-  _onHandleMouseOut(event) {
-    this.scaleHandle.scale.set(1.0, 1.0);
-  }
   _rescaleDimensions(original, dx, dy) {
     let {points, width, height} = original;
-    this.data.width = width + dx;
-    this.data.height = height + dy;
-    if (this.isPolygon) {
-      // Avoid a divide by zero
-      if (width == 0) width = 1;
-      if (height == 0) height = 1;
-      let scaleX = 1 +(dx / width),
-        scaleY = 1 + (dy / height);
-      this.data.points = points.map(p => [p[0] * scaleX, p[1] * scaleY]);
-    }
+    // Avoid a divide by zero for polygon scale calculation
+    if (width == 0) width = 1;
+    if (height == 0) height = 1;
+    return super._rescaleDimensions({points, width, height}, dx, dy);
   }
 
   /**
