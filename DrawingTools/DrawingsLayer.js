@@ -6,7 +6,7 @@
  *
  * @type {PlaceablesLayer}
  */
-class FurnaceDrawingsLayer extends PlaceablesLayer {
+class FurnaceDrawingsLayer extends DrawingsLayer {
   // Override the constructor's name
   static get name() {
     return "DrawingsLayer"
@@ -19,21 +19,9 @@ class FurnaceDrawingsLayer extends PlaceablesLayer {
   }
 
   static get layerOptions() {
-    return {
-      canDragCreate: true,
-      canDelete: true,
-      controllableObjects: true,
-      rotatableObjects: true,
+    return mergeObject(super.layerOptions, {
       snapToGrid: false
-    }
-  }
-
-  /**
-   * Define the source data array underlying the placeable objects contained in this layer
-   * @type {Array}
-   */
-  static get dataArray() {
-    return "drawings";
+    });
   }
 
   /**
@@ -47,12 +35,6 @@ class FurnaceDrawingsLayer extends PlaceablesLayer {
     return 2;
   }
 
-  /**
-   * Drawing objects on this layer utilize the DrawingHUD
-   */
-  get hud() {
-    return canvas.hud.drawing;
-  }
 
   /* -------------------------------------------- */
   /*  Rendering                                   */
@@ -64,12 +46,12 @@ class FurnaceDrawingsLayer extends PlaceablesLayer {
     let content = `<p>Clear all Drawings from this Scene?</p>`
     let placeables = this.placeables;
     if (!game.user.isGM) {
-      if (game.user.isTrusted) {
+      if (game.user.can("DRAWING_CREATE")) {
         title = "Clear Your Drawings"
         content = `<p>Clear your Drawings from this Scene?</p>`
         placeables = this.placeables.filter(p => p.data.author == game.user.id)
       } else {
-        throw new Error(`You do not have permission to delete Drawings from the Scene.`);
+        return ui.notification.error(`You do not have permission to delete Drawings from the Scene.`);
       }
     }
     
@@ -92,22 +74,6 @@ class FurnaceDrawingsLayer extends PlaceablesLayer {
   }
 
   /* -------------------------------------------- */
-
-  /**
-   * Override the deactivation behavior of this layer.
-   * Placeables on this layer remain visible even when the layer is inactive.
-   */
-  deactivate() {
-    super.deactivate();
-    this.releaseAll();
-    if (this.objects) this.objects.visible = true;
-  }
-
-  releaseAll() {
-    super.releaseAll()
-    canvas.hud.drawing.clear();
-  }
-
   /* -------------------------------------------- */
 
   
@@ -197,18 +163,16 @@ class FurnaceDrawingsLayer extends PlaceablesLayer {
     new DrawingDefaultsConfig(this, this._last_tool).render(true);
   }
 
-  getPosition(event, point) {
+  _onDragLeftStart(event) {
     // Snap to grid by default only for shapes and polygons
-    let position = duplicate(point)
     if (!event.data.originalEvent.shiftKey && ["rectangle", "ellipse", "polygon"].includes(game.activeTool)) {
-      position = canvas.grid.getSnappedPosition(position.x, position.y);
-    }
-    return position;
-  }
+      event.data.origin = canvas.grid.getSnappedPosition(event.data.origin.x, event.data.origin.y, this.gridPrecision);
 
-  _getNewDataFromEvent(event) {
+    }
+    super._onDragLeftStart(event);
+  }
+  _getNewDrawingData(origin) {
     let type = game.activeTool;
-    let origin = this.getPosition(event, event.data.origin)
     let data = mergeObject(this.getStartingData(type), origin, { inplace: false })
     if (type == "freehand" || type == "polygon") {
       data.points.push([data.x, data.y])
@@ -216,212 +180,6 @@ class FurnaceDrawingsLayer extends PlaceablesLayer {
     }
 
     return data;
-  }
-  /* -------------------------------------------- */
-  /*  Event Listeners and Handlers                */
-  /* -------------------------------------------- */
-
-  /**
-   * Sequence of events : 
-   * Normal operation : 
-   * _onMouseDown --> (createState == 0)
-   *   --> _onDragStart --> createState = 1 --> if (type == text --> createState = 2)
-   * _onMouseMove --> createState = 2
-   * _onMouseUp --> (createState == 2)
-   *   --> _onDragCreate
-   *        --> Drawing.create
-   *        --> _onDragCancel --> createState = 0
-   * 
-   * Simple click, no move (non polygon)
-   * _onMouseDown --> (createState == 0)
-   *   --> _onDragStart --> createState = 1 --> (type == text --> createState = 2)
-   * _onMouseUp --> (createState == 1) --> (type != polygon)
-   *   --> _onDragCancel --> createState = 0
-   * 
-   * Simple click, (polygon) followed by move
-   * _onMouseDown --> (createState == 0)
-   *   --> _onDragStart --> createState = 1 --> (type == text --> createState = 2)
-   * _onMouseUp --> (createState == 1) --> (type == polygon)
-   * _onMouseMove --> createState = 2
-   * _onMouseDown --> (createState >= 1) --> (type == polygon)
-   *   --> object.addPolygonPoint --> createState = 1
-   *  == return to state @ line 3 == 
-   *
-   */
-
-  /**
-   * Default handling of drag start events by left click + dragging
-   * @private
-   */
-  _onDragStart(event) {
-    super._onDragStart(event);
-    canvas.app.view.oncontextmenu = ev => this._onRightClick(event);
-    let data = this._getNewDataFromEvent(event);
-    let drawing = new FurnaceDrawing(data);
-    drawing.draw();
-    drawing._controlled = true;
-    event.data.object = this.preview.addChild(drawing);
-    // You can place a text by simply clicking, no need to drag it first.
-    if (drawing.type == CONST.DRAWING_TYPES.TEXT)
-      event.data.createState = 2;
-    event.data.createTime = Date.now();
-  }
-
-  /* Difference with base class is that we don't need a minimum of half-grid to create the drawing  */
-  _onDragCreate(event) {
-    // A single click could create 
-    let object = event.data.object;
-    this._onDragCancel(event);
-    // Text objects create their sheets for users to enter the text, otherwise create the drawing
-    if (object.type == CONST.DRAWING_TYPES.TEXT) {
-      // Render the preview sheet
-      object.sheet.preview = this.preview;
-      object.sheet.render(true);
-
-      // Re-render the preview text
-      this.preview.addChild(object);
-      object.refresh();
-    } else if (!object.isPolygon || object.data.points.length > 1) {
-      // Only create the object if it's not a polygon/freehand or if it has at least 2 points
-      this.constructor.placeableClass.create(object.data);
-    }
-  }
-
-  _onRightClick(event) {
-    let { createState, object } = event.data;
-    if (createState >= 1 && object && object.type == CONST.DRAWING_TYPES.POLYGON) {
-      // Remove the current mouse position
-      let position = object.data.points.pop()
-      // If it was the last point, cancel the thing.
-      if (object.data.points.length > 1) {
-        // Remove the last point and re-add our cursor position
-        object.data.points.pop()
-        object.data.points.push(position);
-        object.refresh();
-      } else {
-        this._onDragCancel(event);
-      }
-    } else {
-      this._onDragCancel(event);
-    }
-  }
-
-  /* -------------------------------------------- */
-
-  _onMouseDown(event) {
-    canvas.hud.drawing.clear();
-    if (event.data.createState >= 1) {
-      event.stopPropagation();
-
-      // Add point to polygon and reset the state
-      let drawing = event.data.object;
-      if (drawing && drawing.type == CONST.DRAWING_TYPES.POLYGON) {
-        let destination = this.getPosition(event, event.data.destination);
-        drawing.addPolygonPoint(destination);
-        drawing.refresh();
-        event.data.createState = 1;
-        let now = Date.now();
-        let timeDiff = now - (event.data.createTime || 0);
-        event.data.doubleclick = timeDiff < 250;
-        event.data.createTime = now;
-      }
-    } else {
-      super._onMouseDown(...arguments)
-    }
-  }
-  /**
-   * Default handling of mouse move events during a dragging workflow
-   * @private
-   */
-  _onMouseMove(event) {
-    super._onMouseMove(event);
-    if (event.data.createState >= 1) {
-      let drawing = event.data.object;
-      let [gx, gy] = [event.data.originalEvent.x, event.data.originalEvent.y];
-
-      // If the cursor has moved close to the edge of the window
-      this._panCanvasEdge(gx, gy);
-
-      drawing.updateDragPosition(event.data.destination)
-      drawing.refresh();
-      event.data.createState = 2;
-    }
-  }
-
-  _onMouseUp(event) {
-    let { createState, object, createTime } = event.data;
-
-    if (object && object.type == CONST.DRAWING_TYPES.POLYGON) {
-      // Check for moving mouse during a polygon waypoint click
-      if (createState == 2) {
-        let now = Date.now();
-        let timeDiff = now - (createTime || 0);
-        if (keyboard.isCtrl(event) || timeDiff < 250)
-          createState = 1;
-      }
-      // Check for clicking on the origin point or the last point position
-      if (createState == 1 && object.data.points.length > 2) {
-        // The last point is our current cursor/end position. The last clicked point is the one before that
-        let origin = object.data.points[0];
-        let position = object.data.points[object.data.points.length - 1];
-        // Check distance between origin point and current cursor position
-        let originDistance = Math.hypot(origin[0] - position[0], origin[1] - position[1]);
-        // Check if user double clicked on the end point.
-        if (originDistance < this.gridPrecision || event.data.doubleclick) {
-          // We're done, pop the last cursor position
-          object.data.points.pop()
-          createState = 2;
-        }
-      }
-    }
-
-    // Handle single clicks with no moves
-    if (createState === 1) {
-      event.stopPropagation();
-      // Don't cancel a click for polygons
-      if (!object || object.type != CONST.DRAWING_TYPES.POLYGON)
-        this._onDragCancel(event);
-      // Handle successful creation and chaining
-    } else if (createState === 2) {
-      this._onDragCreate(event);
-      event.data.createState = 0;
-    }
-  }
-  /* -------------------------------------------- */
-
-  // FIXME: taken as is from WallsLayer, maybe should move into PlaceablesLayer
-  /**
-   * Pan the canvas view when the cursor position gets close to the edge of the frame
-   * @private
-   */
-  _panCanvasEdge(x, y) {
-    const pad = 50,
-      shift = 500 / canvas.stage.scale.x;
-    let dx = 0;
-    if (x < pad) dx = -shift;
-    else if (x > window.innerWidth - pad) dx = shift;
-    let dy = 0;
-    if (y < pad) dy = -shift;
-    else if (y > window.innerHeight - pad) dy = shift;
-    if ((dx || dy) && !this._panning) {
-      this._panning = true;
-      canvas.animatePan({ x: canvas.stage.pivot.x + dx, y: canvas.stage.pivot.y + dy }, { duration: 100 }).then(() => {
-        this._panning = false;
-      })
-    }
-  }
-
-  /* -------------------------------------------- */
-
-  /**
-   * Handle a DELETE keypress while the TilesLayer is active
-   * @private
-   */
-  async _onDeleteKey(event) {
-    if (!game.user.isTrusted) throw new Error("You may not delete drawings!");
-    let ids = this.controlled.map(obj => obj.id);
-    if ( !ids.length ) return;
-    return canvas.scene.deleteEmbeddedEntity('Drawing', ids);
   }
 }
 
