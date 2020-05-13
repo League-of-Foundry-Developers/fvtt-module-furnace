@@ -7,13 +7,13 @@ class RotationHandle extends PIXI.Graphics {
     }
 
     addEventListeners(layer, permissions) {
-        new HandleManager(this, layer, {
+        new MouseInteractionManager(this, layer, permissions, {
             mouseover: event => this._onMouseOver(event),
             mouseout: event => this._onMouseOut(event),
             mousedown: event => this._onMouseDown(event),
             mousemove: event => this._onMouseMove(event),
             mouseup: event => this._onMouseUp(event)
-        }, permissions);
+        });
     }
 
     draw() {

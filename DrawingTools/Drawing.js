@@ -626,6 +626,12 @@ class FurnaceDrawing extends Drawing {
   /*  Event Handlers                              */
   /* -------------------------------------------- */
 
+  _addPoint(position, temporary=true) {
+    //return super._addPoint(position, temporary);
+    const points = this.data.points || [];
+    if (points.length > 1 && temporary) points.pop();
+    return super._addPoint(position, false);
+  }
   /**
    * Default handling for Placeable mouse-over hover event
    * @private
