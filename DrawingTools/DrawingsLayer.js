@@ -163,13 +163,33 @@ class FurnaceDrawingsLayer extends DrawingsLayer {
     new DrawingDefaultsConfig(this, this._last_tool).render(true);
   }
 
+  _onClickLeft(event) {
+    super._onClickLeft(event);
+    // You can place a text by simply clicking, no need to drag it first.
+    if (game.activeTool === "text") {
+        canvas.mouseInteractionManager._handleDragStart(event);
+        canvas.mouseInteractionManager._handleDragDrop(event);
+        event.data.createState = 2;
+    }
+  }
   _onDragLeftStart(event) {
     // Snap to grid by default only for shapes and polygons
     if (!event.data.originalEvent.shiftKey && ["rectangle", "ellipse", "polygon"].includes(game.activeTool)) {
       event.data.origin = canvas.grid.getSnappedPosition(event.data.origin.x, event.data.origin.y, this.gridPrecision);
-
     }
     super._onDragLeftStart(event);
+  }
+  _onDragLeftDrop(event) {
+    const { preview } = event.data;
+    super._onDragLeftDrop(event);
+
+    // Text objects create their sheets for users to enter the text, otherwise create the drawing
+    if (preview.type == CONST.DRAWING_TYPES.TEXT) {
+        // Render the preview sheet
+        preview.sheet.preview = preview;
+        preview.sheet.render(true);
+        this.preview.addChild(preview);
+      }
   }
   _getNewDrawingData(origin) {
     let type = game.activeTool;

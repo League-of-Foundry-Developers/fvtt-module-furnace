@@ -9,7 +9,7 @@
 class FurnaceDrawingConfig extends DrawingConfig {
   constructor() {
     super(...arguments)
-    this._tab = "settings";
+    this._tabs[0].active = "settings";
   }
   // Override the constructor's name
   static get name() {
@@ -60,7 +60,8 @@ class FurnaceDrawingConfig extends DrawingConfig {
     super.activateListeners(html);
     html.find("select[name=fillType]").change((ev) => this.updateFields(html))
     html.find("button[name=reset]").click((ev) => this.reset(ev, html))
-    html.find("input,textarea,select").change((ev) => this.refresh(html))
+    html.find("input,select").change((ev) => this.refresh(html))
+    html.find("textarea").on('input', (ev) => this.refresh(html))
     this.updateFields(html)
     html.find("textarea").focus()
   }

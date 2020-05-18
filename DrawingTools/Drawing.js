@@ -626,12 +626,6 @@ class FurnaceDrawing extends Drawing {
   /*  Event Handlers                              */
   /* -------------------------------------------- */
 
-  _addPoint(position, temporary=true) {
-    //return super._addPoint(position, temporary);
-    const points = this.data.points || [];
-    if (points.length > 1 && temporary) points.pop();
-    return super._addPoint(position, false);
-  }
   /**
    * Default handling for Placeable mouse-over hover event
    * @private
@@ -650,12 +644,15 @@ class FurnaceDrawing extends Drawing {
     this.frame.visible = this.layer._active && this._controlled;
   }
   _rescaleDimensions(original, dx, dy) {
-    let {points, width, height} = original;
+    let {width, height} = original;
     // Avoid a divide by zero for polygon scale calculation
-    if (width == 0) width = 1;
-    if (height == 0) height = 1;
-    return super._rescaleDimensions({points, width, height}, dx, dy);
+    if (width == 0) original.width = 1;
+    if (height == 0) original.height = 1;
+    return super._rescaleDimensions(original, dx, dy);
   }
+  
+  // I don't want this!
+  _onDrawingTextKeydown() {}
 
   /**
    * Handle click event on a hovered tile
