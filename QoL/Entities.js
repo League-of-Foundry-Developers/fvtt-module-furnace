@@ -126,7 +126,7 @@ class FurnaceSplitJournal extends FormApplication {
             if (formData.includeImage)
                 img = this.object.data.img
             journalEntries.push({
-                "name": name,
+                "name": name || " ",
                 "permission": this.object.data.permission,
                 "flags": { "entityorder": { "order": idx * 100000 } },
                 "folder": folder ? folder.id : null,
