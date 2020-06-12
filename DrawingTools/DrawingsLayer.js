@@ -201,6 +201,10 @@ class FurnaceDrawingsLayer extends DrawingsLayer {
 
     return data;
   }
+  _onDeleteKey(event) {
+    // Skip the _onDeleteKey from DrawingsLayer which ignores Text drawings.
+    PlaceablesLayer.prototype._onDeleteKey.call(this, event);
+  }
 }
 
 // Needed so core doesn't break due to our change of the DrawingsLayer.
