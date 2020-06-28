@@ -167,6 +167,8 @@ class FurnaceDrawingsLayer extends DrawingsLayer {
     super._onClickLeft(event);
     // You can place a text by simply clicking, no need to drag it first.
     if (game.activeTool === "text") {
+        // fix for when right panning before the click
+        canvas.mouseInteractionManager._dragRight = false;
         canvas.mouseInteractionManager._handleDragStart(event);
         canvas.mouseInteractionManager._handleDragDrop(event);
         event.data.createState = 2;
