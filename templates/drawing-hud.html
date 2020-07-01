@@ -26,27 +26,32 @@
 
     <div class="col right">
         <div class="control-icon visibility {{visibilityClass}}">
-            <img src="{{icons.visibility}}" width="36" height="36" title="{{localize "HUD.ToggleVis"}}"/>
+            <img src="{{icons.visibility}}" width="36" height="36" title='{{localize "HUD.ToggleVis"}}'/>
         </div>
 
         <div class="control-icon locked {{lockedClass}}">
-            <img src="{{icons.lock}}" width="36" height="36" title="{{localize "HUD.ToggleLock"}}"/>
+            <img src="{{icons.lock}}" width="36" height="36" title='{{localize "HUD.ToggleLock"}}'/>
         </div>
+        {{#if isText}}
+        <div class="control-icon text-autofit">
+            <i class="fas fa-compress" width="36" height="36" title="Resize to fit text"></i>
+        </div> 
+        {{/if}}
 
         <div class="control-icon sort-up">
-            <img src="{{icons.up}}" width="36" height="36" title="{{localize "HUD.ToFront"}}"/>
+            <img src="{{icons.up}}" width="36" height="36" title='{{localize "HUD.ToFront"}}'/>
         </div>
 
         <div class="control-icon sort-down">
-            <img src="{{icons.down}}" width="36" height="36" title="{{localize "HUD.ToBack"}}"/>
+            <img src="{{icons.down}}" width="36" height="36" title='{{localize "HUD.ToBack"}}'/>
         </div>
 
         <div class="control-icon mirror-vert {{mirrorVertClass}}">
-            <i class="fas fa-arrows-alt-v" width="36" height="36" title="Mirror Vertically"/>
+            <i class="fas fa-arrows-alt-v" width="36" height="36" title="Mirror Vertically"></i>
         </div>
 
         <div class="control-icon mirror-horiz {{mirrorHorizClass}}">
-            <i class="fas fa-arrows-alt-h" width="36" height="36" title="Mirror Horizontally"/>
+            <i class="fas fa-arrows-alt-h" width="36" height="36" title="Mirror Horizontally"></i>
         </div>
     </div>
 </form>

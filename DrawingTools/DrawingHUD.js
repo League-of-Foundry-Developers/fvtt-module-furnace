@@ -55,6 +55,7 @@ class FurnaceDrawingHUD extends DrawingHUD {
     super.activateListeners(html);
     html.find(".config").click(this._onDrawingConfig.bind(this));
     html.find(".mirror-vert").click(this._onMirror.bind(this, true));
+    html.find(".text-autofit").click(this._onTextAutofit.bind(this));
     html.find(".mirror-horiz").click(this._onMirror.bind(this, false));
     // Color change inputs
     html.find('input[type="color"]').change(this._onColorPickerChange.bind(this));
@@ -93,6 +94,14 @@ class FurnaceDrawingHUD extends DrawingHUD {
     canvas.scene.updateEmbeddedEntity('Drawing', drawings.map(d => {
       return { _id: d.id, [field]: !isEnabled  }
     }), { updateKeys: [field] })
+  }
+  _onTextAutofit(event) {
+    event.preventDefault();
+    const drawings = this.object._controlled ? canvas.drawings.controlled : [this.object];
+    canvas.scene.updateEmbeddedEntity('Drawing', drawings.map(d => {
+      const bounds = d.img.getLocalBounds();
+      return { _id: d.id, width: bounds.width, height: bounds.height }
+    }), { updateKeys: ["width", "height"] })
   }
 
   /**
