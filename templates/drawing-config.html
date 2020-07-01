@@ -71,8 +71,8 @@
             <label>Font</label>
             <select name="fontFamily" data-dtype="String">
                 {{#select object.fontFamily}}
-                {{#each availableFonts as |font f|}}
-                <option value="{{f}}">{{font}}</option>
+                {{#each availableFonts as |family font|}}
+                <option value="{{family}}">{{font}}</option>
                 {{/each}}
                 {{/select}}
             </select>

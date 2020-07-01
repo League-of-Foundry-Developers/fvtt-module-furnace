@@ -49,10 +49,10 @@ class FurnaceDrawingConfig extends DrawingConfig {
 
   getAvailableFonts() {
     let availableFonts = {}
-    for (let font of FONTS._loaded)
+    for (let font of CONFIG.fontFamilies)
       availableFonts[font] = font;
-    for (let font in CONFIG.WebSafeFonts)
-      availableFonts[CONFIG.WebSafeFonts[font]] = font;
+    for (let [font, family] of Object.entries(CONFIG.WebSafeFonts))
+      availableFonts[font] = family;
     return availableFonts;
   }
   /* Make it interactive a little */
