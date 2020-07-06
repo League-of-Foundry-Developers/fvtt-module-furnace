@@ -171,7 +171,7 @@ class FurnaceMacros {
         return (new Function(`"use strict";
             return (${asyncFunction} function ({speaker, actor, token, character, args, scene}={}) {
                 ${this.data.command}
-                });`))()(context);
+                });`))().call(this, context);
     }
 
     renderMacro(...args) {
