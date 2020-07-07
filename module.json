@@ -22,7 +22,8 @@
         "QoL/Entities.js",
         "QoL/Tokens.js",
         "QoL/Combat.js",
-        "QoL/Playlist.js"
+        "QoL/Playlist.js",
+        "QoL/Macros.js"
     ],
     "styles": [
         "Furnace.css",
