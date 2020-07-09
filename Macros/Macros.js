@@ -288,6 +288,7 @@ class FurnaceMacros {
             const context = FurnaceMacros.getTemplateContext();
             const compiled = Handlebars.compile(content);
             content = compiled(context, { allowProtoMethodsByDefault: true, allowProtoPropertiesByDefault: true });
+            if (content.trim().length === 0) return false;
         }
         if (content.trim().startsWith("<")) return true;
         content = content.replace(/\n/gm, "<br>");
