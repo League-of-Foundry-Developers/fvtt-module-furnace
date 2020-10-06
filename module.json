@@ -53,6 +53,11 @@
             "lang": "es",
             "name": "Spanish",
             "path": "lang/es.json"
+        },
+        {
+            "lang": "cn",
+            "name": "中文",
+            "path": "lang/cn.json"
         }
     ],
     "url": "https://github.com/kakaroto/fvtt-module-furnace",
