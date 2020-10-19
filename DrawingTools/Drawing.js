@@ -103,6 +103,8 @@ class FurnaceDrawing extends Drawing {
   get _pendingText() {
       return this.data.text;
   }
+  set _pendingText(value) {
+  }
   /* -------------------------------------------- */
   /* Rendering                                    */
   /* -------------------------------------------- */
