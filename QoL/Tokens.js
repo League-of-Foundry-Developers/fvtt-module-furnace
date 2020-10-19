@@ -84,7 +84,7 @@ class FurnaceTokenQoL {
                         let position = {x: topLeft[0], y: topLeft[1]}
                         if (choice === "same") {
                             for (let actor of actors) {
-                                await canvas.tokens.dropActor(actor, {x: position.x, y: position.y, hidden});
+                                await this.dropActor(actor, {x: position.x, y: position.y, hidden});
                             }
                         } else if (choice === "random") {
                             let distance = 0;
@@ -99,7 +99,7 @@ class FurnaceTokenQoL {
                                 while (tries > 0) {
                                     console.log(distance, dropped, tries, total_tries, offsetX, offsetY);
                                     if (true || FurnaceTokenQoL.isGridFree(position.x + offsetX, w, position.y + offsetY, h))
-                                        await canvas.tokens.dropActor(actor, {x: position.x + offsetX, y: position.y + offsetY, hidden});
+                                        await this.dropActor(actor, {x: position.x + offsetX, y: position.y + offsetY, hidden});
                                     if (total_tries - tries < total_tries / 4)
                                         offsetX += canvas.grid.w;
                                     else if (total_tries - tries < 2 * total_tries / 4)
@@ -145,7 +145,7 @@ class FurnaceTokenQoL {
                                     offsetY = offsetY - previous_h + h * step * direction
                                     previous_h = h * step * direction;
                                 }
-                                await canvas.tokens.dropActor(actor, {x: position.x + offsetX, y: position.y + offsetY, hidden});
+                                await this.dropActor(actor, {x: position.x + offsetX, y: position.y + offsetY, hidden});
                                 if (horizontal)
                                     offsetX += w * step * direction;
                                 else
@@ -163,6 +163,22 @@ class FurnaceTokenQoL {
             default: "yes"
         }, {width: 700}).render(true);
 
+    }
+
+    /* Copied from TokenLayer dropActor logic pre 0.7.0 */
+    static async dropActor(actor, tokenData) {
+        // Merge Token data with the default for the Actor
+        tokenData = mergeObject(actor.data.token, tokenData, {inplace: false});
+        // Get the Token image
+        if ( tokenData.randomImg ) {
+            let images = await actor.getTokenImages();
+            images = images.filter(i => (images.length === 1) || !(i === canvas.tokens._lastWildcard));
+            const image = images[Math.floor(Math.random() * images.length)];
+            tokenData.img = canvas.tokens._lastWildcard = image;
+        }
+
+        // Submit the Token creation request and activate the Tokens layer (if not already active)
+        return Token.create(tokenData);
     }
 }
 
