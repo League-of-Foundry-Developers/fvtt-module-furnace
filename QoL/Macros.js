@@ -4,7 +4,7 @@ Hooks.on("hotbarDrop", (hotbar, data, slot) => {
     if (!table) return true;
     // Make a new macro for the RollTable
     Macro.create({
-        name: `RollTable: ${table.name}`,
+        name: game.i18n.format("FURNACE.ROLLTABLE.macroName", {tableName: table.name}),
         type: "script",
         scope: "global",
         command: `game.tables.get("${table.id}").draw();`,

@@ -18,7 +18,7 @@ class FurnaceDrawingConfig extends DrawingConfig {
   static get defaultOptions() {
     const options = super.defaultOptions;
     options.classes = ["sheet", "drawing-sheet"];
-    options.title = "Drawing Configuration";
+    options.title = game.i18n.localize("FURNACE.DRAWINGS.ConfigTitle");
     options.template = "modules/furnace/templates/drawing-config.html";
     options.height = 'auto';
     return options;
@@ -43,7 +43,7 @@ class FurnaceDrawingConfig extends DrawingConfig {
       drawingTypes: CONFIG.furnaceDrawingTypes,
       fillTypes: CONFIG.furnaceDrawingFillTypes,
       availableFonts: this.getAvailableFonts(),
-      submitText: this.preview ? "Create" : "Update"
+      submitText: game.i18n.localize(`FURNACE.DRAWINGS.${this.preview ? "createDrawing" : "updateDrawing"}`)
     }
   }
 
@@ -163,7 +163,7 @@ class FurnaceDrawingConfig extends DrawingConfig {
   _updateObject(event, formData) {
     formData = this.fixData(formData)
     if (this.object.id) {
-      if (!this.object.owner) throw "You do not have the ability to configure a Drawing object.";
+      if (!this.object.owner) throw  game.i18n.localize("FURNACE.DRAWINGS.NotAuthorizedToConfigure");
       formData["id"] = this.object.id;
       this.object.update(formData)
         .then(() => this.object.layer.updateStartingData(this.object))
@@ -229,7 +229,7 @@ class DrawingDefaultsConfig extends FurnaceDrawingConfig {
       drawingTypes: CONFIG.furnaceDrawingTypes,
       fillTypes: CONFIG.furnaceDrawingFillTypes,
       availableFonts: this.getAvailableFonts(),
-      submitText: "Set New Drawing Defaults"
+      submitText: game.i18n.localize("FURNACE.DRAWINGS.setDefaults")
     }
   }
 

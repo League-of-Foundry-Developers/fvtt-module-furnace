@@ -1,7 +1,7 @@
 <form class="flexcol" autocomplete="off" onsubmit="event.preventDefault();">
 
     <div class="form-group">
-        <label>Drawing Type</label>
+        <label>{{localize "FURNACE.DRAWINGS.type"}}</label>
         <select name="type" data-dtype="String"
         {{#unless enableTypeSelection}} disabled {{/unless}}>
             {{#select object.type}}
@@ -15,45 +15,45 @@
     <!-- Sheet Navigation Tabs -->
     <nav class="sheet-tabs tabs">
         {{#unless enableTypeSelection}} 
-        <a class="item" data-tab="position"><i class="fas fa-map-marker-alt"></i> Position</a>
+        <a class="item" data-tab="position"><i class="fas fa-map-marker-alt"></i> {{localize "DRAWING.TabPosition"}}</a>
         {{/unless}}
-        <a class="item" data-tab="settings"><i class="fas fa-paint-brush"></i> Settings</a>
-        <a class="item" data-tab="texture"><i class="fas fa-fill-drip"></i> Texture</a>
+        <a class="item" data-tab="settings"><i class="fas fa-paint-brush"></i> {{localize "FURNACE.DRAWINGS.tabSettings"}}</a>
+        <a class="item" data-tab="texture"><i class="fas fa-fill-drip"></i> {{localize "FURNACE.DRAWINGS.tabTexture"}}</a>
     </nav>
 
 
     {{#unless enableTypeSelection}} 
     <!-- Position Tab -->
     <div class="tab" data-tab="position">
-        <p class="notes">Adjust the position and rotation of the Drawing.</p>
+        <p class="notes">{{localize "FURNACE.DRAWINGS.positionHint"}}</p>
         
         <div class="form-group">
-            <label for="x">X-Position <span class="units">(pixels)</span></label>
+            <label for="x">{{localize "FURNACE.DRAWINGS.xPosition"}} <span class="units">{{localize "FURNACE.DRAWINGS.pixelsUnit"}}</span></label>
             <input type="text" name="x" value="{{object.x}}" data-dtype="Number"/>
         </div>
 
         <div class="form-group">
-          <label for="y">Y-Position <span class="units">(pixels)</span></label>
+          <label for="y">{{localize "FURNACE.DRAWINGS.yPosition"}} <span class="units">{{localize "FURNACE.DRAWINGS.pixelsUnit"}}</span></label>
           <input type="text" name="y" value="{{object.y}}" data-dtype="Number"/>
       </div>
 
       <div class="form-group">
-          <label for="z">Z-Position</label>
+          <label for="z">{{localize "FURNACE.DRAWINGS.zPosition"}}</label>
           <input type="text" name="z" value="{{object.z}}" data-dtype="Number"/>
       </div>
 
         <div class="form-group">
-            <label for="width">Width <span class="units">(pixels)</span></label>
+            <label for="width">{{localize "Width"}} <span class="units">{{localize "FURNACE.DRAWINGS.pixelsUnit"}}</span></label>
             <input type="text" name="width" value="{{object.width}}" data-dtype="Number"/>
         </div>
 
         <div class="form-group">
-            <label for="height">Height <span class="units">(pixels)</span></label>
+            <label for="height">{{localize "Height"}} <span class="units">{{localize "FURNACE.DRAWINGS.pixelsUnit"}}</span></label>
             <input type="text" name="height" value="{{object.height}}" data-dtype="Number"/>
         </div>
 
         <div class="form-group">
-            <label for="rotation">Rotation <span class="units">(degrees)</span></label>
+            <label for="rotation">{{localize "Rotation"}} <span class="units">{{localize "FURNACE.DRAWINGS.degreesUnit"}}</span></label>
             <input type="text" name="rotation" value="{{object.rotation}}" data-dtype="Number"/>
         </div>
     </div>
@@ -62,13 +62,13 @@
 
     <!-- Settings Tab -->
     <div class="tab" data-tab="settings">
-      <p class="notes">Configure most of the Drawing's settings.</p>
+      <p class="notes">{{localize "FURNACE.DRAWINGS.settingsHint"}}</p>
 
       <div class="text-section">
         <hr>
 
         <div class="form-group">
-            <label>Font</label>
+            <label>{{localize "DRAWING.FontFamily"}}</label>
             <select name="fontFamily" data-dtype="String">
                 {{#select object.fontFamily}}
                 {{#each availableFonts as |family font|}}
@@ -78,21 +78,21 @@
             </select>
         </div>
         <div class="form-group">
-          <label for="fontSize">Font Size </label>
+          <label for="fontSize">{{localize "DRAWING.FontSize"}} </label>
           <input type="text" name="fontSize" value="{{object.fontSize}}" data-dtype="Number"/>
         </div>
         <div class="form-group">
-            <label>Text Content</label>
+            <label>{{localize "FURNACE.DRAWINGS.textContent"}}</label>
             <textarea name="text" data-dtype="String">{{object.text}}</textarea>
         </div>
         
         <div class="form-group">
-          <label>Text Color:</label>
+          <label>{{localize "DRAWING.TextColor"}}</label>
           <input type="color" name="textColor" value="{{object.textColor}}" data-dtype="String"/>
         </div>
 
         <div class="form-group">
-          <label>Text Opacity:</label>
+          <label>{{localize "DRAWING.TextOpacity"}}</label>
           <input type="range" name="textAlpha" value="{{object.textAlpha}}" min="0" max="1" step="0.05" data-dtype="Number"/>
           <span class="range-value">{{floor (multiply object.textAlpha 100)}}%</span>
         </div>
@@ -101,23 +101,23 @@
       <div class="stroke-section">
         <hr>
         <div class="form-group">
-          <label for="strokeWidth">Stroke Width <span class="units">(pixels)</span></label>
+          <label for="strokeWidth">{{localize "DRAWING.LineWidth"}} <span class="units">{{localize "FURNACE.DRAWINGS.pixelsUnit"}}</span></label>
           <input type="text" name="strokeWidth" value="{{object.strokeWidth}}" data-dtype="Number"/>
         </div>
 
         <div class="form-group">
-          <label>Stroke Color:</label>
+          <label>{{localize "DRAWING.StrokeColor"}}</label>
           <input type="color" name="strokeColor" value="{{object.strokeColor}}" data-dtype="String"/>
         </div>
 
         <div class="form-group">
-          <label>Stroke Opacity:</label>
+          <label>{{localize "DRAWING.LineOpacity"}}</label>
           <input type="range" name="strokeAlpha" value="{{object.strokeAlpha}}" min="0" max="1" step="0.05" data-dtype="Number"/>
           <span class="range-value">{{floor (multiply object.strokeAlpha 100)}}%</span>
         </div>
 
         <div class="form-group">
-          <label>Bezier smoothing factor:</label>
+          <label>{{localize "DRAWING.SmoothingFactor"}}</label>
           <input type="range" name="bezierFactor" value="{{object.bezierFactor}}" min="0" max="1" step="0.05" data-dtype="Number"/>
           <span class="range-value">{{floor (multiply object.bezierFactor 100)}}%</span>
         </div>
@@ -126,7 +126,7 @@
       <div class="fill-section">
         <hr>
         <div class="form-group">
-          <label>Fill Type</label>
+          <label>{{localize "DRAWING.FillTypes"}}</label>
           <select name="fillType" data-dtype="Number">
               {{#select object.fillType}}
               {{#each fillTypes as |type t|}}
@@ -136,12 +136,12 @@
           </select>
         </div>
         <div class="form-group">
-          <label>Fill Color:</label>
+          <label>{{localize "DRAWING.FillColor"}}</label>
           <input type="color" name="fillColor" value="{{object.fillColor}}" data-dtype="String"/>
         </div>
 
         <div class="form-group">
-          <label>Fill Opacity:</label>
+          <label>{{localize "DRAWING.FillOpacity"}}</label>
           <input type="range" name="fillAlpha" value="{{object.fillAlpha}}" min="0" max="1" step="0.05" data-dtype="Number"/>
           <span class="range-value">{{floor (multiply object.fillAlpha 100)}}%</span>
         </div>
@@ -149,34 +149,34 @@
     </div>
 
     <div class="tab" data-tab="texture">
-        <p class="notes">Configure the Drawing's texture information.</p>
+        <p class="notes">{{localize "FURNACE.DRAWINGS.textureHint"}}</p>
       <div class="texture-section">
         <hr>
         <div class="form-group">
-          <label>Drawing Texture:</label>
+          <label>{{localize "DRAWING.FillTexture"}}</label>
           {{filePicker target="texture" type="image"}}
           <input class="image" type="text" name="texture" placeholder="path/image.png" value="{{object.texture}}" data-dtype="String"/>
         </div>
 
-        <p class="notes">You can set a tint to the texture with the Fill Color and Opacity. To remove the tint, simply set Fill Opacity to 0.</p>
-        <p class="notes"><strong>Remember to lower or zero the fill/stroke opacity for the texture to appear.</strong></p>
+        <p class="notes">{{localize "FURNACE.DRAWINGS.textureHint1"}}</p>
+        <p class="notes"><strong>{{localize "FURNACE.DRAWINGS.textureHint2"}}</strong></p>
 
         <div class="form-group">
-          <label>Texture Opacity:</label>
+          <label>{{localize "FURNACE.DRAWINGS.textureOpacity"}}</label>
           <input type="range" name="textureAlpha" value="{{object.textureAlpha}}" min="0" max="1" step="0.05" data-dtype="Number"/>
           <span class="range-value">{{floor (multiply object.textureAlpha 100)}}%</span>
         </div>
 
 
         <div class="form-group">
-          <p class="notes">Set the width and height to 0 for the tiled pattern to retain the original image size, or override the tiled image's size here.</p>
+          <p class="notes">{{localize "FURNACE.DRAWINGS.textureSizeHint"}}</p>
 
-          <label for="width">Texture Width</label>
+          <label for="width">{{localize "FURNACE.DRAWINGS.textureWidth"}}</label>
           <input type="text" name="textureWidth" value="{{object.textureWidth}}" data-dtype="Number"/>
         </div>
 
         <div class="form-group">
-          <label for="height">Texture Height</label>
+          <label for="height">{{localize "FURNACE.DRAWINGS.textureHeight"}}</label>
           <input type="text" name="textureHeight" value="{{object.textureHeight}}" data-dtype="Number"/>
         </div>
 
@@ -185,7 +185,7 @@
 
     <hr>
     <div style="display: flex;">
-      <button type="button" name="reset" value="1"><i class="fas fa-sync"></i> Reset to Default</button>
+      <button type="button" name="reset" value="1"><i class="fas fa-sync"></i> {{localize "DRAWING.SubmitReset"}}</button>
       <button type="submit" name="submit" value="1"><i class="far fa-save"></i> {{submitText}} </button>
     </div>
 </form>

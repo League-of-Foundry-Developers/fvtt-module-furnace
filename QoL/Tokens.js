@@ -1,7 +1,7 @@
 class FurnaceTokenQoL {
     static init() {
         game.settings.register("furnace", "tokenIgnoreVision", {
-            name: "Ignore Token Vision for the GM",
+            name: game.i18n.localize("FURNACE.ACTORS.tokenIgnoreVisionGM"),
             scope: "world",
             config: false,
             default: false,
@@ -17,7 +17,7 @@ class FurnaceTokenQoL {
         if (tokenButton) {
             tokenButton.tools.push({
                 name: "vision",
-                title: "Ignore Token Vision",
+                title: game.i18n.localize("FURNACE.ACTORS.tokenIgnoreVision"),
                 icon: "far fa-eye-slash",
                 toggle: true,
                 active: game.settings.get("furnace", "tokenIgnoreVision"),
@@ -67,12 +67,12 @@ class FurnaceTokenQoL {
         const content = await renderTemplate("modules/furnace/templates/token-folder-drop.html", {folder, actors});
 
         new Dialog({
-            title: "Drop Actor Folder to Canvas",
+            title: game.i18n.localize("FURNACE.ACTORS.dropActorsFolder"),
             content: content,
             buttons: {
                 yes: {
                     icon: '<i class="fas fa-level-down-alt"></i>',
-                    label: `Drop ${actors.length} tokens`,
+                    label: game.i18n.localize("FURNACE.ACTORS.dropTokens", {numTokens: actors.length}),
                     callback: async (html) => {
                         const choice = html.find("input[name='arrangement']:checked").val()
                         const hidden = event.altKey;
@@ -157,7 +157,7 @@ class FurnaceTokenQoL {
                 },
                 no: {
                     icon: '<i class="fas fa-times"></i>',
-                    label: "Cancel Drop"
+                    label: game.i18n.localize("FURNACE.ACTORS.cancelDrop"),
                 }
             },
             default: "yes"

@@ -4,8 +4,8 @@ class FurnaceDebug {
     static init() {
             
         game.settings.register("furnace", "enableDebug", {
-            name: "Enable Debugging",
-            hint: "Useful for module developers",
+            name: game.i18n.localize("FURNACE.SETTINGS.enableDebug"),
+            hint: game.i18n.localize("FURNACE.SETTINGS.enableDebugHint"),
             scope: "client",
             config: true,
             default: false,
