@@ -7,7 +7,7 @@ class FurnaceTokenQoL {
             default: false,
             type: Boolean,
             onChange: value => {
-                canvas.sight.initializeTokens();
+                canvas.initializeSources()
             }
         });
     }
