@@ -9,6 +9,8 @@ class FurnaceCombatQoL {
         }
     }
     static _onInitiativeDblClick(event) {
+        event.stopPropagation();
+        event.preventDefault();
         let html = $(event.target).closest(".combatant")
         let cid = html.data("combatant-id")
         let initiative = html.find(".token-initiative")
