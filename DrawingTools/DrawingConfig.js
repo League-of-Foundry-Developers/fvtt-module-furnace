@@ -12,9 +12,9 @@ class FurnaceDrawingConfig extends DrawingConfig {
     this._tabs[0].active = "settings";
   }
   // Override the constructor's name
-  static get name() {
+  /*static get name() {
     return "DrawingConfig"
-  }
+  }*/
   static get defaultOptions() {
     const options = super.defaultOptions;
     options.classes = ["sheet", "drawing-sheet"];
