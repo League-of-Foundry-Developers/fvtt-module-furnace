@@ -18,7 +18,7 @@ class FurnaceMacros {
         Hooks.once("ready", this.ready.bind(this));
         Hooks.on('renderMacroConfig', this.renderMacroConfig.bind(this))
         // On 0.6.5, unknown commands throw an error which breaks posting macros from chat box
-        const parse = FurnacePatching.patchFunction(ChatLog.parse, 21, `"invalid": /^(\\/[^\\s]+)/, // Any other message starting with a slash command is invalid`, "");
+        const parse = FurnacePatching.patchFunction(ChatLog.parse, 24, `"invalid": /^(\\/[^\\s]+)/, // Any other message starting with a slash command is invalid`, "");
         if (parse)
             ChatLog.parse = parse;
 
