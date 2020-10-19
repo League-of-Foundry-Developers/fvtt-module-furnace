@@ -1,13 +1,13 @@
 class FurnaceTokenQoL {
     static init() {
         game.settings.register("furnace", "tokenIgnoreVision", {
-            name: "Ignore Token Vision for the GM",
+            name: game.i18n.localize("FURNACE.ACTORS.tokenIgnoreVisionGM"),
             scope: "world",
             config: false,
             default: false,
             type: Boolean,
             onChange: value => {
-                canvas.sight.initializeTokens();
+                canvas.initializeSources()
             }
         });
     }
@@ -17,7 +17,7 @@ class FurnaceTokenQoL {
         if (tokenButton) {
             tokenButton.tools.push({
                 name: "vision",
-                title: "Ignore Token Vision",
+                title: game.i18n.localize("FURNACE.ACTORS.tokenIgnoreVision"),
                 icon: "far fa-eye-slash",
                 toggle: true,
                 active: game.settings.get("furnace", "tokenIgnoreVision"),
@@ -67,12 +67,12 @@ class FurnaceTokenQoL {
         const content = await renderTemplate("modules/furnace/templates/token-folder-drop.html", {folder, actors});
 
         new Dialog({
-            title: "Drop Actor Folder to Canvas",
+            title: game.i18n.localize("FURNACE.ACTORS.dropActorsFolder"),
             content: content,
             buttons: {
                 yes: {
                     icon: '<i class="fas fa-level-down-alt"></i>',
-                    label: `Drop ${actors.length} tokens`,
+                    label: game.i18n.localize("FURNACE.ACTORS.dropTokens", {numTokens: actors.length}),
                     callback: async (html) => {
                         const choice = html.find("input[name='arrangement']:checked").val()
                         const hidden = event.altKey;
@@ -84,7 +84,7 @@ class FurnaceTokenQoL {
                         let position = {x: topLeft[0], y: topLeft[1]}
                         if (choice === "same") {
                             for (let actor of actors) {
-                                await canvas.tokens.dropActor(actor, {x: position.x, y: position.y, hidden});
+                                await this.dropActor(actor, {x: position.x, y: position.y, hidden});
                             }
                         } else if (choice === "random") {
                             let distance = 0;
@@ -99,7 +99,7 @@ class FurnaceTokenQoL {
                                 while (tries > 0) {
                                     console.log(distance, dropped, tries, total_tries, offsetX, offsetY);
                                     if (true || FurnaceTokenQoL.isGridFree(position.x + offsetX, w, position.y + offsetY, h))
-                                        await canvas.tokens.dropActor(actor, {x: position.x + offsetX, y: position.y + offsetY, hidden});
+                                        await this.dropActor(actor, {x: position.x + offsetX, y: position.y + offsetY, hidden});
                                     if (total_tries - tries < total_tries / 4)
                                         offsetX += canvas.grid.w;
                                     else if (total_tries - tries < 2 * total_tries / 4)
@@ -145,7 +145,7 @@ class FurnaceTokenQoL {
                                     offsetY = offsetY - previous_h + h * step * direction
                                     previous_h = h * step * direction;
                                 }
-                                await canvas.tokens.dropActor(actor, {x: position.x + offsetX, y: position.y + offsetY, hidden});
+                                await this.dropActor(actor, {x: position.x + offsetX, y: position.y + offsetY, hidden});
                                 if (horizontal)
                                     offsetX += w * step * direction;
                                 else
@@ -157,12 +157,28 @@ class FurnaceTokenQoL {
                 },
                 no: {
                     icon: '<i class="fas fa-times"></i>',
-                    label: "Cancel Drop"
+                    label: game.i18n.localize("FURNACE.ACTORS.cancelDrop"),
                 }
             },
             default: "yes"
         }, {width: 700}).render(true);
 
+    }
+
+    /* Copied from TokenLayer dropActor logic pre 0.7.0 */
+    static async dropActor(actor, tokenData) {
+        // Merge Token data with the default for the Actor
+        tokenData = mergeObject(actor.data.token, tokenData, {inplace: false});
+        // Get the Token image
+        if ( tokenData.randomImg ) {
+            let images = await actor.getTokenImages();
+            images = images.filter(i => (images.length === 1) || !(i === canvas.tokens._lastWildcard));
+            const image = images[Math.floor(Math.random() * images.length)];
+            tokenData.img = canvas.tokens._lastWildcard = image;
+        }
+
+        // Submit the Token creation request and activate the Tokens layer (if not already active)
+        return Token.create(tokenData);
     }
 }
 

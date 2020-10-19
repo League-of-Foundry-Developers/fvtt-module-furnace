@@ -5,9 +5,9 @@
  */
 class FurnaceDrawingHUD extends DrawingHUD {
   // Override the constructor's name
-  static get name() {
+  /*static get name() {
     return "DrawingHUD"
-  }
+  }*/
   /**
    * Assign the default options which are supported by the entity edit sheet
    * @type {Object}

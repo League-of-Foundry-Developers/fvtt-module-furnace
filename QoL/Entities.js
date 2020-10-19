@@ -31,7 +31,7 @@ class FurnaceSplitJournal extends FormApplication {
     static get defaultOptions() {
         const options = super.defaultOptions;
         options.id = "split-journal";
-        options.title = "Split Journal";
+        options.title = game.i18n.localize("FURNACE.SPLIT.title");
         options.classes = ["sheet"];
         options.template = "modules/furnace/templates/split-journal.html";
         options.width = 400;
@@ -53,14 +53,14 @@ class FurnaceSplitJournal extends FormApplication {
                 this.useSplitter = this.splitters[0]
             if (this.useSplitter == null) {
                 error = true;
-                errorMessage = "<strong>This Journal entry had no headings.</strong><p>Create headings in your journal then try again</p>";
+                errorMessage = game.i18n.localize("FURNACE.SPLIT.errorNoHeadings");
             } else {
                 let parts = this.content.find(this.useSplitter)
                 newEntries = $.map(parts, h => h.textContent)
             }
         } else {
             error = true;
-            errorMessage = "<strong>This Journal entry is empty.</strong><p>There is nothing to split</p>";
+            errorMessage = game.i18n.localize("FURNACE.SPLIT.errorJournalEmpty");
         }
         return {
             name: this.object.name,
@@ -70,7 +70,7 @@ class FurnaceSplitJournal extends FormApplication {
             hasImage: this.object.data.img != "",
             error: error,
             errorMessage: new Handlebars.SafeString(errorMessage),
-            submitText: error ? "OK" : "Split Journal"
+            submitText: game.i18n.localize(`FURNACE.SPLIT.${error ? "errorOk" : "splitSubmit"}`)
         }
     }
 
@@ -155,7 +155,7 @@ class FurnaceSplitJournal extends FormApplication {
     }
     static getEntryContext(html, options) {
         options.push({
-            name: "Split Journal",
+            name: game.i18n.localize("FURNACE.SPLIT.contextMenu"),
             icon: '<i class="fas fa-list-ul"></i>',
             condition: game.user.isGM,
             callback: header => {
@@ -171,13 +171,13 @@ class FurnaceSplitJournal extends FormApplication {
 class FurnaceSortEntities {
 	static getEntityFolderContext(html, options) {
 		options.push({
-			name: "Sort Alphabetically (Ascending)",
+			name: game.i18n.localize("FURNACE.ENTITIES.sortAscending"),
 			icon: '<i class="fas fa-sort-alpha-down"></i>',
 			condition: game.user.isGM,
 			callback: header => FurnaceSortEntities.sortEntities(header, true)
 		})
 		options.push({
-			name: "Sort Alphabetically (Descending)",
+			name: game.i18n.localize("FURNACE.ENTITIES.sortDescending"),
 			icon: '<i class="fas fa-sort-alpha-down-alt"></i>',
 			condition: game.user.isGM,
 			callback: header => FurnaceSortEntities.sortEntities(header, false)

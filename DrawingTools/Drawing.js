@@ -99,6 +99,12 @@ class FurnaceDrawing extends Drawing {
     else
       return 1;
   }
+  /* _pendingText gets used by core to do weird stuff which messed with the update of text contents */
+  get _pendingText() {
+      return this.data.text;
+  }
+  set _pendingText(value) {
+  }
   /* -------------------------------------------- */
   /* Rendering                                    */
   /* -------------------------------------------- */

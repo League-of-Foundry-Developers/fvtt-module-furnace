@@ -1,34 +1,34 @@
 <form class="furnace-drop-actors" autocomplete="off" onsubmit="event.preventDefault();">
-      <p class="notes">You have dropped <strong>{{actors.length}}</strong> actors from the folder '<em>{{folder.name}}</em>' onto the scene.</p>
-      <p>How would you like to arrange their tokens ?</p>
+      <p class="notes">{{{localize "FURNACE.ACTORS.droppedFolder" numActors=actors.length folderName=folder.name}}}</p>
+      <p>{{localize "FURNACE.ACTORS.dropQuestion"}}</p>
       <div class="form-group">
           <input type="radio" name="arrangement" id="furnace-arrangement-same" value="same"/>
-          <label for="furnace-arrangement-same">All {{actors.length}} tokens on top of each other.</label>
+          <label for="furnace-arrangement-same">{{localize "FURNACE.ACTORS.arrangementSame" totalTokens=actors.length}}</label>
           <i class="far fa-dot-circle"></i>
       </div>
       <div class="form-group">
           <input type="radio" name="arrangement" id="furnace-arrangement-random" value="random" checked/>
-          <label for="furnace-arrangement-random">Randomly spread out (packed close) around the dropped point.</label>
+          <label for="furnace-arrangement-random">{{localize "FURNACE.ACTORS.arrangementRandom"}}</label>
           <i class="fas fa-braille"></i>
       </div>
       <div class="form-group">
           <input type="radio" name="arrangement" id="furnace-arrangement-tb" value="tb"/>
-          <label for="furnace-arrangement-tb">Line up (marching order based on folder order) from Top to Bottom.</label>
+          <label for="furnace-arrangement-tb">{{localize "FURNACE.ACTORS.arrangementTopBottom"}}</label>
           <i class="fas fa-angle-double-down"></i>
       </div>
       <div class="form-group">
           <input type="radio" name="arrangement" id="furnace-arrangement-bt" value="bt"/>
-          <label for="furnace-arrangement-bt">Line up from Bottom to Top.</label>
+          <label for="furnace-arrangement-bt">{{localize "FURNACE.ACTORS.arrangementBottomTop"}}</label>
           <i class="fas fa-angle-double-up"></i>
       </div>
       <div class="form-group">
           <input type="radio" name="arrangement" id="furnace-arrangement-lr" value="lr"/>
-          <label for="furnace-arrangement-lr">Line up from Left to Right.</label>
+          <label for="furnace-arrangement-lr">{{localize "FURNACE.ACTORS.arrangementLeftRight"}}</label>
           <i class="fas fa-angle-double-right"></i>
       </div>
       <div class="form-group">
           <input type="radio" name="arrangement" id="furnace-arrangement-rl" value="rl"/>
-          <label for="furnace-arrangement-rl">Line up from Right to Left.</label>
+          <label for="furnace-arrangement-rl">{{localize "FURNACE.ACTORS.arrangementRightLeft"}}</label>
           <i class="fas fa-angle-double-left"></i>
       </div>
 </form>

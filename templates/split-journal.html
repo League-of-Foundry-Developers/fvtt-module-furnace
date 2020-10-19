@@ -2,24 +2,24 @@
     {{#if error}}
         <p class="notes">{{errorMessage}}</p>
     {{else}}
-        <p class="notes">Split the journal entry '{{name}}' into multiple entries.</p>
+        <p class="notes">{{localize "FURNACE.SPLIT.description" name=name}}</p>
 
         <div class="form-group">
-            <label>Split in new Folder</label>
+            <label>{{localize "FURNACE.SPLIT.newFolder"}}</label>
             <input type="checkbox" name="newFolder" data-dtype="Boolean" checked/>
         </div>
         {{#if hasImage}}
         <div class="form-group">
-            <label>Include Journal's image in each new entry</label>
+            <label>{{localize "FURNACE.SPLIT.includeImage"}}</label>
             <input type="checkbox" name="includeImage" data-dtype="Boolean" checked/>
         </div>
         {{/if}}
         <div class="form-group">
-            <label>Include page header in each new journal entry</label>
+            <label>{{localize "FURNACE.SPLIT.separateHeader"}}</label>
             <input type="checkbox" name="separateHeader" data-dtype="Boolean"/>
         </div>
         <div class="form-group">
-            <label>Split on</label>
+            <label>{{localize "FURNACE.SPLIT.splitOn"}}</label>
             <select name="splitter" data-dtype="String">
                 {{#select useSplitter}}
                 {{#each splitters as |splitter s|}}
@@ -30,7 +30,7 @@
         </div>
         <div class="form-group">
             <div>
-            New journal entries ({{newEntries.length}}) :
+                {{localize "FURNACE.SPLIT.newEntries" numEntries=newEntries.length}}
             </div>
             <div>
                 <ul>
@@ -42,6 +42,6 @@
         </div>
     {{/if}}
     <div>
-      <button type="submit" name="submit" value="1">{{submitText}} </button>
+      <button type="submit" name="submit" value="1">{{submitText}}</button>
     </div>
 </form>
