@@ -9,7 +9,7 @@ class FurnacePatching {
         // Check for newlines so it can work on minified content too
         const splitChar = funcStr.indexOf("\n") >= 0 ? "\n" : ";";
         let lines = funcStr.split(splitChar)
-        if (lines[line_number].trim() == line.trim()) {
+        if (lines[line_number] !== undefined && lines[line_number].trim() == line.trim()) {
             lines[line_number] = lines[line_number].replace(line, new_line);
             let fixed = lines.join(splitChar)
             if (klass !== undefined) {
