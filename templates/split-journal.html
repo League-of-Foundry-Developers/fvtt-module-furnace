@@ -29,6 +29,16 @@
             </select>
         </div>
         <div class="form-group">
+            <label>{{localize "FURNACE.SPLIT.splitDepth"}}</label>
+            <select name="splitterDepth" data-dtype="String">
+                {{#select useSplitterDepth}}
+                {{#each splitters as |splitter s|}}
+                <option value="{{s}}">{{splitter}}</option>
+                {{/each}}
+                {{/select}}
+            </select>
+        </div>
+        <div class="form-group">
             <div>
                 {{localize "FURNACE.SPLIT.newEntries" numEntries=newEntries.length}}
             </div>

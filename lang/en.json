@@ -31,6 +31,7 @@
     "FURNACE.SPLIT.contextMenu": "Split Journal",
     "FURNACE.SPLIT.description": "Split the journal entry '{name}' into multiple entries.",
     "FURNACE.SPLIT.splitOn": "Split on",
+    "FURNACE.SPLIT.splitDepth": "Split depth",
     "FURNACE.SPLIT.newEntries": "New journal entries ({numEntries}) :",
     "FURNACE.SPLIT.separateHeader": "Include page header in each new journal entry",
     "FURNACE.SPLIT.includeImage": "Include Journal's image in each new entry",
