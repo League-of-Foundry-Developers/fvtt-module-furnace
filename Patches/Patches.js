@@ -63,12 +63,6 @@ class FurnacePatching {
     }
 
     static init() {
-        // Fix Settings Extender issue on 0.7.5 by preventing settings crash if one dtype is invalid
-        const patchedFormDataExtended = FurnacePatching.patchMethod(FormDataExtended, "toObject", 9,
-            "if ( (v !== null) && ( window[dtype] instanceof Function ) ) v = window[dtype](v);",
-            "if ( (v !== null) && ( window[dtype] instanceof Function ) ) { try { v = window[dtype](v); } catch (err) {} }");
-        if (patchedFormDataExtended)
-            FormDataExtended = patchedFormDataExtended;
     }
 }
 FurnacePatching.ORIG_PRREFIX = "__furnace_original_"
