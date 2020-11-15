@@ -80,62 +80,18 @@ class FurnaceDrawingTools {
     let drawingsButton = buttons.find(b => b.name == "drawings")
     // Replace the drawings scene controls with our own
     if (drawingsButton) {
-      drawingsButton.tools = [{
-          name: "select",
-          title: "Select Drawings",
-          icon: "fas fa-expand"
-        },
-        {
-          name: "rectangle",
-          title: "Draw Rectangle",
-          icon: "fas fa-square",
-          onClick: () => canvas.drawings._last_tool = CONST.DRAWING_TYPES.RECTANGLE
-        },
-        {
-          name: "ellipse",
-          title: "Draw Ellipse",
-          icon: "fas fa-circle",
-          onClick: () => canvas.drawings._last_tool = CONST.DRAWING_TYPES.ELLIPSE
-        },
-        {
-          name: "polygon",
-          title: "Draw Polygons",
-          icon: "fas fa-draw-polygon",
-          onClick: () => canvas.drawings._last_tool = CONST.DRAWING_TYPES.POLYGON
-        },
-        {
-          name: "freehand",
-          title: "Draw Freehand",
-          icon: "fas fa-signature",
-          onClick: () => canvas.drawings._last_tool = CONST.DRAWING_TYPES.FREEHAND
-        },
-        {
-          name: "text",
-          title: "Draw Text",
-          icon: "fas fa-font",
-          onClick: () => canvas.drawings._last_tool = CONST.DRAWING_TYPES.TEXT
-        },
-        {
-          name: "clear",
-          title: "Clear all Drawings",
-          icon: "fas fa-trash",
-          onClick: () => {
-            canvas.drawings.deleteAll();
-            ui.controls.control.activeTool = "select";
-            ui.controls.render();
-          }
-        },
-        {
-          name: "configure",
-          title: "Set Drawing Defaults",
-          icon: "fas fa-cog",
-          onClick: () => {
+        // Replace the tools we want modified
+        drawingsButton.tools[1].name  = "rectangle";
+        drawingsButton.tools[1].onClick = () => canvas.drawings._last_tool = CONST.DRAWING_TYPES.RECTANGLE;
+        drawingsButton.tools[2].onClick = () => canvas.drawings._last_tool = CONST.DRAWING_TYPES.ELLIPSE;
+        drawingsButton.tools[3].onClick = () => canvas.drawings._last_tool = CONST.DRAWING_TYPES.POLYGON;
+        drawingsButton.tools[4].onClick = () => canvas.drawings._last_tool = CONST.DRAWING_TYPES.FREEHAND;
+        drawingsButton.tools[5].onClick = () => canvas.drawings._last_tool = CONST.DRAWING_TYPES.TEXT;
+        drawingsButton.tools[6].onClick = () => {
             canvas.drawings.configureStartingData();
             ui.controls.control.activeTool = "select";
             ui.controls.render();
-          }
-        }
-      ]
+        };
     }
   }
 }
