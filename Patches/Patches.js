@@ -24,7 +24,8 @@ class FurnacePatching {
             }
             return Function('"use strict";return (' + fixed + ')')();
         } else {
-            console.log("Cannot patch function. It has wrong content at line ", line_number, " : ", lines[line_number].trim(), " != ", line.trim(), "\n", funcStr)
+            console.log("Cannot patch function. It has wrong content at line ", line_number, " : ", 
+                lines[line_number] && lines[line_number].trim(), " != ", line.trim(), "\n", funcStr)
         }
     }
 
