@@ -60,9 +60,9 @@
             "path": "lang/zh-CN.json"
         }
     ],
-    "url": "https://github.com/kakaroto/fvtt-module-furnace",
-    "manifest": "https://raw.githubusercontent.com/kakaroto/fvtt-module-furnace/master/module.json",
-    "download": "https://github.com/kakaroto/fvtt-module-furnace/releases/download/v2.6.0/furnace.zip",
+    "url": "https://github.com/League-of-Foundry-Developers/fvtt-module-furnace",
+    "manifest": "https://raw.githubusercontent.com/League-of-Foundry-Developers/fvtt-module-furnace/master/module.json",
+    "download": "https://github.com/League-of-Foundry-Developers/fvtt-module-furnace/releases/download/v2.6.0/furnace.zip",
     "socket": true,
     "minimumCoreVersion": "0.7.7",
     "compatibleCoreVersion": "0.8.0"
