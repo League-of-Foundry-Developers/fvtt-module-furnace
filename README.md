@@ -19,7 +19,7 @@ More QoL improvements are planned.
 
 # Installation
 
-You can now install this module automatically by specifying the following public module URL : `https://raw.githubusercontent.com/kakaroto/fvtt-module-furnace/master/module.json`
+You can now install this module manually by specifying the following public module URL : `https://raw.githubusercontent.com/League-of-Foundry-Developers/fvtt-module-furnace/master/module.json`
 
 As GM go to the `Manage Modules` options menu in your World Settings tab then enable the `The Furnace` module.
 
@@ -127,9 +127,6 @@ You can then type `/run` in the chat to execute the 'run' macro which executes '
 **Note**: HTML content will not be parsed for /command macros, though you will still be able to use the `{{macro}}` helper in that case. 
 **Note 2**: You can only use one space to separate each argument. If you use more than one space, FVTT will replace the second with `&nbsp;` as it transforms the chat input into html, which would break your argument list.
 
-# Support
-
-If you like this module and would like to help support its development, you can subscribe to my [Patreon](https://www.patreon.com/kakaroto) or if you prefer, you can also send me some rations via [Ko-Fi](https://ko-fi.com/kakaroto)
 
 # License
 This Foundry VTT module, writen by KaKaRoTo, is licensed under a [Creative Commons Attribution 4.0 International License](http://creativecommons.org/licenses/by/4.0/).
