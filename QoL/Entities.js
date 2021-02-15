@@ -4,25 +4,29 @@ class FurnaceSplitJournal extends FormApplication {
 
         this.splitters = {}
         this.useSplitter = null
+        this.useSplitterDepth = null
+        this.SplitLevels = []
         this.content = null
         if (object.data.content != "") {
             this.content = $("<div>" + object.data.content + "</div>")
             let try_splitters = {
-                "h1": "Heading 1",
-                "h2": "Heading 2",
-                "h3": "Heading 3",
-                "h4": "Heading 4",
-                "h5": "Heading 5",
-                "h6": "Heading 6",
-                "h7": "Heading 7"
+                "1": "Heading 1",
+                "2": "Heading 2",
+                "3": "Heading 3",
+                "4": "Heading 4",
+                "5": "Heading 5",
+                "6": "Heading 6",
+                "7": "Heading 7"
             }
 
             for (let splitter in try_splitters) {
-                let parts = this.content.find(splitter)
+                let parts = this.content.find("h"+splitter)
                 if (parts.length > 0) {
                     this.splitters[splitter] = try_splitters[splitter]
                     if (this.useSplitter == null && parts.length > 1)
                         this.useSplitter = splitter
+                    if (this.useSplitterDepth == null && parts.length > 1)
+                        this.useSplitterDepth = splitter
                 }
             }
         }
@@ -51,11 +55,19 @@ class FurnaceSplitJournal extends FormApplication {
         if (this.content) {
             if (this.useSplitter == null && this.splitters.length > 0)
                 this.useSplitter = this.splitters[0]
+            if (this.useSplitterDepth == null && this.splitters.length > 0)
+                this.useSplitterDepth = this.splitters[0]
+            if(parseInt(this.useSplitterDepth)< parseInt(this.useSplitter))
+                this.useSplitterDepth = this.useSplitter
             if (this.useSplitter == null) {
                 error = true;
                 errorMessage = game.i18n.localize("FURNACE.SPLIT.errorNoHeadings");
             } else {
-                let parts = this.content.find(this.useSplitter)
+                this.SplitLevels = []
+                for(var i = this.useSplitter;i<=this.useSplitterDepth;i++) {
+                    this.SplitLevels.push("h"+i)
+                }
+                let parts = this.content.find(this.SplitLevels.join())
                 newEntries = $.map(parts, h => h.textContent)
             }
         } else {
@@ -66,6 +78,7 @@ class FurnaceSplitJournal extends FormApplication {
             name: this.object.name,
             splitters: this.splitters,
             useSplitter: this.useSplitter,
+            useSplitterDepth: this.useSplitterDepth,
             newEntries: newEntries,
             hasImage: this.object.data.img != "",
             error: error,
@@ -80,8 +93,53 @@ class FurnaceSplitJournal extends FormApplication {
             this.useSplitter = html.find("select[name=splitter]").val()
             await this.render(true)
         })
+        html.find("select[name=splitterDepth]").change(async (ev) => {
+            this.useSplitterDepth = html.find("select[name=splitterDepth]").val()
+            await this.render(true)
+        })
     }
 
+    html_splitter(html,levels,journalEntries,formData,folder,outer_name = "Header") {
+        let parts = splitHtml(html, levels.shift())
+        let header = ""
+
+        for (let idx = 0; idx < parts.length; idx++) {
+            
+            let name = this.object.name
+            let content = parts[idx];
+  
+            if (idx == 0) {
+                name = outer_name
+                header = content.trim();
+                if (header == "" || formData.separateHeader)
+                    continue;
+            } else {
+                name = $(parts[idx]).text()
+                content += parts[++idx]
+                if (formData.separateHeader)
+                    content = header + content;
+            }
+            
+            // If there are still more levels of data, then process those, else save the journal
+            if (splitHtml(content,levels.join()).length>1) {
+                this.html_splitter(content,levels,journalEntries,formData,folder,name)
+            }
+            else {
+                let img = ""
+                if (formData.includeImage)
+                    img = this.object.data.img
+                journalEntries.push({
+                    "name": name || " ",
+                    "permission": this.object.data.permission,
+                    "flags": { "entityorder": { "order": idx * 100000 } },
+                    "folder": folder ? folder.id : null,
+                    "entryTime": this.object.data.entryTime,
+                    "img": img,
+                    "content": content
+                })
+            }
+        }
+    }
     async _updateObject(event, formData) {
         if (!this.content || !this.useSplitter) return;
 
@@ -103,38 +161,10 @@ class FurnaceSplitJournal extends FormApplication {
             }
             folder = await Folder.create(folderData)
         }
-        let parts = splitHtml(this.content, formData.splitter)
-        let header = ""
         let journalEntries = []
-        for (let idx = 0; idx < parts.length; idx++) {
 
-            let name = this.object.name
-            let content = parts[idx];
+        this.html_splitter(this.content,this.SplitLevels,journalEntries,formData,folder) // TODO Hook recursive mode to a switch
 
-            if (idx == 0) {
-                name = "Header"
-                header = content.trim();
-                if (header == "" || formData.separateHeader)
-                    continue;
-            } else {
-                name = $(parts[idx]).text()
-                content += parts[++idx]
-                if (formData.separateHeader)
-                    content = header + content;
-            }
-            let img = ""
-            if (formData.includeImage)
-                img = this.object.data.img
-            journalEntries.push({
-                "name": name || " ",
-                "permission": this.object.data.permission,
-                "flags": { "entityorder": { "order": idx * 100000 } },
-                "folder": folder ? folder.id : null,
-                "entryTime": this.object.data.entryTime,
-                "img": img,
-                "content": content
-            })
-        }
         if (journalEntries.length > 0)
             return JournalEntry.create(journalEntries, { displaySheet: false })
     }
