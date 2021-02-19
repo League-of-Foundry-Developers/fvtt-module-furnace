@@ -58,6 +58,11 @@
             "lang": "cn",
             "name": "中文",
             "path": "lang/zh-CN.json"
+        },
+        {
+            "lang": "pl",
+            "name": "Polski",
+            "path": "lang/pl.json"
         }
     ],
     "url": "https://github.com/League-of-Foundry-Developers/fvtt-module-furnace",
