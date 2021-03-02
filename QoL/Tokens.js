@@ -72,7 +72,7 @@ class FurnaceTokenQoL {
             buttons: {
                 yes: {
                     icon: '<i class="fas fa-level-down-alt"></i>',
-                    label: game.i18n.localize("FURNACE.ACTORS.dropTokens", {numTokens: actors.length}),
+                    label: game.i18n.format("FURNACE.ACTORS.dropTokens", {numTokens: actors.length}),
                     callback: async (html) => {
                         const choice = html.find("input[name='arrangement']:checked").val()
                         const hidden = event.altKey;
