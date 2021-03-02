@@ -42,7 +42,7 @@
     "FURNACE.ENTITIES.sortAscending": "字母序 (升序)",
     "FURNACE.ENTITIES.sortDescending": "字母序 (降序)",
 
-    "FURNACE.ACTORS.droppedFolder": "你已从文件夹 '<em>{folderName}</em>' 内，放置了 <strong>{numActors}</strong> 名角色在该场景内。",
+    "FURNACE.ACTORS.droppedFolder": "你将从文件夹 '<em>{folderName}</em>' 内，放置 <strong>{numActors}</strong> 名角色在该场景内。",
     "FURNACE.ACTORS.dropQuestion": "你想要怎么排列这些指示物？",
     "FURNACE.ACTORS.arrangementSame": "叠置这 {totalTokens} 个指示物。",
     "FURNACE.ACTORS.arrangementRandom": "在放置点周围随机排布 (紧密堆积) 。",
