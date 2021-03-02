@@ -74,6 +74,7 @@ class FurnaceTokenQoL {
                     icon: '<i class="fas fa-level-down-alt"></i>',
                     label: game.i18n.localize("FURNACE.ACTORS.dropTokens", {numTokens: actors.length}),
                     callback: async (html) => {
+                        const tokenDatas = [];
                         const choice = html.find("input[name='arrangement']:checked").val()
                         const hidden = event.altKey;
                         // Acquire cursor position transformed to Canvas coordinates
@@ -83,9 +84,8 @@ class FurnaceTokenQoL {
                         const topLeft = canvas.grid.getTopLeft(tx, ty);
                         let position = {x: topLeft[0], y: topLeft[1]}
                         if (choice === "same") {
-                            for (let actor of actors) {
-                                await this.dropActor(actor, {x: position.x, y: position.y, hidden});
-                            }
+                            const sameTokens = await Promise.all(actors.map(a => this.dropActor(a, {x: position.x, y: position.y, hidden})));
+                            tokenDatas.push(...sameTokens);
                         } else if (choice === "random") {
                             let distance = 0;
                             let dropped = 0;
@@ -99,7 +99,7 @@ class FurnaceTokenQoL {
                                 while (tries > 0) {
                                     console.log(distance, dropped, tries, total_tries, offsetX, offsetY);
                                     if (true || FurnaceTokenQoL.isGridFree(position.x + offsetX, w, position.y + offsetY, h))
-                                        await this.dropActor(actor, {x: position.x + offsetX, y: position.y + offsetY, hidden});
+                                        tokenDatas.push(await this.dropActor(actor, {x: position.x + offsetX, y: position.y + offsetY, hidden}));
                                     if (total_tries - tries < total_tries / 4)
                                         offsetX += canvas.grid.w;
                                     else if (total_tries - tries < 2 * total_tries / 4)
@@ -145,13 +145,16 @@ class FurnaceTokenQoL {
                                     offsetY = offsetY - previous_h + h * step * direction
                                     previous_h = h * step * direction;
                                 }
-                                await this.dropActor(actor, {x: position.x + offsetX, y: position.y + offsetY, hidden});
+                                tokenDatas.push(await this.dropActor(actor, {x: position.x + offsetX, y: position.y + offsetY, hidden}));
                                 if (horizontal)
                                     offsetX += w * step * direction;
                                 else
                                     offsetY += h * step * direction;
                             }
                             
+                        }
+                        if (tokenDatas.length > 0) {
+                            await canvas.tokens.createMany(tokenDatas);
                         }
                     }
                 },
@@ -165,7 +168,8 @@ class FurnaceTokenQoL {
 
     }
 
-    /* Copied from TokenLayer dropActor logic pre 0.7.0 */
+    /* Copied from TokenLayer dropActor logic pre 0.7.0
+       Modified in order to work with createMany */
     static async dropActor(actor, tokenData) {
         // Merge Token data with the default for the Actor
         tokenData = mergeObject(actor.data.token, tokenData, {inplace: false});
@@ -178,7 +182,7 @@ class FurnaceTokenQoL {
         }
 
         // Submit the Token creation request and activate the Tokens layer (if not already active)
-        return Token.create(tokenData);
+        return tokenData;
     }
 }
 
