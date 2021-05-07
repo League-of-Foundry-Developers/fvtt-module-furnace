@@ -2,7 +2,7 @@
     "name": "furnace",
     "title": "The Furnace",
     "description": "<p>No Foundry is complete without it's Furnace!</p><p>This module contains a set of features that improve the Quality of Life of the DM/Players. The current features are : </p><p><strong>Advanced Drawing Tools :</strong>Improved drawing tools with different pattern fill types, new HUD, and various options.</p><p><strong>Advanced Macros:</strong> Use async script macros, handlebars templating, recursive macro calls and call macros with arguments or directly from chat.</p><p><strong>Split Journal :</strong> Select the split option from the context menu on a journal entry to split it into multiple entries.</p><p><strong>Tokens : </strong>As GM, you can enable/disable token vision for yourself. You can also drop an actor folder into a scene to deploy multiple tokens at once.</p><p><strong>Combat : </strong>Double click the initiative value in the combat tracker to quickly modify it.</p><p><strong>Playlists : </strong>Adds a 'Now Playing' section, and auto-hides sound controls until hovered. Helps in fine tuning of low level volumes.</p><hr/><p>See website from URL below for instructions on how to use all these features.</p><hr/>",
-    "version": "2.3.2",
+    "version": "2.6.0",
     "author": "KaKaRoTo",
     "scripts": [
         "libs/split-html.js",
@@ -60,10 +60,10 @@
             "path": "lang/zh-CN.json"
         }
     ],
-    "url": "https://github.com/kakaroto/fvtt-module-furnace",
-    "manifest": "https://raw.githubusercontent.com/kakaroto/fvtt-module-furnace/master/module.json",
-    "download": "https://github.com/kakaroto/fvtt-module-furnace/archive/v2.3.2.zip",
+    "url": "https://github.com/League-of-Foundry-Developers/fvtt-module-furnace",
+    "manifest": "https://raw.githubusercontent.com/League-of-Foundry-Developers/fvtt-module-furnace/master/module.json",
+    "download": "https://github.com/League-of-Foundry-Developers/fvtt-module-furnace/releases/download/v2.6.0/furnace.zip",
     "socket": true,
-    "minimumCoreVersion": "0.7.4",
+    "minimumCoreVersion": "0.7.7",
     "compatibleCoreVersion": "0.8.0"
 }

@@ -6,10 +6,12 @@ class FurnacePatching {
         if (func === undefined)
             return;
         let funcStr = func.toString()
-        let lines = funcStr.split("\n")
-        if (lines[line_number].trim() == line.trim()) {
+        // Check for newlines so it can work on minified content too
+        const splitChar = funcStr.indexOf("\n") >= 0 ? "\n" : ";";
+        let lines = funcStr.split(splitChar)
+        if (lines[line_number] !== undefined && lines[line_number].trim() == line.trim()) {
             lines[line_number] = lines[line_number].replace(line, new_line);
-            let fixed = lines.join("\n")
+            let fixed = lines.join(splitChar)
             if (klass !== undefined) {
                 let classStr = klass.toString()
                 fixed = classStr.replace(funcStr, fixed)
@@ -22,7 +24,8 @@ class FurnacePatching {
             }
             return Function('"use strict";return (' + fixed + ')')();
         } else {
-            console.log("Cannot patch function. It has wrong content at line ", line_number, " : ", lines[line_number].trim(), " != ", line.trim(), "\n", funcStr)
+            console.log("Cannot patch function. It has wrong content at line ", line_number, " : ", 
+                lines[line_number] && lines[line_number].trim(), " != ", line.trim(), "\n", funcStr)
         }
     }
 

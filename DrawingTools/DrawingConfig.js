@@ -188,8 +188,8 @@ class FurnaceDrawingConfig extends DrawingConfig {
   /**
    * Extend the application close method to clear any preview if one exists
    */
-  close() {
-    super.close();
+  close(...args) {
+    super.close(...args);
     // Refresh in case we changed anything
     this.refresh();
   }
